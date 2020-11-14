@@ -1,0 +1,111 @@
+<!-- 
+    scan, 默认true, 配置文件发生改变时会被重新加载
+    scanPeriod, 默认单位毫秒，为true时此属性生效，默认时间间隔1分钟
+    debug, 默认false，为true时会打印出logback内部日志信息，实时查看logback运行状态
+-->
+<configuration scan="true" scanPeriod="60 seconds" debug="true">
+
+    <!-- 变量值定义 -->
+    <!-- <property name="APP_NAME" value="masker-rest-demo" /> -->
+
+    <!-- 设置上下文名称，默认为default，每个logger都关联到logger上下文 -->
+    <contextName>${app.name:-masker-rest-demo}</contextName>
+
+    <!-- ConsoleAppender将日志输出到控制台 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!--
+            <pattern>
+                [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-36.36thread] [%-5level] [%-36.36logger{36}:%-4.4line] - %msg%n
+            </pattern>
+            -->
+            <pattern>
+                [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%thread] [%logger:%line] - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- debug回滚日志 -->
+    <appender name="FILE-DEBUG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.path:-logs}/${app.name:-masker-rest-demo}/debug/debug.log</file>
+        <!-- 日志级别过滤器 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <!-- trace日志也输出到debug日志文件 -->
+            <level>${log.lowest.level:-TRACE}</level>
+            <!-- <onMatch>ACCEPT</onMatch> -->
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${log.path:-logs}/${app.name:-masker-rest-demo}/debug/debug-%d{yyyy-MM-dd}-%i.log</FileNamePattern>
+            <MaxHistory>5</MaxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <MaxFileSize>10MB</MaxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>
+                [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%thread] [%logger:%line] - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+    <!-- info回滚日志 -->
+    <appender name="FILE-INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.path:-logs}/${app.name:-masker-rest-demo}/info/info.log</file>
+        <!-- 临界值过滤器，过滤掉低于指定级别的日志 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+            <!-- <onMatch>ACCEPT</onMatch>
+            <onDismatch>DENY</onDismatch> -->
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${log.path:-logs}/${app.name:-masker-rest-demo}/info/info-%d{yyyy-MM-dd}-%i.log</FileNamePattern>
+            <MaxHistory>5</MaxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <MaxFileSize>10MB</MaxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>
+                [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%thread] [%logger:%line] - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+    <!-- error回滚日志 -->
+    <appender name="FILE-ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.path:-logs}/${app.name:-masker-rest-demo}/error/error.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+            <!-- <onMatch>ACCEPT</onMatch>
+            <onDismatch>DENY</onDismatch> -->
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${log.path:-logs}/${app.name:-masker-rest-demo}/error/error-%d{yyyy-MM-dd}-%i.log</FileNamePattern>
+            <MaxHistory>5</MaxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <MaxFileSize>10MB</MaxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>
+                [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%thread] [%logger:%line] - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- 集成第三方框架指定logger日志输出级别
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder"    additivity="true" level="${log.hibernate.level}" />
+    <logger name="org.hibernate.type.descriptor.sql.BasicExtractor" additivity="true" level="${log.hibernate.level}" />
+    <logger name="org.hibernate.SQL"                                additivity="true" level="${log.hibernate.level}" />
+    <logger name="org.springframework"                              additivity="true" level="${log.spring.level}"/>
+    -->
+
+    <!-- 关闭指定包日志 -->
+    <logger name="org.apache.tomcat.util.net" level="OFF" />
+
+    <!-- 根logger，将appender-ref添加到根logger -->
+    <root level="${log.root.level:-INFO}">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE-DEBUG"/>
+        <appender-ref ref="FILE-INFO"/>
+        <appender-ref ref="FILE-ERROR"/>
+    </root>
+</configuration>
