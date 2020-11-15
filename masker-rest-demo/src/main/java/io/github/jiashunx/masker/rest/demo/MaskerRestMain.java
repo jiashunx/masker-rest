@@ -1,11 +1,14 @@
 package io.github.jiashunx.masker.rest.demo;
 
+import com.alibaba.fastjson.JSON;
+import com.google.gson.Gson;
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.MRestServer;
 import io.github.jiashunx.masker.rest.framework.filter.Filter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
+import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,8 +94,20 @@ public class MaskerRestMain {
                     logger.info("post-data -->> " + request.parseBodyToObj(Vo.class));
                     return new HashMap<>();
                 })
+                .get("/get-html", request -> {
+                    logger.info("get-html -->> ");
+                    return "<html><body>this is a html page !</body></html>";
+                }, MRestHeaderBuilder.Build("Content-Type", "text/html"))
+                .get("/get-text", request -> {
+                    logger.info("get-text -->> ");
+                    return "text.......";
+                }, MRestHeaderBuilder.Build("Content-Type", "text/plain"))
                 .filter("/post*", new Filter0(), new Filter1())
                 .start();
+        logger.info(JSON.toJSONString("asldfjl"));
+        logger.info(new Gson().toJson("asldfjl"));
+        logger.info(JSON.toJSONString(new Vo()));
+        logger.info(new Gson().toJson(new Vo()));
     }
 
 }

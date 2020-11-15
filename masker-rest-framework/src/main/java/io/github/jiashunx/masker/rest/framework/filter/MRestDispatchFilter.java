@@ -42,7 +42,8 @@ public class MRestDispatchFilter implements MRestFilter {
             handleRequest(restRequest, restResponse, functionHandler);
             return;
         }
-        restResponse.write(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+        // TODO 处理静态资源
+        restResponse.write(HttpResponseStatus.NOT_FOUND);
     }
 
     private void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandler1<MRestRequest> handler) {
@@ -91,18 +92,16 @@ public class MRestDispatchFilter implements MRestFilter {
         }
         String contentType = Constants.CONTENT_TYPE_APPLICATION_JSON;
         MRestHandlerConfig config = handler.getConfig();
-        if (config != null && !config.isResponseContentTypeEmpty()) {
-            contentType = config.getResponseContentType();
+        if (config != null) {
+            contentType = config.getHeaderToStr(Constants.HTTP_HEADER_CONTENT_TYPE);
         }
         byte[] retBytes = null;
         if (retObj instanceof byte[]) {
             retBytes = (byte[]) retObj;
         } else if (Constants.CONTENT_TYPE_APPLICATION_JSON.equals(contentType)) {
             retBytes = MRestSerializer.jsonSerialize(retObj);
-        } else if (Constants.CONTENT_TYPE_TEXT_PLAIN.equals(contentType)) {
-            retBytes = String.valueOf(retObj).getBytes(StandardCharsets.UTF_8);
         } else {
-            retBytes = MRestSerializer.jsonSerialize(retObj);
+            retBytes = retObj.toString().getBytes(StandardCharsets.UTF_8);
         }
         restResponse.write(retBytes, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, contentType));
     }

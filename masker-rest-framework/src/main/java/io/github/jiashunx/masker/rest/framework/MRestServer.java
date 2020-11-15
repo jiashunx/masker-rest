@@ -6,6 +6,7 @@ import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.filter.MRestDispatchFilter;
 import io.github.jiashunx.masker.rest.framework.handler.*;
+import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -151,25 +152,14 @@ public class MRestServer {
         }
     }
 
-    /**
-     * url路由映射处理.
-     * @param url url
-     * @param handler handler
-     * @param methods methods
-     * @return MRestServer
-     */
     public synchronized MRestServer mapping(String url, Consumer<MRestRequest> handler, HttpMethod... methods) {
-        return mapping(url, handler, MRestHandlerConfig.newInstance(), methods);
+        return mapping(url, handler, MRestHeaderBuilder.Build(), methods);
     }
 
-    /**
-     * url路由映射处理.
-     * @param url url
-     * @param handler handler
-     * @param config config
-     * @param methods methods
-     * @return MRestServer
-     */
+    public synchronized MRestServer mapping(String url, Consumer<MRestRequest> handler, Map<String, Object> headers, HttpMethod... methods) {
+        return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
+    }
+
     public synchronized MRestServer mapping(String url, Consumer<MRestRequest> handler, MRestHandlerConfig config, HttpMethod... methods) {
         checkServerState();
         checkMappingUrl(url);
@@ -182,25 +172,14 @@ public class MRestServer {
         return this;
     }
 
-    /**
-     * url路由映射处理.
-     * @param url url
-     * @param handler handler
-     * @param methods methods
-     * @return MRestServer
-     */
     public synchronized MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, HttpMethod... methods) {
-        return mapping(url, handler, MRestHandlerConfig.newInstance(), methods);
+        return mapping(url, handler, MRestHeaderBuilder.Build(), methods);
     }
 
-    /**
-     * url路由映射处理.
-     * @param url url
-     * @param handler handler
-     * @param config config
-     * @param methods methods
-     * @return MRestServer
-     */
+    public synchronized MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, Map<String, Object> headers, HttpMethod... methods) {
+        return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
+    }
+
     public synchronized MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, MRestHandlerConfig config, HttpMethod... methods) {
         checkServerState();
         checkMappingUrl(url);
@@ -213,25 +192,14 @@ public class MRestServer {
         return this;
     }
 
-    /**
-     * url路由映射处理.
-     * @param url url
-     * @param handler handler
-     * @param methods methods
-     * @return MRestServer
-     */
     public synchronized <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, HttpMethod... methods) {
-        return mapping(url, handler, MRestHandlerConfig.newInstance(), methods);
+        return mapping(url, handler, MRestHeaderBuilder.Build(), methods);
     }
 
-    /**
-     * url路由映射处理.
-     * @param url url
-     * @param handler handler
-     * @param config config
-     * @param methods methods
-     * @return MRestServer
-     */
+    public synchronized <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, Map<String, Object> headers, HttpMethod... methods) {
+        return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
+    }
+
     public synchronized <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, MRestHandlerConfig config, HttpMethod... methods) {
         checkServerState();
         checkMappingUrl(url);
@@ -248,12 +216,20 @@ public class MRestServer {
         return mapping(url, handler, HttpMethod.GET);
     }
 
+    public MRestServer get(String url, Consumer<MRestRequest> handler, Map<String, Object> headers) {
+        return mapping(url, handler, headers, HttpMethod.GET);
+    }
+
     public MRestServer get(String url, Consumer<MRestRequest> handler, MRestHandlerConfig config) {
         return mapping(url, handler, config, HttpMethod.GET);
     }
 
     public <R> MRestServer get(String url, Function<MRestRequest, R> handler) {
         return mapping(url, handler, HttpMethod.GET);
+    }
+
+    public <R> MRestServer get(String url, Function<MRestRequest, R> handler, Map<String, Object> headers) {
+        return mapping(url, handler, headers, HttpMethod.GET);
     }
 
     public <R> MRestServer get(String url, Function<MRestRequest, R> handler, MRestHandlerConfig config) {
@@ -264,12 +240,20 @@ public class MRestServer {
         return mapping(url, handler, HttpMethod.GET);
     }
 
+    public MRestServer get(String url, BiConsumer<MRestRequest, MRestResponse> handler, Map<String, Object> headers) {
+        return mapping(url, handler, headers, HttpMethod.GET);
+    }
+
     public MRestServer get(String url, BiConsumer<MRestRequest, MRestResponse> handler, MRestHandlerConfig config) {
         return mapping(url, handler, config, HttpMethod.GET);
     }
 
     public MRestServer post(String url, Consumer<MRestRequest> handler) {
         return mapping(url, handler, HttpMethod.POST);
+    }
+
+    public MRestServer post(String url, Consumer<MRestRequest> handler, Map<String, Object> headers) {
+        return mapping(url, handler, headers, HttpMethod.POST);
     }
 
     public MRestServer post(String url, Consumer<MRestRequest> handler, MRestHandlerConfig config) {
@@ -280,12 +264,20 @@ public class MRestServer {
         return mapping(url, handler, HttpMethod.POST);
     }
 
+    public <R> MRestServer post(String url, Function<MRestRequest, R> handler, Map<String, Object> headers) {
+        return mapping(url, handler, headers, HttpMethod.POST);
+    }
+
     public <R> MRestServer post(String url, Function<MRestRequest, R> handler, MRestHandlerConfig config) {
         return mapping(url, handler, config, HttpMethod.POST);
     }
 
     public MRestServer post(String url, BiConsumer<MRestRequest, MRestResponse> handler) {
         return mapping(url, handler, HttpMethod.POST);
+    }
+
+    public MRestServer post(String url, BiConsumer<MRestRequest, MRestResponse> handler, Map<String, Object> headers) {
+        return mapping(url, handler, headers, HttpMethod.POST);
     }
 
     public MRestServer post(String url, BiConsumer<MRestRequest, MRestResponse> handler, MRestHandlerConfig config) {

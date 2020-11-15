@@ -1,7 +1,8 @@
 package io.github.jiashunx.masker.rest.framework.handler;
 
-import org.apache.commons.lang.StringUtils;
-
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -10,13 +11,21 @@ import java.util.function.Consumer;
  */
 public class MRestHandlerConfig {
 
-    private String requestContentType;
-    private String responseContentType;
+    /**
+     * 响应header.
+     */
+    private Map<String, Object> headers = new HashMap<>();
 
     public MRestHandlerConfig() {}
 
     public static MRestHandlerConfig newInstance() {
         return new MRestHandlerConfig();
+    }
+
+    public static MRestHandlerConfig newInstance(Map<String, Object> headers) {
+        MRestHandlerConfig config = newInstance();
+        config.headers = Objects.requireNonNull(headers);
+        return config;
     }
 
     public static MRestHandlerConfig newInstance(Consumer<MRestHandlerConfig> consumer) {
@@ -25,28 +34,22 @@ public class MRestHandlerConfig {
         return config;
     }
 
-    public boolean isRequestContentTypeEmpty() {
-        return StringUtils.isEmpty(getRequestContentType());
+    public Map<String, Object> getHeaders() {
+        return headers;
     }
 
-    public boolean isResponseContentTypeEmpty() {
-        return StringUtils.isEmpty(getResponseContentType());
+    public String getHeaderToStr(String key) {
+        Object value = getHeader(key);
+        return value == null ? null : value.toString();
     }
 
-    public String getRequestContentType() {
-        return requestContentType;
+    public Object getHeader(String key) {
+        return headers.get(key);
     }
 
-    public void setRequestContentType(String requestContentType) {
-        this.requestContentType = requestContentType;
-    }
-
-    public String getResponseContentType() {
-        return responseContentType;
-    }
-
-    public void setResponseContentType(String responseContentType) {
-        this.responseContentType = responseContentType;
+    public MRestHandlerConfig setHeader(String key, String value) {
+        headers.put(key, value);
+        return this;
     }
 
 }
