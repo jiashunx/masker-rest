@@ -5,11 +5,14 @@ import com.google.gson.Gson;
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.MRestServer;
+import io.github.jiashunx.masker.rest.framework.exception.MRestJWTException;
 import io.github.jiashunx.masker.rest.framework.filter.Filter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
+import io.github.jiashunx.masker.rest.framework.util.MRestJWTHelper;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +63,36 @@ public class MaskerRestMain {
     }
 
     public static void main(String[] args) {
+        MRestJWTHelper jwtHelper = new MRestJWTHelper("qwerasdfzxcv09876543231");
         new MRestServer(21700, "mrest-demo")
+                .filter("/*", (restRequest, restResponse, filterChain) -> {
+                    String requestURL = restRequest.getUrl();
+                    if ("/login".equals(requestURL)) {
+                        Vo vo = restRequest.parseBodyToObj(Vo.class);
+                        if (vo.username.equals("admin")) {
+                            String jwtToken = jwtHelper.newToken();
+                            restResponse.write(HttpResponseStatus.OK, MRestHeaderBuilder.Build("Authorization", jwtToken));
+                        } else {
+                            restResponse.write(HttpResponseStatus.UNAUTHORIZED);
+                        }
+                    } else {
+                        String jwtToken = restRequest.getHeaderToStr("Authorization");
+                        if (StringUtils.isBlank(jwtToken)) {
+                            restResponse.write(HttpResponseStatus.UNAUTHORIZED);
+                            return;
+                        }
+                        try {
+                            if (!jwtHelper.isTokenTimeout(jwtToken) && jwtHelper.isTokenValid(jwtToken)) {
+                                filterChain.doFilter(restRequest, restResponse);
+                                return;
+                            }
+                        } catch (MRestJWTException e) {
+                            logger.error("", e);
+                        }
+                        restResponse.write(HttpResponseStatus.UNAUTHORIZED);
+                    }
+                })
+
                 .get("/get0", request -> {
                     logger.info("get0 -->> username=" + request.getParameter("username"));
                 })

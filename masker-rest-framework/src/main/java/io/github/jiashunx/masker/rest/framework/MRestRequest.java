@@ -124,6 +124,15 @@ public class MRestRequest {
         return headers;
     }
 
+    public Object getHeader(String key) {
+        return getHeaders().get(key);
+    }
+
+    public String getHeaderToStr(String key) {
+        Object value = getHeader(key);
+        return value == null ? null : value.toString();
+    }
+
     public void setHeaders(HttpHeaders headers) {
         this.headers = headers;
     }
