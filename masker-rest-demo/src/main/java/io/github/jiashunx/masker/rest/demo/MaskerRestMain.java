@@ -60,7 +60,7 @@ public class MaskerRestMain {
     }
 
     public static void main(String[] args) {
-        new MRestServer()
+        new MRestServer(21700, "mrest-demo")
                 .get("/get0", request -> {
                     logger.info("get0 -->> username=" + request.getParameter("username"));
                 })
