@@ -156,6 +156,7 @@ public class MRestServer {
      * @param url url
      * @param handler handler
      * @param methods methods
+     * @return MRestServer
      */
     public synchronized MRestServer mapping(String url, Consumer<MRestRequest> handler, HttpMethod... methods) {
         return mapping(url, handler, MRestHandlerConfig.newInstance(), methods);
@@ -167,6 +168,7 @@ public class MRestServer {
      * @param handler handler
      * @param config config
      * @param methods methods
+     * @return MRestServer
      */
     public synchronized MRestServer mapping(String url, Consumer<MRestRequest> handler, MRestHandlerConfig config, HttpMethod... methods) {
         checkServerState();
@@ -185,6 +187,7 @@ public class MRestServer {
      * @param url url
      * @param handler handler
      * @param methods methods
+     * @return MRestServer
      */
     public synchronized MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, HttpMethod... methods) {
         return mapping(url, handler, MRestHandlerConfig.newInstance(), methods);
@@ -196,6 +199,7 @@ public class MRestServer {
      * @param handler handler
      * @param config config
      * @param methods methods
+     * @return MRestServer
      */
     public synchronized MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, MRestHandlerConfig config, HttpMethod... methods) {
         checkServerState();
@@ -214,6 +218,7 @@ public class MRestServer {
      * @param url url
      * @param handler handler
      * @param methods methods
+     * @return MRestServer
      */
     public synchronized <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, HttpMethod... methods) {
         return mapping(url, handler, MRestHandlerConfig.newInstance(), methods);
@@ -225,6 +230,7 @@ public class MRestServer {
      * @param handler handler
      * @param config config
      * @param methods methods
+     * @return MRestServer
      */
     public synchronized <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, MRestHandlerConfig config, HttpMethod... methods) {
         checkServerState();
@@ -343,6 +349,8 @@ public class MRestServer {
 
     /**
      * 添加filter, 自动扫描filter注解, 获取urlPattern.
+     * @param filterArr filterArr
+     * @return MRestServer
      */
     public synchronized MRestServer filter(MRestFilter... filterArr) {
         for (MRestFilter filter: filterArr) {
@@ -357,6 +365,9 @@ public class MRestServer {
 
     /**
      * 添加filter, 如果filter未配置注解, 则根据传入urlPattern来进行匹配, 否则将注解指定的urlPattern和urlPattern参数进行合并.
+     * @param urlPattern urlPattern
+     * @param filterArr filterArr
+     * @return MRestServer
      */
     public synchronized MRestServer filter(String urlPattern, MRestFilter... filterArr) {
         for (MRestFilter filter: filterArr) {

@@ -1,9 +1,8 @@
 package io.github.jiashunx.masker.rest.framework.handler;
 
-import io.netty.handler.codec.http.HttpMethod;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * rest请求处理配置.
@@ -18,6 +17,12 @@ public class MRestHandlerConfig {
 
     public static MRestHandlerConfig newInstance() {
         return new MRestHandlerConfig();
+    }
+
+    public static MRestHandlerConfig newInstance(Consumer<MRestHandlerConfig> consumer) {
+        MRestHandlerConfig config = newInstance();
+        consumer.accept(config);
+        return config;
     }
 
     public boolean isRequestContentTypeEmpty() {
