@@ -84,6 +84,7 @@ public class MaskerRestMain {
                         try {
                             if (!jwtHelper.isTokenTimeout(jwtToken) && jwtHelper.isTokenValid(jwtToken)) {
                                 filterChain.doFilter(restRequest, restResponse);
+                                restResponse.setHeader("Authroization", jwtHelper.updateToken(jwtToken));
                                 return;
                             }
                         } catch (MRestJWTException e) {

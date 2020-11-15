@@ -1,12 +1,14 @@
 package io.github.jiashunx.masker.rest.framework;
 
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
+import io.github.jiashunx.masker.rest.framework.exception.MRestServerException;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -15,16 +17,19 @@ import java.util.Objects;
  */
 public class MRestResponse {
 
-    private final ChannelHandlerContext channelHandlerContext;
+    private final ChannelHandlerContext $channelHandlerContext;
     private final MRestServer restServer;
+    private final Map<String, Object> $headers = new HashMap<>();
+    private FlushTask flushTask = null;
+    private boolean flushed = false;
 
     public MRestResponse(ChannelHandlerContext ctx, MRestServer restServer) {
-        this.channelHandlerContext = Objects.requireNonNull(ctx);
+        this.$channelHandlerContext = Objects.requireNonNull(ctx);
         this.restServer = restServer;
     }
 
     public ChannelHandlerContext getChannelHandlerContext() {
-        return channelHandlerContext;
+        return $channelHandlerContext;
     }
 
     public MRestServer getRestServer() {
@@ -32,11 +37,7 @@ public class MRestResponse {
     }
 
     public void redirect(String targetURL) {
-        redirect(channelHandlerContext, targetURL);
-    }
-
-    public static void redirect(ChannelHandlerContext ctx, String targetURL) {
-        write(ctx, HttpResponseStatus.TEMPORARY_REDIRECT, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_LOCATION, targetURL));
+        redirect($channelHandlerContext, targetURL);
     }
 
     public void forward(String targetURL, MRestRequest request) {
@@ -65,8 +66,56 @@ public class MRestResponse {
         write(HttpResponseStatus.OK, bytes, headers);
     }
 
-    public void write(HttpResponseStatus status, byte[] bytes, Map<String, Object> headers) {
-        write(channelHandlerContext, status, bytes, headers);
+    public synchronized void write(HttpResponseStatus status, byte[] bytes, Map<String, Object> headers) {
+        if (flushTask != null) {
+            throw new MRestServerException("write method has already been invoked.");
+        }
+        flushTask = new FlushTask(status, bytes, headers);
+    }
+
+    public void setHeader(String key, Object value) {
+        this.$headers.put(key, value);
+    }
+
+    public void setHeader(Map<String, Object> headers) {
+        this.$headers.putAll(headers);
+    }
+
+    public synchronized void flush() {
+        if (flushed) {
+            throw new MRestServerException("flush method has already been invoked.");
+        }
+        if (flushTask != null) {
+            flushTask.execute();
+            flushed = true;
+        } else {
+            flushTask = new FlushTask(HttpResponseStatus.OK, null, null);
+            flush();
+        }
+    }
+
+    private class FlushTask {
+        final HttpResponseStatus status;
+        final byte[] bytes;
+        final Map<String, Object> headers;
+        FlushTask(HttpResponseStatus status, byte[] bytes,  Map<String, Object> headers) {
+            this.status = Objects.requireNonNull(status);
+            this.bytes = bytes;
+            this.headers = headers == null ? new HashMap<>() : headers;
+        }
+        void execute() {
+            this.headers.putAll($headers);
+            write($channelHandlerContext, status, bytes, this.headers);
+        }
+    }
+
+
+    /**************************************************** SEP ****************************************************/
+    /**************************************************** SEP ****************************************************/
+
+
+    public static void redirect(ChannelHandlerContext ctx, String targetURL) {
+        write(ctx, HttpResponseStatus.TEMPORARY_REDIRECT, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_LOCATION, targetURL));
     }
 
     public static void write(ChannelHandlerContext ctx, HttpResponseStatus status) {

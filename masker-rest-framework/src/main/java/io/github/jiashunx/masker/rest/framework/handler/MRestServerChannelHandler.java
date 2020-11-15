@@ -36,10 +36,12 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
             MRestResponse restResponse = new MRestResponse(ctx, restServer);
             if (restRequest == null) {
                 restResponse.write(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                restResponse.flush();
                 return;
             }
             MRestFilterChain filterChain = restServer.getFilterChain(restRequest.getUrl());
             filterChain.doFilter(restRequest, restResponse);
+            restResponse.flush();
         }
     }
 
