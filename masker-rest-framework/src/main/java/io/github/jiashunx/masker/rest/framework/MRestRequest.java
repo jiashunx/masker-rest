@@ -68,6 +68,14 @@ public class MRestRequest {
         this.attributes = attributes;
     }
 
+    public void setAttribute(String key, String value) {
+        attributes.put(key, value);
+    }
+
+    public String getAttribute(String key) {
+        return attributes.get(key);
+    }
+
     public HttpMethod getMethod() {
         return method;
     }

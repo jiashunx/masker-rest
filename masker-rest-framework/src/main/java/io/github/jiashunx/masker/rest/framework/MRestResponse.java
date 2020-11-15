@@ -1,6 +1,7 @@
 package io.github.jiashunx.masker.rest.framework;
 
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
+import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -14,14 +15,20 @@ import java.util.Objects;
  */
 public class MRestResponse {
 
-    private ChannelHandlerContext channelHandlerContext;
+    private final ChannelHandlerContext channelHandlerContext;
+    private final MRestServer restServer;
 
-    public MRestResponse(ChannelHandlerContext ctx) {
+    public MRestResponse(ChannelHandlerContext ctx, MRestServer restServer) {
         this.channelHandlerContext = Objects.requireNonNull(ctx);
+        this.restServer = restServer;
     }
 
     public ChannelHandlerContext getChannelHandlerContext() {
         return channelHandlerContext;
+    }
+
+    public MRestServer getRestServer() {
+        return restServer;
     }
 
     /**
@@ -29,7 +36,18 @@ public class MRestResponse {
      * @param targetURL 重定向目标url
      */
     public void redirect(String targetURL) {
-        write(HttpResponseStatus.FOUND, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_LOCATION, targetURL));
+        write(HttpResponseStatus.TEMPORARY_REDIRECT, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_LOCATION, targetURL));
+    }
+
+    /**
+     * 转发
+     * @param targetURL 转发目标url
+     * @param request request
+     */
+    public void forward(String targetURL, MRestRequest request) {
+        request.setUrl(targetURL);
+        MRestFilterChain filterChain = getRestServer().getFilterChain(targetURL);
+        filterChain.doFilter(request, this);
     }
 
     /**

@@ -33,7 +33,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
     protected void channelRead0(ChannelHandlerContext ctx, HttpObject httpObject) throws Exception {
         if (httpObject instanceof HttpRequest) {
             MRestRequest restRequest = parseRestRequest((HttpRequest) httpObject);
-            MRestResponse restResponse = new MRestResponse(ctx);
+            MRestResponse restResponse = new MRestResponse(ctx, restServer);
             if (restRequest == null) {
                 restResponse.write(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                 return;

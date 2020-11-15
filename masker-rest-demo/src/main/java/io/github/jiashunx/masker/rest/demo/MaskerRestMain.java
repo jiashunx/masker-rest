@@ -1,46 +1,97 @@
 package io.github.jiashunx.masker.rest.demo;
 
-//import org.springframework.boot.SpringApplication;
-//import org.springframework.boot.autoconfigure.SpringBootApplication;
-
+import io.github.jiashunx.masker.rest.framework.MRestRequest;
+import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.MRestServer;
-import io.netty.handler.codec.http.HttpMethod;
+import io.github.jiashunx.masker.rest.framework.filter.Filter;
+import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
+import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+
 /**
  * @author jiashunx
  */
-//@SpringBootApplication
 public class MaskerRestMain {
 
     private static final Logger logger = LoggerFactory.getLogger(MaskerRestMain.class);
 
+    private static class Vo {
+        String username;
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        @Override
+        public String toString() {
+            return "Vo{" +
+                    "username='" + username + '\'' +
+                    '}';
+        }
+    }
+
+    @Filter(order = 123)
+    private static class Filter0 implements MRestFilter {
+        @Override
+        public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {
+            logger.info("filter0 -->> " + restRequest.getUrl());
+            filterChain.doFilter(restRequest, restResponse);
+        }
+    }
+
+    @Filter(order = -123)
+    private static class Filter1 implements MRestFilter {
+        @Override
+        public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {
+            logger.info("filter1 -->> " + restRequest.getUrl());
+            filterChain.doFilter(restRequest, restResponse);
+        }
+    }
+
     public static void main(String[] args) {
-//        SpringApplication.run(MaskerRestMain.class, args);
         new MRestServer()
-                .mapping("/post0", (request, response) -> {
-                    System.out.println(request.bodyToString());
+                .get("/get0", request -> {
+                    logger.info("get0 -->> username=" + request.getParameter("username"));
+                })
+                .get("/get1", (request, response) -> {
+                    logger.info("get1 -->> body=" + request.bodyToString());
                     response.write(HttpResponseStatus.OK);
-                }, HttpMethod.POST)
-                .mapping("/post1", (request, response) -> {
-                    System.out.println(request.bodyToString());
+                })
+                .post("/post0", request -> {
+                    logger.info("post0 -->> body=" + request.bodyToString());
+                })
+                .post("/post1", (request, response) -> {
+                    logger.info("post1 -->> body=" + request.bodyToString());
+                    logger.info("post1 -->> body=" + request.parseBodyToObj(Vo.class));
                     response.write(HttpResponseStatus.OK);
-                }, HttpMethod.POST)
-                .mapping("/get", (request, response) -> {
-                    System.out.println(request.bodyToString());
-                    System.out.println("receive username: " + request.getParameter("username"));
-                    System.out.println("receive password: " + request.getParameter("password"));
-                    response.write(HttpResponseStatus.OK);
-                }, HttpMethod.GET)
+                })
+                .post("/post2", (request, response) -> {
+                    logger.info("post2(redirect) -->> redirect to /post1");
+                    logger.info("post2(redirect) -->> attribute->hell0: " + request.getAttribute("hello"));
+                    response.redirect("/post1");
+                })
+                .post("/post3", (request, response) -> {
+                    logger.info("post3(forward) -->> forward to /post2");
+                    request.setAttribute("hello", "I'm fine, thank you, and you?");
+                    response.forward("/post2", request);
+                })
                 .filter("/*", (restRequest, restResponse, filterChain) -> {
-                    if (logger.isInfoEnabled()) {
-                        logger.info("test filter, receive request, url: {}", restRequest.getUrl());
-                    }
+                    logger.info("filter* -->> " + restRequest.getUrl());
                     filterChain.doFilter(restRequest, restResponse);
                 })
-
+                .post("/post-data", request -> {
+                    logger.info("post-data -->> " + request.parseBodyToObj(Vo.class));
+                    return new HashMap<>();
+                })
+                .filter("/post*", new Filter0(), new Filter1())
                 .start();
     }
 
