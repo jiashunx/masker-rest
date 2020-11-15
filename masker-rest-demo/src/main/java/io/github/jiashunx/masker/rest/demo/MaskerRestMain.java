@@ -62,9 +62,9 @@ public class MaskerRestMain {
         }
     }
 
-    public static void main(String[] args) {
+    private static void startNewServer(int port, String serverName) {
         MRestJWTHelper jwtHelper = new MRestJWTHelper("qwerasdfzxcv09876543231");
-        new MRestServer(21700, "mrest-demo")
+        new MRestServer(port, serverName)
                 .filter("/*", (restRequest, restResponse, filterChain) -> {
                     String requestURL = restRequest.getUrl();
                     if ("/login".equals(requestURL)) {
@@ -137,6 +137,13 @@ public class MaskerRestMain {
                 }, MRestHeaderBuilder.Build("Content-Type", "text/plain"))
                 .filter("/post*", new Filter0(), new Filter1())
                 .start();
+    }
+
+    public static void main(String[] args) {
+        startNewServer(21700, "mrest-demo");
+        startNewServer(21701, "mrest-demo1");
+        startNewServer(21702, "mrest-demo2");
+        startNewServer(21703, "mrest-demo3");
         logger.info(JSON.toJSONString("asldfjl"));
         logger.info(new Gson().toJson("asldfjl"));
         logger.info(JSON.toJSONString(new Vo()));

@@ -128,7 +128,7 @@ public class MRestServer {
      */
     private final Map<String, MRestHandler2<MRestRequest, MRestResponse>> consumerHandlerMap2 = new HashMap<>();
 
-    private static final Set<String> MAPPING_URL_SET = new HashSet<>();
+    private final Set<String> mappingUrlSet = new HashSet<>();
 
     /**
      * 指定url是否是已指定映射处理.
@@ -136,7 +136,7 @@ public class MRestServer {
      * @return boolean
      */
     public boolean isMappingURL(String requestURL) {
-        return MAPPING_URL_SET.contains(requestURL);
+        return mappingUrlSet.contains(requestURL);
     }
 
     /**
@@ -165,7 +165,7 @@ public class MRestServer {
         checkMappingUrl(url);
         MRestHandler1<MRestRequest> restHandler = new MRestHandler1<>(url, handler, config, methods);
         consumerHandlerMap1.put(url, restHandler);
-        MAPPING_URL_SET.add(url);
+        mappingUrlSet.add(url);
         if (logger.isInfoEnabled()) {
             logger.info("server: {} register url {} handler success, method: {}", serverName, url, methods);
         }
@@ -185,7 +185,7 @@ public class MRestServer {
         checkMappingUrl(url);
         MRestHandler2<MRestRequest, MRestResponse> restHandler = new MRestHandler2<>(url, handler, config, methods);
         consumerHandlerMap2.put(url, restHandler);
-        MAPPING_URL_SET.add(url);
+        mappingUrlSet.add(url);
         if (logger.isInfoEnabled()) {
             logger.info("server: {} register url {} handler success, method: {}", serverName, url, methods);
         }
@@ -205,7 +205,7 @@ public class MRestServer {
         checkMappingUrl(url);
         MRestHandler0<MRestRequest, R> restHandler = new MRestHandler0<>(url, handler, config, methods);
         functionHandlerMap.put(url, restHandler);
-        MAPPING_URL_SET.add(url);
+        mappingUrlSet.add(url);
         if (logger.isInfoEnabled()) {
             logger.info("server: {} register url {} handler success, method: {}", serverName, url, methods);
         }
