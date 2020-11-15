@@ -284,26 +284,14 @@ public class MRestServer {
         return mapping(url, handler, config, HttpMethod.POST);
     }
 
-    /**
-     * @param requestURL requestURL
-     * @return MRestHandler1
-     */
     public MRestHandler1<MRestRequest> getConsumerHandler1(String requestURL) {
         return consumerHandlerMap1.get(requestURL);
     }
 
-    /**
-     * @param requestURL requestURL
-     * @return MRestHandler2
-     */
     public MRestHandler2<MRestRequest, MRestResponse> getConsumerHandler2(String requestURL) {
         return consumerHandlerMap2.get(requestURL);
     }
 
-    /**
-     * @param requestURL requestURL
-     * @return MRestHandler0
-     */
     public MRestHandler0<MRestRequest, ?> getFunctionHandler(String requestURL) {
         return functionHandlerMap.get(requestURL);
     }

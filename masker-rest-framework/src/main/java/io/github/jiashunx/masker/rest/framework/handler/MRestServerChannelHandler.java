@@ -67,11 +67,6 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
         super.userEventTriggered(ctx, evt);
     }
 
-    /**
-     * 解析获取请求对象.
-     * @param request HttpRequest
-     * @return MRestRequest
-     */
     private MRestRequest parseRestRequest(HttpRequest request) {
         MRestRequest restRequest = null;
         if (request instanceof FullHttpRequest) {

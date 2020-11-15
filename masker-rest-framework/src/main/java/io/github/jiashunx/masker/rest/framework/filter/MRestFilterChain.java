@@ -23,11 +23,6 @@ public class MRestFilterChain {
         this.index = 0;
     }
 
-    /**
-     * doFilter.
-     * @param restRequest MRestRequest
-     * @param restResponse MRestResponse
-     */
     public void doFilter(MRestRequest restRequest, MRestResponse restResponse) {
         MRestFilter filter = next();
         if (filter != null) {
@@ -35,10 +30,6 @@ public class MRestFilterChain {
         }
     }
 
-    /**
-     * 获取下一个待执行Filter对象.
-     * @return MRestFilter
-     */
     private MRestFilter next() {
         MRestFilter filter = null;
         if (index < size) {
