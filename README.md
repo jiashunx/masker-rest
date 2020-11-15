@@ -18,10 +18,14 @@
     </tr>
     <tr>
         <td>重定向、转发</td>
-        <td>TODO</td>
+        <td>DONE</td>
     </tr>
     <tr>
         <td>默认JWT实现&会话控制</td>
+        <td>TODO</td>
+    </tr>
+    <tr>
+        <td>默认静态资源处理</td>
         <td>TODO</td>
     </tr>
     <tr>
