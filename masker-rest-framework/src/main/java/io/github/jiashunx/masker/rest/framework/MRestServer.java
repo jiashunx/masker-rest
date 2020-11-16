@@ -111,6 +111,14 @@ public class MRestServer {
             logger.info("start server: {}, listening on port: {}", serverName, listenPort);
         }
         try {
+            // mapping处理
+            for (Runnable mappingTask: mappingTaskList) {
+                mappingTask.run();
+            }
+            // filter处理
+            for (Runnable filterTask: filterTaskList) {
+                filterTask.run();
+            }
             EventLoopGroup bossGroup = new NioEventLoopGroup(bossThreadNum, new MRestThreadFactory(MRestNettyThreadType.BOSS, listenPort));
             EventLoopGroup workerGroup = new NioEventLoopGroup(workerThreadNum, new MRestThreadFactory(MRestNettyThreadType.WORK, listenPort));
             ServerBootstrap bootstrap = new ServerBootstrap();
@@ -123,7 +131,7 @@ public class MRestServer {
                     .childHandler(new MRestServerChannelInitializer(this));
             Channel channel = bootstrap.bind(listenPort).sync().channel();
             if (logger.isInfoEnabled()) {
-                logger.info("start server: {} success.", serverName);
+                logger.info("start server: {} success, listening on port: {}", serverName, listenPort);
             }
             final Thread syncThread = new Thread(() -> {
                 try {
@@ -160,8 +168,14 @@ public class MRestServer {
      * 输入MRestRequest, MRestResponse, 无返回.
      */
     private final Map<String, MRestHandler2<MRestRequest, MRestResponse>> consumerHandlerMap2 = new HashMap<>();
-
+    /**
+     * 已添加映射的url列表.
+     */
     private final Set<String> mappingUrlSet = new HashSet<>();
+    /**
+     * 添加url映射处理的任务(在服务启动时统一添加).
+     */
+    private final List<Runnable> mappingTaskList = new ArrayList<>();
 
     /**
      * 指定url是否是已指定映射处理.
@@ -185,63 +199,69 @@ public class MRestServer {
         }
     }
 
-    public synchronized MRestServer mapping(String url, Consumer<MRestRequest> handler, HttpMethod... methods) {
+    public MRestServer mapping(String url, Consumer<MRestRequest> handler, HttpMethod... methods) {
         return mapping(url, handler, MRestHeaderBuilder.Build(), methods);
     }
 
-    public synchronized MRestServer mapping(String url, Consumer<MRestRequest> handler, Map<String, Object> headers, HttpMethod... methods) {
+    public MRestServer mapping(String url, Consumer<MRestRequest> handler, Map<String, Object> headers, HttpMethod... methods) {
         return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
     }
 
     public synchronized MRestServer mapping(String url, Consumer<MRestRequest> handler, MRestHandlerConfig config, HttpMethod... methods) {
         checkServerState();
-        checkMappingUrl(url);
-        MRestHandler1<MRestRequest> restHandler = new MRestHandler1<>(url, handler, config, methods);
-        consumerHandlerMap1.put(url, restHandler);
-        mappingUrlSet.add(url);
-        if (logger.isInfoEnabled()) {
-            logger.info("server: {} register url {} handler success, method: {}", serverName, url, methods);
-        }
+        mappingTaskList.add(() -> {
+            checkMappingUrl(url);
+            MRestHandler1<MRestRequest> restHandler = new MRestHandler1<>(url, handler, config, methods);
+            consumerHandlerMap1.put(url, restHandler);
+            mappingUrlSet.add(url);
+            if (logger.isInfoEnabled()) {
+                logger.info("server: {} register url handler success, {}, {}", serverName, methods, url);
+            }
+        });
         return this;
     }
 
-    public synchronized MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, HttpMethod... methods) {
+    public MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, HttpMethod... methods) {
         return mapping(url, handler, MRestHeaderBuilder.Build(), methods);
     }
 
-    public synchronized MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, Map<String, Object> headers, HttpMethod... methods) {
+    public MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, Map<String, Object> headers, HttpMethod... methods) {
         return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
     }
 
     public synchronized MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, MRestHandlerConfig config, HttpMethod... methods) {
         checkServerState();
-        checkMappingUrl(url);
-        MRestHandler2<MRestRequest, MRestResponse> restHandler = new MRestHandler2<>(url, handler, config, methods);
-        consumerHandlerMap2.put(url, restHandler);
-        mappingUrlSet.add(url);
-        if (logger.isInfoEnabled()) {
-            logger.info("server: {} register url {} handler success, method: {}", serverName, url, methods);
-        }
+        mappingTaskList.add(() -> {
+            checkMappingUrl(url);
+            MRestHandler2<MRestRequest, MRestResponse> restHandler = new MRestHandler2<>(url, handler, config, methods);
+            consumerHandlerMap2.put(url, restHandler);
+            mappingUrlSet.add(url);
+            if (logger.isInfoEnabled()) {
+                logger.info("server: {} register url handler success, {}, {}", serverName, methods, url);
+            }
+        });
         return this;
     }
 
-    public synchronized <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, HttpMethod... methods) {
+    public <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, HttpMethod... methods) {
         return mapping(url, handler, MRestHeaderBuilder.Build(), methods);
     }
 
-    public synchronized <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, Map<String, Object> headers, HttpMethod... methods) {
+    public <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, Map<String, Object> headers, HttpMethod... methods) {
         return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
     }
 
     public synchronized <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, MRestHandlerConfig config, HttpMethod... methods) {
         checkServerState();
-        checkMappingUrl(url);
-        MRestHandler0<MRestRequest, R> restHandler = new MRestHandler0<>(url, handler, config, methods);
-        functionHandlerMap.put(url, restHandler);
-        mappingUrlSet.add(url);
-        if (logger.isInfoEnabled()) {
-            logger.info("server: {} register url {} handler success, method: {}", serverName, url, methods);
-        }
+        mappingTaskList.add(() -> {
+            checkMappingUrl(url);
+            MRestHandler0<MRestRequest, R> restHandler = new MRestHandler0<>(url, handler, config, methods);
+            functionHandlerMap.put(url, restHandler);
+            mappingUrlSet.add(url);
+            if (logger.isInfoEnabled()) {
+                logger.info("server: {} register url handler success, {}, {}", serverName, methods, url);
+            }
+        });
         return this;
     }
 
@@ -338,8 +358,14 @@ public class MRestServer {
      * filter映射处理.
      */
     private final Map<String, List<MRestFilter>> filterMap = new HashMap<>();
-
+    /**
+     * 请求分发处理.
+     */
     private final MRestFilter requestFilter = new MRestDispatchFilter();
+    /**
+     * 添加filter的任务(在服务启动时统一添加).
+     */
+    private final List<Runnable> filterTaskList = new ArrayList<>();
 
     public MRestFilterChain getFilterChain(String requestURL) {
         Set<MRestFilter> filterSet = new HashSet<>();
@@ -396,12 +422,18 @@ public class MRestServer {
 
     private synchronized void filter0(MRestFilter filter, String... urlPatterns) {
         checkServerState();
-        if (filter == null || urlPatterns.length == 0) {
-            throw new IllegalArgumentException();
-        }
-        for (String urlPattern: urlPatterns) {
-            filterMap.computeIfAbsent(urlPattern, k -> new ArrayList<>()).add(filter);
-        }
+        filterTaskList.add(() -> {
+            MRestFilter restFilter = Objects.requireNonNull(filter);
+            if (urlPatterns.length == 0) {
+                throw new IllegalArgumentException("can't assign empty urlPatterns to filter: " + filter.filterName());
+            }
+            for (String urlPattern: urlPatterns) {
+                filterMap.computeIfAbsent(urlPattern, k -> new ArrayList<>()).add(restFilter);
+                if (logger.isInfoEnabled()) {
+                    logger.info("server: {} register filter success, {} -> {}", serverName, urlPattern, filter.filterName());
+                }
+            }
+        });
     }
 
 

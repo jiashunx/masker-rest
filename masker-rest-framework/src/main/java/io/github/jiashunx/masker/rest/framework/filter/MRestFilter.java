@@ -30,6 +30,10 @@ public interface MRestFilter {
         return getFilterAnnotation().urlPatterns();
     }
 
+    default String filterName() {
+        return getClass().getName();
+    }
+
     default boolean hasFilterAnnotation() {
         return getFilterAnnotation() != null;
     }
