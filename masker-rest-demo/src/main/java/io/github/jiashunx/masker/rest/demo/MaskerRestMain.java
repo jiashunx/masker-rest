@@ -12,6 +12,7 @@ import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.github.jiashunx.masker.rest.framework.util.MRestJWTHelper;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.util.NettyRuntime;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +66,8 @@ public class MaskerRestMain {
     private static void startNewServer(int port, String serverName) {
         MRestJWTHelper jwtHelper = new MRestJWTHelper("qwerasdfzxcv09876543231");
         new MRestServer(port, serverName)
+                .listenPort(port).serverName(serverName)
+                .bossThreadNum(1).workerThreadNum(NettyRuntime.availableProcessors() * 2)
                 .filter("/*", (restRequest, restResponse, filterChain) -> {
                     String requestURL = restRequest.getUrl();
                     if ("/login".equals(requestURL)) {

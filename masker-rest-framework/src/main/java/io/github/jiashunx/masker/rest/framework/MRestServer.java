@@ -6,7 +6,9 @@ import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.filter.MRestDispatchFilter;
 import io.github.jiashunx.masker.rest.framework.handler.*;
+import io.github.jiashunx.masker.rest.framework.type.MRestNettyThreadType;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
+import io.github.jiashunx.masker.rest.framework.util.MRestThreadFactory;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -35,8 +37,10 @@ public class MRestServer {
 
     private volatile boolean started = false;
 
-    private final int port;
-    private final String serverName;
+    private int listenPort;
+    private String serverName;
+    private int bossThreadNum = 0;
+    private int workerThreadNum = 0;
 
     public MRestServer() {
         this(MRestUtils.getDefaultServerPort(), MRestUtils.getDefaultServerName());
@@ -46,16 +50,45 @@ public class MRestServer {
         this(MRestUtils.getDefaultServerPort(), serverName);
     }
 
-    public MRestServer(int port) {
-        this(port, MRestUtils.getDefaultServerName());
+    public MRestServer(int listenPort) {
+        this(listenPort, MRestUtils.getDefaultServerName());
     }
 
-    public MRestServer(int port, String serverName) {
-        if (port <= 0 || port > 65535 || StringUtils.isBlank(serverName)) {
-            throw new MRestServerInitializeException("illegal arguments");
+    public MRestServer(int listenPort, String serverName) {
+        listenPort(listenPort);
+        serverName(serverName);
+    }
+
+    public MRestServer listenPort(int listenPort) {
+        if (listenPort <= 0 || listenPort > 65535) {
+            throw new IllegalArgumentException("listenPort -> " + listenPort);
         }
-        this.port = port;
+        this.listenPort = listenPort;
+        return this;
+    }
+
+    public MRestServer serverName(String serverName) {
+        if (StringUtils.isBlank(serverName)) {
+            throw new IllegalArgumentException("serverName -> " + serverName);
+        }
         this.serverName = serverName;
+        return this;
+    }
+
+    public MRestServer bossThreadNum(int bossThreadNum) {
+        if (bossThreadNum < 0) {
+            throw new IllegalArgumentException("bossThreadNum -> " + bossThreadNum);
+        }
+        this.bossThreadNum = bossThreadNum;
+        return this;
+    }
+
+    public MRestServer workerThreadNum(int workerThreadNum) {
+        if (workerThreadNum < 0) {
+            throw new IllegalArgumentException("workThreadNum -> " + workerThreadNum);
+        }
+        this.workerThreadNum = workerThreadNum;
+        return this;
     }
 
     /**
@@ -75,11 +108,11 @@ public class MRestServer {
     public synchronized void start() throws MRestServerInitializeException {
         checkServerState();
         if (logger.isInfoEnabled()) {
-            logger.info("start server: {}, listening on port: {}", serverName, port);
+            logger.info("start server: {}, listening on port: {}", serverName, listenPort);
         }
         try {
-            EventLoopGroup bossGroup = new NioEventLoopGroup();
-            EventLoopGroup workerGroup = new NioEventLoopGroup();
+            EventLoopGroup bossGroup = new NioEventLoopGroup(bossThreadNum, new MRestThreadFactory(MRestNettyThreadType.BOSS, listenPort));
+            EventLoopGroup workerGroup = new NioEventLoopGroup(workerThreadNum, new MRestThreadFactory(MRestNettyThreadType.WORK, listenPort));
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.option(ChannelOption.SO_BACKLOG, 1024);
             bootstrap.option(ChannelOption.TCP_NODELAY, true);
@@ -88,7 +121,7 @@ public class MRestServer {
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new MRestServerChannelInitializer(this));
-            Channel channel = bootstrap.bind(port).sync().channel();
+            Channel channel = bootstrap.bind(listenPort).sync().channel();
             if (logger.isInfoEnabled()) {
                 logger.info("start server: {} success.", serverName);
             }
