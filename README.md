@@ -61,6 +61,8 @@
 
    ```text
    new MRestServer(21700, "mrest-demo")
+       .listenPort(port).serverName(serverName)
+       .bossThreadNum(1).workerThreadNum(NettyRuntime.availableProcessors() * 2)
        .get("/get0", request -> {
            logger.info("get0 -->> username=" + request.getParameter("username"));
        })
