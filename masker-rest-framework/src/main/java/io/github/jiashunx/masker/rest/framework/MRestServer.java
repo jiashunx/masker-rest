@@ -120,7 +120,7 @@ public class MRestServer {
                 filterTask.run();
             }
             EventLoopGroup bossGroup = new NioEventLoopGroup(bossThreadNum, new MRestThreadFactory(MRestNettyThreadType.BOSS, listenPort));
-            EventLoopGroup workerGroup = new NioEventLoopGroup(workerThreadNum, new MRestThreadFactory(MRestNettyThreadType.WORK, listenPort));
+            EventLoopGroup workerGroup = new NioEventLoopGroup(workerThreadNum, new MRestThreadFactory(MRestNettyThreadType.WORKER, listenPort));
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.option(ChannelOption.SO_BACKLOG, 1024);
             bootstrap.option(ChannelOption.TCP_NODELAY, true);
@@ -142,7 +142,7 @@ public class MRestServer {
                     }
                 }
             });
-            syncThread.setName(serverName);
+            syncThread.setName(serverName + "-closeFuture.Sync");
             syncThread.setDaemon(true);
             syncThread.start();
             started = true;
