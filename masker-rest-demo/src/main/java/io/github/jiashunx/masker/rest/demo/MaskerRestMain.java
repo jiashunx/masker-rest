@@ -79,7 +79,7 @@ public class MaskerRestMain {
                             restResponse.write(HttpResponseStatus.UNAUTHORIZED);
                         }
                     } else {
-                        String jwtToken = restRequest.getHeaderToStr("Authorization");
+                        String jwtToken = restRequest.getHeader("Authorization");
                         if (StringUtils.isBlank(jwtToken)) {
                             restResponse.write(HttpResponseStatus.UNAUTHORIZED);
                             return;

@@ -3,16 +3,16 @@ package io.github.jiashunx.masker.rest.framework;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author jiashunx
@@ -28,6 +28,9 @@ public class MRestRequest {
     private Map<String, String> parameters;
     private Map<String, List<String>> originParameters;
     private HttpHeaders headers;
+    private List<String> headerKeys;
+    private List<Cookie> cookies;
+    private Map<String, Cookie> cookieMap;
     private byte[] bodyBytes;
 
     public MRestRequest() {}
@@ -124,17 +127,80 @@ public class MRestRequest {
         return headers;
     }
 
-    public Object getHeader(String key) {
+    public String getHeader(String key) {
         return getHeaders().get(key);
     }
 
-    public String getHeaderToStr(String key) {
-        Object value = getHeader(key);
-        return value == null ? null : value.toString();
+    public List<String> getHeaderAll(String key) {
+        return getHeaders().getAll(key);
+    }
+
+    public List<Map.Entry<String, String>> getHeaderEntries() {
+        return getHeaders().entries();
+    }
+
+    public List<String> getHeaderKeys() {
+        return this.headerKeys;
+    }
+
+    private void setHeaderKeys(List<String> headerKeys) {
+        this.headerKeys = Objects.requireNonNull(headerKeys);
+    }
+
+    public List<Cookie> getCookies() {
+        return cookies;
+    }
+
+    public void setCookies(List<Cookie> cookies) {
+        this.cookies = Objects.requireNonNull(cookies);
+    }
+
+    public Cookie getCookie(String key) {
+        return getCookieMap().get(key);
+    }
+
+    public Map<String, Cookie> getCookieMap() {
+        return cookieMap;
+    }
+
+    private void setCookieMap(Map<String, Cookie> cookieMap) {
+        this.cookieMap = Objects.requireNonNull(cookieMap);
     }
 
     public void setHeaders(HttpHeaders headers) {
         this.headers = headers;
+
+        // ----------- set headerKeys
+        Set<String> keySet = new HashSet<>();
+        getHeaderEntries().forEach(entry -> {
+            keySet.add(entry.getKey());
+        });
+        setHeaderKeys(new ArrayList<>(keySet));
+
+        // ----------- set cookies
+        List<String> cookieNames = new ArrayList<>();
+        getHeaderKeys().forEach(key -> {
+            if (key.toLowerCase().equals(Constants.HTTP_HEADER_COOKIE.toLowerCase())
+                    || key.toLowerCase().equals(Constants.HTTP_HEADER_SET_COOKIE.toLowerCase())) {
+                cookieNames.add(key);
+            }
+        });
+        List<String> cookieStrList = new ArrayList<>(cookieNames.size());
+        cookieNames.forEach(name -> {
+            cookieStrList.addAll(getHeaderAll(name));
+        });
+        List<Cookie> _cookies = new ArrayList<>();
+        cookieStrList.forEach(string -> {
+            _cookies.addAll(ServerCookieDecoder.STRICT.decodeAll(string));
+        });
+        setCookies(_cookies);
+
+        // ----------- set cookieMap
+        Map<String, Cookie> _cookieMap = new HashMap<>();
+        getCookies().forEach(cookie -> {
+            _cookieMap.put(cookie.name(), cookie);
+        });
+        setCookieMap(_cookieMap);
     }
 
     public byte[] getBodyBytes() {
