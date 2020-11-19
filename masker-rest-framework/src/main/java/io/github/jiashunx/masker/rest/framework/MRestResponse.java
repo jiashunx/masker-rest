@@ -9,6 +9,9 @@ import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.DefaultCookie;
+import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -121,8 +124,20 @@ public class MRestResponse {
         return this.$headers.get(key);
     }
 
-    public List<Object> getAllHeader(String key) {
+    public List<Object> getHeaderAll(String key) {
         return this.$headers.getAll(key);
+    }
+
+    public void setCookie(String name, String value) {
+        setCookie(new DefaultCookie(name, value));
+    }
+
+    /**
+     * set cookie.
+     * @param cookie io.netty.handler.codec.http.cookie.DefaultCookie.
+     */
+    public void setCookie(Cookie cookie) {
+        setHeader(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
     }
 
     public synchronized void flush() {

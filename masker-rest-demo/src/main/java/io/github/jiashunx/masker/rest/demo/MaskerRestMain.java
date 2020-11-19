@@ -123,8 +123,11 @@ public class MaskerRestMain {
                     response.forward("/post2", request);
                 })
                 .filter("/*", (restRequest, restResponse, filterChain) -> {
+                    logger.info("cookie: mmmm -> {}", restRequest.getCookie("mmmm"));
+                    logger.info("cookieList: {}", restRequest.getCookies());
                     logger.info("filter* -->> " + restRequest.getUrl());
                     filterChain.doFilter(restRequest, restResponse);
+                    restResponse.setCookie("mmmm", "nnnnn");
                 })
                 .post("/post-data", request -> {
                     logger.info("post-data -->> " + request.parseBodyToObj(Vo.class));
