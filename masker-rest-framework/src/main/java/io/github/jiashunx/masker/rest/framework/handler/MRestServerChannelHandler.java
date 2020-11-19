@@ -3,7 +3,9 @@ package io.github.jiashunx.masker.rest.framework.handler;
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.MRestServer;
+import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
+import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
@@ -41,6 +43,8 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
             }
             MRestFilterChain filterChain = restServer.getFilterChain(restRequest.getUrl());
             filterChain.doFilter(restRequest, restResponse);
+            restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_NAME, MRestUtils.getFrameworkName());
+            restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_VERSION, MRestUtils.getFrameworkVersion());
             restResponse.flush();
         }
     }

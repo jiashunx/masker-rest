@@ -21,6 +21,8 @@ public class Constants {
     public static final String HTTP_HEADER_LOCATION = "Location";
     public static final String HTTP_HEADER_COOKIE = "Cookie";
     public static final String HTTP_HEADER_SET_COOKIE = "Set-Cookie";
+    public static final String HTTP_HEADER_SERVER_FRAMEWORK_NAME = "Server-Framework-Name";
+    public static final String HTTP_HEADER_SERVER_FRAMEWORK_VERSION = "Server-Framework-Version";
 
     public static final String CONTENT_TYPE_APPLICATION_JSON = "application/json";
     public static final String CONTENT_TYPE_TEXT_PLAIN = "text/plain";
