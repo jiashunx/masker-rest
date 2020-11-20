@@ -20,8 +20,9 @@ public class MRestUtils {
         try {
             properties.load(MRestUtils.class.getResourceAsStream("/META-INF/maven/io.github.jiashunx/masker-rest-framework/pom.properties"));
         } catch (Throwable throwable) {
-            if (logger.isErrorEnabled()) {
-                logger.error("get bundle version failed.", throwable);
+            if (logger.isWarnEnabled()) {
+                logger.warn("get bundle version failed, error reason: {}", throwable.getMessage());
+                logger.warn("reset bundle version to: test");
             }
             properties.put("version", "test");
         }
