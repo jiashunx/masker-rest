@@ -36,6 +36,10 @@
             <td>DONE</td>
         </tr>
         <tr>
+            <td>支持cookie处理</td>
+            <td>DONE</td>
+        </tr>
+        <tr>
             <td>默认静态资源处理</td>
             <td>TODO</td>
         </tr>
