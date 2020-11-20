@@ -44,6 +44,10 @@ public class MRestResponse {
     }
 
     public void redirect(String targetURL) {
+        String contextPath = getRestServer().getContextPath();
+        if (!contextPath.equals(Constants.DEFAULT_CONTEXT_PATH)) {
+            targetURL = contextPath + targetURL;
+        }
         redirect($channelHandlerContext, targetURL);
     }
 

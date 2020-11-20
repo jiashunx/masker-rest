@@ -41,6 +41,22 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
                 restResponse.flush();
                 return;
             }
+            String contextPath = restServer.getContextPath();
+            String url = restRequest.getUrl();
+            if (!url.startsWith(contextPath)) {
+                if (logger.isWarnEnabled()) {
+                    logger.warn("current server contextPath: {}, can't resolve request url: {}", contextPath, url);
+                }
+                restResponse.write(HttpResponseStatus.NOT_FOUND);
+                restResponse.flush();
+                return;
+            }
+            if (url.equals(contextPath)) {
+                url = Constants.ROOT_PATH;
+            } else {
+                url = url.substring(contextPath.length());
+            }
+            restRequest.setUrl(url);
             MRestFilterChain filterChain = restServer.getFilterChain(restRequest.getUrl());
             filterChain.doFilter(restRequest, restResponse);
             restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_NAME, MRestUtils.getFrameworkName());
@@ -109,6 +125,11 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
                 httpRequest.content().readBytes(bodyBytes, 0, byteSize);
             }
             restRequest.setBodyBytes(bodyBytes);
+        }
+        if (restRequest == null && request != null) {
+            if (logger.isWarnEnabled()) {
+                logger.warn("parse rest request object failed, uri: {}", request.uri());
+            }
         }
         return restRequest;
     }

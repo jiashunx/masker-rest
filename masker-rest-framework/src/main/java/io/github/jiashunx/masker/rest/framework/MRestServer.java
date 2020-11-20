@@ -42,6 +42,7 @@ public class MRestServer {
     private int bossThreadNum = 0;
     private int workerThreadNum = 0;
     private boolean connectionKeepAlive;
+    private String contextPath = Constants.DEFAULT_CONTEXT_PATH;
 
     public MRestServer() {
         this(MRestUtils.getDefaultServerPort(), MRestUtils.getDefaultServerName());
@@ -101,6 +102,28 @@ public class MRestServer {
         return this.connectionKeepAlive;
     }
 
+    public MRestServer contextPath(String contextPath) {
+        if (StringUtils.isBlank(contextPath)) {
+            throw new IllegalArgumentException("contextPath can't be empty");
+        }
+        String _ctxPath = contextPath.trim();
+        while (_ctxPath.endsWith(Constants.URL_PATH_SEP)) {
+            if (_ctxPath.length() == 1) {
+                break;
+            }
+            _ctxPath = _ctxPath.substring(0, _ctxPath.length() - 1);
+        }
+        if (!_ctxPath.startsWith(Constants.URL_PATH_SEP)) {
+            _ctxPath += Constants.URL_PATH_SEP;
+        }
+        this.contextPath = _ctxPath;
+        return this;
+    }
+
+    public String getContextPath() {
+        return this.contextPath;
+    }
+
     /**
      * 检查server是否已启动
      * @throws MRestServerInitializeException MRestServerInitializeException
@@ -118,7 +141,7 @@ public class MRestServer {
     public synchronized void start() throws MRestServerInitializeException {
         checkServerState();
         if (logger.isInfoEnabled()) {
-            logger.info("start server: {}, listening on port: {}", serverName, listenPort);
+            logger.info("start server: {}[contextPath={}], listening on port: {}", serverName, contextPath, listenPort);
         }
         try {
             // mapping处理

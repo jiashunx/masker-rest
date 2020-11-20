@@ -10,6 +10,9 @@ public class Constants {
 
     public static final String DEFAULT_SERVER_NAME = "mrest-server";
 
+    public static final String ROOT_PATH = "/";
+    public static final String DEFAULT_CONTEXT_PATH = "/";
+    public static final String URL_PATH_SEP = "/";
     public static final int DEFAULT_FILTER_ORDER = 0;
     public static final String DEFAULT_FILTER_URLPATTERN = "/*";
     public static final String[] DEFAULT_FILTER_URLPATTERNS = new String[] { DEFAULT_FILTER_URLPATTERN };
