@@ -40,6 +40,10 @@
             <td>DONE</td>
         </tr>
         <tr>
+            <td>支持自定义context-path</td>
+            <td>DONE</td>
+        </tr>
+        <tr>
             <td>默认静态资源处理</td>
             <td>TODO</td>
         </tr>
@@ -57,7 +61,7 @@
    <dependency>
      <groupId>io.github.jiashunx</groupId>
      <artifactId>masker-rest-framework</artifactId>
-     <version>1.2.0</version>
+     <version>1.2.1</version>
    </dependency>
    ```
 
