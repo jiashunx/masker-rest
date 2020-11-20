@@ -12,46 +12,31 @@
 
    - JDK8+
 
-- 功能列表：
+- 版本清单：
 
-    <table>
-        <tr>
-            <th>功能名称</th>
-            <th>是否完成</th>
-        </tr>
-        <tr>
-            <td>rest请求处理</td>
-            <td>DONE</td>
-        </tr>
-        <tr>
-            <td>过滤器实现</td>
-            <td>DONE</td>
-        </tr>
-        <tr>
-            <td>重定向、转发</td>
-            <td>DONE</td>
-        </tr>
-        <tr>
-            <td>默认JWT实现&会话控制</td>
-            <td>DONE</td>
-        </tr>
-        <tr>
-            <td>支持cookie处理</td>
-            <td>DONE</td>
-        </tr>
-        <tr>
-            <td>支持自定义context-path</td>
-            <td>DONE</td>
-        </tr>
-        <tr>
-            <td>默认静态资源处理</td>
-            <td>TODO</td>
-        </tr>
-        <tr>
-            <td>支持文件的上传下载</td>
-            <td>TODO</td>
-        </tr>
-    </table>
+   - 1.0.0版本
+      - feature：支持发布rest接口
+      - feature：支持重定向与转发
+      - feature：支持设置响应头
+   - 1.1.0版本
+      - feature：添加默认JWT服务端实现
+      - bugfix：设置响应体write操作仅可执行一次
+   - 1.1.1版本
+      - bugfix：修正启动多个rest server时url映射冲突的错误
+   - 1.2.0版本
+      - feature：请求及响应支持对cookie的处理
+      - feature：server支持自定义netty的boss及worker线程数
+      - feature：server支持自定义连接的keep-alive属性
+      - refactor：url映射处理及filter映射处理的操作调整至server启动方式执行时执行
+      - refactor：统一netty监听线程的名称
+      - refactor：请求响应的header设置处理逻辑重构
+      - refactor：对http请求的响应统一添加server框架名称及版本信息
+   - 1.2.1版本
+      - feature：server支持自定义context-path
+
+   - TODO
+      - 默认静态资源处理
+      - 支持文件的上传下载
 
 - 部署使用：
 
