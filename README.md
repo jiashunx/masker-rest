@@ -57,7 +57,7 @@
    <dependency>
      <groupId>io.github.jiashunx</groupId>
      <artifactId>masker-rest-framework</artifactId>
-     <version>1.1.1</version>
+     <version>1.2.0</version>
    </dependency>
    ```
 
