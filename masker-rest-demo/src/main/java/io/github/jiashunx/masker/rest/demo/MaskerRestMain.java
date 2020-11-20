@@ -68,6 +68,7 @@ public class MaskerRestMain {
         new MRestServer(port, serverName)
                 .listenPort(port).serverName(serverName)
                 .bossThreadNum(1).workerThreadNum(NettyRuntime.availableProcessors() * 2)
+                .connectionKeepAlive(true)
                 .filter("/*", (restRequest, restResponse, filterChain) -> {
                     String requestURL = restRequest.getUrl();
                     if ("/login".equals(requestURL)) {

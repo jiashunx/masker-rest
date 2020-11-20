@@ -41,6 +41,7 @@ public class MRestServer {
     private String serverName;
     private int bossThreadNum = 0;
     private int workerThreadNum = 0;
+    private boolean connectionKeepAlive;
 
     public MRestServer() {
         this(MRestUtils.getDefaultServerPort(), MRestUtils.getDefaultServerName());
@@ -89,6 +90,15 @@ public class MRestServer {
         }
         this.workerThreadNum = workerThreadNum;
         return this;
+    }
+
+    public MRestServer connectionKeepAlive(boolean connectionKeepAlive) {
+        this.connectionKeepAlive = connectionKeepAlive;
+        return this;
+    }
+
+    public boolean isConnectionKeepAlive() {
+        return this.connectionKeepAlive;
     }
 
     /**

@@ -45,6 +45,9 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
             filterChain.doFilter(restRequest, restResponse);
             restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_NAME, MRestUtils.getFrameworkName());
             restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_VERSION, MRestUtils.getFrameworkVersion());
+            if (restResponse.getRestServer().isConnectionKeepAlive()) {
+                restResponse.setHeader(Constants.HTTP_HEADER_CONNECTION, Constants.CONNECTION_KEEP_ALIVE);
+            }
             restResponse.flush();
         }
     }

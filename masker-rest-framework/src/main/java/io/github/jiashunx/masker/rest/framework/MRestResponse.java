@@ -224,7 +224,6 @@ public class MRestResponse {
             });
         }
         httpHeaders.add(Constants.HTTP_HEADER_CONTENT_LENGTH, response.content().readableBytes());
-        httpHeaders.add(Constants.HTTP_HEADER_CONNECTION, Constants.CONNECTION_KEEP_ALIVE);
         ctx.write(response);
         ctx.flush();
     }
