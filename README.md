@@ -16,6 +16,7 @@
 
    - 1.0.0版本
       - feature：支持发布rest接口
+      - feature：支持filter
       - feature：支持重定向与转发
       - feature：支持设置响应头
    - 1.1.0版本
@@ -35,7 +36,7 @@
       - feature：server支持自定义context-path
 
    - TODO
-      - 默认静态资源处理
+      - 支持静态资源处理
       - 支持文件的上传下载
 
 - 部署使用：
