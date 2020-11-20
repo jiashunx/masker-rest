@@ -5,10 +5,10 @@ import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.MRestServer;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestHandleException;
-import io.github.jiashunx.masker.rest.framework.handler.MRestHandler0;
-import io.github.jiashunx.masker.rest.framework.handler.MRestHandler1;
-import io.github.jiashunx.masker.rest.framework.handler.MRestHandler2;
-import io.github.jiashunx.masker.rest.framework.handler.MRestHandlerConfig;
+import io.github.jiashunx.masker.rest.framework.handler.MRestHandlerFunction;
+import io.github.jiashunx.masker.rest.framework.handler.MRestHandlerConsumerReq;
+import io.github.jiashunx.masker.rest.framework.handler.MRestHandlerConsumerReqResp;
+import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
 import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.netty.handler.codec.http.HttpMethod;
@@ -27,17 +27,17 @@ public class MRestDispatchFilter implements MRestFilter {
         // dispatch request handler
         String requestURL = restRequest.getUrl();
         MRestServer restServer = filterChain.getRestServer();
-        MRestHandler1<MRestRequest> consumerHandler1 = restServer.getConsumerHandler1(requestURL);
+        MRestHandlerConsumerReq<MRestRequest> consumerHandler1 = restServer.getConsumerHandler1(requestURL);
         if (consumerHandler1 != null) {
             handleRequest(restRequest, restResponse, consumerHandler1);
             return;
         }
-        MRestHandler2<MRestRequest, MRestResponse> consumerHandler2 = restServer.getConsumerHandler2(requestURL);
+        MRestHandlerConsumerReqResp<MRestRequest, MRestResponse> consumerHandler2 = restServer.getConsumerHandler2(requestURL);
         if (consumerHandler2 != null) {
             handleRequest(restRequest, restResponse, consumerHandler2);
             return;
         }
-        MRestHandler0<MRestRequest, ?> functionHandler = restServer.getFunctionHandler(requestURL);
+        MRestHandlerFunction<MRestRequest, ?> functionHandler = restServer.getFunctionHandler(requestURL);
         if (functionHandler != null) {
             handleRequest(restRequest, restResponse, functionHandler);
             return;
@@ -46,7 +46,7 @@ public class MRestDispatchFilter implements MRestFilter {
         restResponse.write(HttpResponseStatus.NOT_FOUND);
     }
 
-    private void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandler1<MRestRequest> handler) {
+    private void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandlerConsumerReq<MRestRequest> handler) {
         List<HttpMethod> httpMethods = handler.getHttpMethods();
         if (!httpMethods.contains(restRequest.getMethod())) {
             restResponse.write(HttpResponseStatus.METHOD_NOT_ALLOWED);
@@ -60,7 +60,7 @@ public class MRestDispatchFilter implements MRestFilter {
         restResponse.write(HttpResponseStatus.OK);
     }
 
-    private void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandler2<MRestRequest, MRestResponse> handler) {
+    private void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandlerConsumerReqResp<MRestRequest, MRestResponse> handler) {
         List<HttpMethod> httpMethods = handler.getHttpMethods();
         if (!httpMethods.contains(restRequest.getMethod())) {
             restResponse.write(HttpResponseStatus.METHOD_NOT_ALLOWED);
@@ -74,7 +74,7 @@ public class MRestDispatchFilter implements MRestFilter {
         }
     }
 
-    private <R> void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandler0<MRestRequest, R> handler) {
+    private <R> void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandlerFunction<MRestRequest, R> handler) {
         List<HttpMethod> httpMethods = handler.getHttpMethods();
         if (!httpMethods.contains(restRequest.getMethod())) {
             restResponse.write(HttpResponseStatus.METHOD_NOT_ALLOWED);

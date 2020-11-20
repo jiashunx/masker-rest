@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.framework.handler;
 
+import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
 import io.netty.handler.codec.http.HttpMethod;
 
 import java.util.Arrays;

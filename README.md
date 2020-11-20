@@ -35,6 +35,9 @@
    - 1.2.1版本
       - feature：server支持自定义context-path
 
+   - 1.3.0版本
+      - refactor：默认请求处理实现类重构
+
    - TODO
       - 支持静态资源处理
       - 支持文件的上传下载

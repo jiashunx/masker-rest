@@ -1,4 +1,4 @@
-package io.github.jiashunx.masker.rest.framework.handler;
+package io.github.jiashunx.masker.rest.framework.model;
 
 import java.util.HashMap;
 import java.util.Map;

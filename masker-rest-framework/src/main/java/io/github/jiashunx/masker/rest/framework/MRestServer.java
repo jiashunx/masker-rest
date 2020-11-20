@@ -6,6 +6,7 @@ import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.filter.MRestDispatchFilter;
 import io.github.jiashunx.masker.rest.framework.handler.*;
+import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
 import io.github.jiashunx.masker.rest.framework.type.MRestNettyThreadType;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.github.jiashunx.masker.rest.framework.util.MRestThreadFactory;
@@ -192,15 +193,15 @@ public class MRestServer {
     /**
      * 输入MRestRequest, 返回自定义对象.
      */
-    private final Map<String, MRestHandler0<MRestRequest, ?>> functionHandlerMap = new HashMap<>();
+    private final Map<String, MRestHandlerFunction<MRestRequest, ?>> functionHandlerMap = new HashMap<>();
     /**
      * 输入MRestRequest, 无返回.
      */
-    private final Map<String, MRestHandler1<MRestRequest>> consumerHandlerMap1 = new HashMap<>();
+    private final Map<String, MRestHandlerConsumerReq<MRestRequest>> consumerHandlerMap1 = new HashMap<>();
     /**
      * 输入MRestRequest, MRestResponse, 无返回.
      */
-    private final Map<String, MRestHandler2<MRestRequest, MRestResponse>> consumerHandlerMap2 = new HashMap<>();
+    private final Map<String, MRestHandlerConsumerReqResp<MRestRequest, MRestResponse>> consumerHandlerMap2 = new HashMap<>();
     /**
      * 已添加映射的url列表.
      */
@@ -244,7 +245,7 @@ public class MRestServer {
         checkServerState();
         mappingTaskList.add(() -> {
             checkMappingUrl(url);
-            MRestHandler1<MRestRequest> restHandler = new MRestHandler1<>(url, handler, config, methods);
+            MRestHandlerConsumerReq<MRestRequest> restHandler = new MRestHandlerConsumerReq<>(url, handler, config, methods);
             consumerHandlerMap1.put(url, restHandler);
             mappingUrlSet.add(url);
             if (logger.isInfoEnabled()) {
@@ -266,7 +267,7 @@ public class MRestServer {
         checkServerState();
         mappingTaskList.add(() -> {
             checkMappingUrl(url);
-            MRestHandler2<MRestRequest, MRestResponse> restHandler = new MRestHandler2<>(url, handler, config, methods);
+            MRestHandlerConsumerReqResp<MRestRequest, MRestResponse> restHandler = new MRestHandlerConsumerReqResp<>(url, handler, config, methods);
             consumerHandlerMap2.put(url, restHandler);
             mappingUrlSet.add(url);
             if (logger.isInfoEnabled()) {
@@ -288,7 +289,7 @@ public class MRestServer {
         checkServerState();
         mappingTaskList.add(() -> {
             checkMappingUrl(url);
-            MRestHandler0<MRestRequest, R> restHandler = new MRestHandler0<>(url, handler, config, methods);
+            MRestHandlerFunction<MRestRequest, R> restHandler = new MRestHandlerFunction<>(url, handler, config, methods);
             functionHandlerMap.put(url, restHandler);
             mappingUrlSet.add(url);
             if (logger.isInfoEnabled()) {
@@ -370,15 +371,15 @@ public class MRestServer {
         return mapping(url, handler, config, HttpMethod.POST);
     }
 
-    public MRestHandler1<MRestRequest> getConsumerHandler1(String requestURL) {
+    public MRestHandlerConsumerReq<MRestRequest> getConsumerHandler1(String requestURL) {
         return consumerHandlerMap1.get(requestURL);
     }
 
-    public MRestHandler2<MRestRequest, MRestResponse> getConsumerHandler2(String requestURL) {
+    public MRestHandlerConsumerReqResp<MRestRequest, MRestResponse> getConsumerHandler2(String requestURL) {
         return consumerHandlerMap2.get(requestURL);
     }
 
-    public MRestHandler0<MRestRequest, ?> getFunctionHandler(String requestURL) {
+    public MRestHandlerFunction<MRestRequest, ?> getFunctionHandler(String requestURL) {
         return functionHandlerMap.get(requestURL);
     }
 
