@@ -69,7 +69,8 @@ public class MaskerRestMain {
                 .listenPort(port).serverName(serverName)
                 .bossThreadNum(1).workerThreadNum(NettyRuntime.availableProcessors() * 2)
                 .connectionKeepAlive(true)
-                .filter("/*", (restRequest, restResponse, filterChain) -> {
+                .contextPath("/demo")
+                .filter("/x/*", (restRequest, restResponse, filterChain) -> {
                     String requestURL = restRequest.getUrl();
                     if ("/login".equals(requestURL)) {
                         Vo vo = restRequest.parseBodyToObj(Vo.class);
