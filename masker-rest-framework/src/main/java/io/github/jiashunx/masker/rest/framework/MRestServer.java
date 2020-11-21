@@ -195,6 +195,10 @@ public class MRestServer {
      */
     private final Map<String, MRestHandlerFunction<MRestRequest, ?>> functionHandlerMap = new HashMap<>();
     /**
+     * 无输入无输出.
+     */
+    private final Map<String, MRestHandlerConsumerVoid> consumerHandlerMap0 = new HashMap<>();
+    /**
      * 输入MRestRequest, 无返回.
      */
     private final Map<String, MRestHandlerConsumerReq<MRestRequest>> consumerHandlerMap1 = new HashMap<>();
@@ -231,6 +235,28 @@ public class MRestServer {
         if (isMappingURL(url)) {
             throw new MRestServerInitializeException(String.format("url mapping conflict: %s", url));
         }
+    }
+
+    public MRestServer mapping(String url, Runnable handler, HttpMethod... methods) {
+        return mapping(url, handler, MRestHeaderBuilder.Build(), methods);
+    }
+
+    public MRestServer mapping(String url, Runnable handler, Map<String, Object> headers, HttpMethod... methods) {
+        return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
+    }
+
+    public synchronized MRestServer mapping(String url, Runnable handler, MRestHandlerConfig config, HttpMethod... methods) {
+        checkServerState();
+        mappingTaskList.add(() -> {
+            checkMappingUrl(url);
+            MRestHandlerConsumerVoid restHandler = new MRestHandlerConsumerVoid(url, handler, config, methods);
+            consumerHandlerMap0.put(url, restHandler);
+            mappingUrlSet.add(url);
+            if (logger.isInfoEnabled()) {
+                logger.info("server: {} register url handler success, {}, {}", serverName, methods, url);
+            }
+        });
+        return this;
     }
 
     public MRestServer mapping(String url, Consumer<MRestRequest> handler, HttpMethod... methods) {
