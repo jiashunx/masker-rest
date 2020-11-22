@@ -424,6 +424,14 @@ public class MRestServer {
         return mapping(url, handler, config, HttpMethod.POST);
     }
 
+    public MRestHandlerSupplier<?> getSupplierHandler(String requestURL) {
+        return supplierHandlerMap.get(requestURL);
+    }
+
+    public MRestHandlerConsumerVoid getConsumerHandler0(String requestURL) {
+        return consumerHandlerMap0.get(requestURL);
+    }
+
     public MRestHandlerConsumerReq<MRestRequest> getConsumerHandler1(String requestURL) {
         return consumerHandlerMap1.get(requestURL);
     }
