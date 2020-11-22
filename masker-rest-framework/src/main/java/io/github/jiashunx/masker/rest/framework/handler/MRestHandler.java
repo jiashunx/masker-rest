@@ -1,6 +1,7 @@
 package io.github.jiashunx.masker.rest.framework.handler;
 
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
+import io.github.jiashunx.masker.rest.framework.type.MRestHandlerType;
 import io.netty.handler.codec.http.HttpMethod;
 
 import java.util.Arrays;
@@ -10,7 +11,7 @@ import java.util.Objects;
 /**
  * @author jiashunx
  */
-public class MRestHandler {
+public abstract class MRestHandler {
 
     private String url;
     private List<HttpMethod> httpMethods;
@@ -49,5 +50,9 @@ public class MRestHandler {
     public void setConfig(MRestHandlerConfig config) {
         this.config = config;
     }
+
+    public abstract Object getHandler();
+
+    public abstract MRestHandlerType getType();
 
 }

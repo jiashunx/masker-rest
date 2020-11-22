@@ -3,6 +3,7 @@ package io.github.jiashunx.masker.rest.framework.handler;
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
+import io.github.jiashunx.masker.rest.framework.type.MRestHandlerType;
 import io.netty.handler.codec.http.HttpMethod;
 
 import java.util.Objects;
@@ -28,4 +29,8 @@ public class MRestHandlerConsumerReqResp<T1 extends MRestRequest, T2 extends MRe
         return handler;
     }
 
+    @Override
+    public MRestHandlerType getType() {
+        return MRestHandlerType.NoRet_ReqResp;
+    }
 }

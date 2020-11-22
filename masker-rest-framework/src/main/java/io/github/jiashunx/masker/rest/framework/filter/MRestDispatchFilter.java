@@ -14,6 +14,10 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * @author jiashunx
@@ -25,126 +29,89 @@ public class MRestDispatchFilter implements MRestFilter {
         // dispatch request handler
         String requestURL = restRequest.getUrl();
         MRestServer restServer = filterChain.getRestServer();
-        MRestHandlerConsumerVoid consumerHandler0 = restServer.getConsumerHandler0(requestURL);
-        if (consumerHandler0 != null) {
-            return;
-        }
-        MRestHandlerConsumerReq<MRestRequest> consumerHandler1 = restServer.getConsumerHandler1(requestURL);
-        if (consumerHandler1 != null) {
-            handleRequest(restRequest, restResponse, consumerHandler1);
-            return;
-        }
-        MRestHandlerConsumerReqResp<MRestRequest, MRestResponse> consumerHandler2 = restServer.getConsumerHandler2(requestURL);
-        if (consumerHandler2 != null) {
-            handleRequest(restRequest, restResponse, consumerHandler2);
-            return;
-        }
-        MRestHandlerSupplier<?> supplierHandler = restServer.getSupplierHandler(requestURL);
-        if (supplierHandler != null) {
-            handleRequest(restRequest, restResponse, supplierHandler);
-            return;
-        }
-        MRestHandlerFunction<MRestRequest, ?> functionHandler = restServer.getFunctionHandler(requestURL);
-        if (functionHandler != null) {
-            handleRequest(restRequest, restResponse, functionHandler);
+        MRestHandler restHandler = restServer.getUrlMappingHandler(requestURL);
+        if (restHandler != null) {
+            handleRequest(restRequest, restResponse, restHandler);
             return;
         }
         // TODO 处理静态资源
         restResponse.write(HttpResponseStatus.NOT_FOUND);
     }
 
-    private void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandlerConsumerVoid handler) {
-        List<HttpMethod> httpMethods = handler.getHttpMethods();
+    private void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandler restHandler) {
+        List<HttpMethod> httpMethods = restHandler.getHttpMethods();
         if (!httpMethods.contains(restRequest.getMethod())) {
             restResponse.write(HttpResponseStatus.METHOD_NOT_ALLOWED);
             return;
         }
-        try {
-            handler.getHandler().run();
-        } catch (Throwable throwable) {
-            throw new MRestHandleException(String.format("handle rest request [%s] failed", restRequest.getUrl()), throwable);
-        }
-        restResponse.write(HttpResponseStatus.OK);
-    }
-
-    private void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandlerConsumerReq<MRestRequest> handler) {
-        List<HttpMethod> httpMethods = handler.getHttpMethods();
-        if (!httpMethods.contains(restRequest.getMethod())) {
-            restResponse.write(HttpResponseStatus.METHOD_NOT_ALLOWED);
-            return;
-        }
-        try {
-            handler.getHandler().accept(restRequest);
-        } catch (Throwable throwable) {
-            throw new MRestHandleException(String.format("handle rest request [%s] failed", restRequest.getUrl()), throwable);
-        }
-        restResponse.write(HttpResponseStatus.OK);
-    }
-
-    private void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandlerConsumerReqResp<MRestRequest, MRestResponse> handler) {
-        List<HttpMethod> httpMethods = handler.getHttpMethods();
-        if (!httpMethods.contains(restRequest.getMethod())) {
-            restResponse.write(HttpResponseStatus.METHOD_NOT_ALLOWED);
-            return;
-        }
-        // 交给具体处理逻辑进行请求的响应操作.
-        try {
-            handler.getHandler().accept(restRequest, restResponse);
-        } catch (Throwable throwable) {
-            throw new MRestHandleException(String.format("handle rest request [%s] failed", restRequest.getUrl()), throwable);
+        switch (restHandler.getType()) {
+            case NoRet_Req:
+            case NoRet_ReqResp:
+            case NoRet_Void:
+                handleRequestWithNoRet(restRequest, restResponse, restHandler);
+                break;
+            case Ret_Void:
+            case Ret_ReqResp:
+                handleRequestWithRet(restRequest, restResponse, restHandler);
+                break;
+            default:
+                restResponse.write(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                break;
         }
     }
 
-    private <R> void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandlerSupplier<R> handler) {
-        List<HttpMethod> httpMethods = handler.getHttpMethods();
-        if (!httpMethods.contains(restRequest.getMethod())) {
-            restResponse.write(HttpResponseStatus.METHOD_NOT_ALLOWED);
-            return;
+    private void handleRequestWithNoRet(MRestRequest restRequest, MRestResponse restResponse, MRestHandler restHandler) {
+        try {
+            Object handler = restHandler.getHandler();
+            switch (restHandler.getType()) {
+                case NoRet_Req:
+                    ((Consumer) handler).accept(restRequest);
+                    break;
+                case NoRet_ReqResp:
+                    ((BiConsumer) handler).accept(restRequest, restResponse);
+                    break;
+                case NoRet_Void:
+                    ((Runnable) handler).run();
+                    break;
+                default:
+                    throw new RuntimeException();
+            }
+        } catch (Throwable throwable) {
+            throw new MRestHandleException(String.format("handle rest request [%s] failed", restRequest.getUrl()), throwable);
         }
+        // 未输出, 输出ok.
+        if (!restResponse.isWriteMethodInvoked()) {
+            restResponse.write(HttpResponseStatus.OK);
+        }
+    }
+
+    private void handleRequestWithRet(MRestRequest restRequest, MRestResponse restResponse, MRestHandler restHandler) {
         Object retObj = null;
         try {
-            retObj = handler.getHandler().get();
+            Object handler = restHandler.getHandler();
+            switch (restHandler.getType()) {
+                case Ret_ReqResp:
+                    retObj = ((Function) handler).apply(restRequest);
+                    break;
+                case Ret_Void:
+                    retObj = ((Supplier) handler).get();
+                    break;
+                default:
+                    throw new RuntimeException();
+            }
         } catch (Throwable throwable) {
             throw new MRestHandleException(String.format("handle rest request [%s] failed", restRequest.getUrl()), throwable);
+        }
+        // 已输出, 直接返回.
+        if (restResponse.isWriteMethodInvoked()) {
+            return;
         }
         if (retObj == null) {
             restResponse.write(HttpResponseStatus.OK);
             return;
         }
         String contentType = Constants.CONTENT_TYPE_APPLICATION_JSON;
-        MRestHandlerConfig config = handler.getConfig();
-        if (config != null) {
-            contentType = config.getHeaderToStr(Constants.HTTP_HEADER_CONTENT_TYPE);
-        }
-        byte[] retBytes = null;
-        if (retObj instanceof byte[]) {
-            retBytes = (byte[]) retObj;
-        } else if (Constants.CONTENT_TYPE_APPLICATION_JSON.equals(contentType)) {
-            retBytes = MRestSerializer.jsonSerialize(retObj);
-        } else {
-            retBytes = retObj.toString().getBytes(StandardCharsets.UTF_8);
-        }
-        restResponse.write(retBytes, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, contentType));
-    }
-
-    private <R> void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandlerFunction<MRestRequest, R> handler) {
-        List<HttpMethod> httpMethods = handler.getHttpMethods();
-        if (!httpMethods.contains(restRequest.getMethod())) {
-            restResponse.write(HttpResponseStatus.METHOD_NOT_ALLOWED);
-            return;
-        }
-        Object retObj = null;
-        try {
-            retObj = handler.getHandler().apply(restRequest);
-        } catch (Throwable throwable) {
-            throw new MRestHandleException(String.format("handle rest request [%s] failed", restRequest.getUrl()), throwable);
-        }
-        if (retObj == null) {
-            restResponse.write(HttpResponseStatus.OK);
-            return;
-        }
-        String contentType = Constants.CONTENT_TYPE_APPLICATION_JSON;
-        MRestHandlerConfig config = handler.getConfig();
+        MRestHandlerConfig config = restHandler.getConfig();
         if (config != null) {
             contentType = config.getHeaderToStr(Constants.HTTP_HEADER_CONTENT_TYPE);
         }

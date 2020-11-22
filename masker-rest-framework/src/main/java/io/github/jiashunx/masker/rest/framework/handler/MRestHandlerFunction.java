@@ -2,6 +2,7 @@ package io.github.jiashunx.masker.rest.framework.handler;
 
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
+import io.github.jiashunx.masker.rest.framework.type.MRestHandlerType;
 import io.netty.handler.codec.http.HttpMethod;
 
 import java.util.Objects;
@@ -27,4 +28,8 @@ public class MRestHandlerFunction<T extends MRestRequest, R> extends MRestHandle
         return handler;
     }
 
+    @Override
+    public MRestHandlerType getType() {
+        return MRestHandlerType.Ret_ReqResp;
+    }
 }

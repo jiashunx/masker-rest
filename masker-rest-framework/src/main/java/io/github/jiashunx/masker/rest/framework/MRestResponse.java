@@ -27,7 +27,7 @@ public class MRestResponse {
     private final ChannelHandlerContext $channelHandlerContext;
     private final MRestServer restServer;
     private final MRestHeaders $headers = new MRestHeaders();
-    private FlushTask flushTask = null;
+    private volatile FlushTask flushTask = null;
     private boolean flushed = false;
 
     public MRestResponse(ChannelHandlerContext ctx, MRestServer restServer) {
@@ -106,10 +106,14 @@ public class MRestResponse {
     }
 
     public synchronized void write(HttpResponseStatus status, byte[] bytes, MRestHeaders headers) {
-        if (flushTask != null) {
+        if (isWriteMethodInvoked()) {
             throw new MRestServerException("write method has already been invoked.");
         }
         flushTask = new FlushTask(status, bytes, headers);
+    }
+
+    public boolean isWriteMethodInvoked() {
+        return flushTask != null;
     }
 
     public void setHeader(String key, Object value) {
@@ -148,7 +152,7 @@ public class MRestResponse {
         if (flushed) {
             throw new MRestServerException("flush method has already been invoked.");
         }
-        if (flushTask != null) {
+        if (isWriteMethodInvoked()) {
             flushTask.execute();
             flushed = true;
         } else {

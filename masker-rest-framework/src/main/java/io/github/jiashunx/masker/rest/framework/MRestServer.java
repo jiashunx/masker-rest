@@ -190,31 +190,8 @@ public class MRestServer {
     /**************************************************** SEP ****************************************************/
     /**************************************************** SEP ****************************************************/
 
+    private final Map<String, MRestHandler> urlMappingHandler = new HashMap<>();
 
-    /**
-     * 输入MRestRequest, 返回自定义对象.
-     */
-    private final Map<String, MRestHandlerFunction<MRestRequest, ?>> functionHandlerMap = new HashMap<>();
-    /**
-     * 无输入有输出.
-     */
-    private final Map<String, MRestHandlerSupplier<?>> supplierHandlerMap = new HashMap<>();
-    /**
-     * 无输入无输出.
-     */
-    private final Map<String, MRestHandlerConsumerVoid> consumerHandlerMap0 = new HashMap<>();
-    /**
-     * 输入MRestRequest, 无返回.
-     */
-    private final Map<String, MRestHandlerConsumerReq<MRestRequest>> consumerHandlerMap1 = new HashMap<>();
-    /**
-     * 输入MRestRequest, MRestResponse, 无返回.
-     */
-    private final Map<String, MRestHandlerConsumerReqResp<MRestRequest, MRestResponse>> consumerHandlerMap2 = new HashMap<>();
-    /**
-     * 已添加映射的url列表.
-     */
-    private final Set<String> mappingUrlSet = new HashSet<>();
     /**
      * 添加url映射处理的任务(在服务启动时统一添加).
      */
@@ -226,7 +203,7 @@ public class MRestServer {
      * @return boolean
      */
     public boolean isMappingURL(String requestURL) {
-        return mappingUrlSet.contains(requestURL);
+        return urlMappingHandler.containsKey(requestURL);
     }
 
     /**
@@ -242,6 +219,12 @@ public class MRestServer {
         }
     }
 
+    private void checkMappingHandler(MRestHandler handler) {
+        if (handler == null || handler.getHandler() == null) {
+            throw new NullPointerException();
+        }
+    }
+
     public MRestServer mapping(String url, Supplier<?> handler, HttpMethod... methods) {
         return mapping(url, handler, MRestHeaderBuilder.Build(), methods);
     }
@@ -250,18 +233,8 @@ public class MRestServer {
         return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
     }
 
-    public synchronized MRestServer mapping(String url, Supplier<?> handler, MRestHandlerConfig config, HttpMethod... methods) {
-        checkServerState();
-        mappingTaskList.add(() -> {
-            checkMappingUrl(url);
-            MRestHandlerSupplier<?> restHandler = new MRestHandlerSupplier<>(url, handler, config, methods);
-            supplierHandlerMap.put(url, restHandler);
-            mappingUrlSet.add(url);
-            if (logger.isInfoEnabled()) {
-                logger.info("server: {} register url handler success, {}, {}", serverName, methods, url);
-            }
-        });
-        return this;
+    public MRestServer mapping(String url, Supplier<?> handler, MRestHandlerConfig config, HttpMethod... methods) {
+        return mapping(url, new MRestHandlerSupplier<>(url, handler, config, methods), config, methods);
     }
 
     public MRestServer mapping(String url, Runnable handler, HttpMethod... methods) {
@@ -272,18 +245,8 @@ public class MRestServer {
         return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
     }
 
-    public synchronized MRestServer mapping(String url, Runnable handler, MRestHandlerConfig config, HttpMethod... methods) {
-        checkServerState();
-        mappingTaskList.add(() -> {
-            checkMappingUrl(url);
-            MRestHandlerConsumerVoid restHandler = new MRestHandlerConsumerVoid(url, handler, config, methods);
-            consumerHandlerMap0.put(url, restHandler);
-            mappingUrlSet.add(url);
-            if (logger.isInfoEnabled()) {
-                logger.info("server: {} register url handler success, {}, {}", serverName, methods, url);
-            }
-        });
-        return this;
+    public MRestServer mapping(String url, Runnable handler, MRestHandlerConfig config, HttpMethod... methods) {
+        return mapping(url, new MRestHandlerConsumerVoid(url, handler, config, methods), config, methods);
     }
 
     public MRestServer mapping(String url, Consumer<MRestRequest> handler, HttpMethod... methods) {
@@ -294,18 +257,8 @@ public class MRestServer {
         return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
     }
 
-    public synchronized MRestServer mapping(String url, Consumer<MRestRequest> handler, MRestHandlerConfig config, HttpMethod... methods) {
-        checkServerState();
-        mappingTaskList.add(() -> {
-            checkMappingUrl(url);
-            MRestHandlerConsumerReq<MRestRequest> restHandler = new MRestHandlerConsumerReq<>(url, handler, config, methods);
-            consumerHandlerMap1.put(url, restHandler);
-            mappingUrlSet.add(url);
-            if (logger.isInfoEnabled()) {
-                logger.info("server: {} register url handler success, {}, {}", serverName, methods, url);
-            }
-        });
-        return this;
+    public MRestServer mapping(String url, Consumer<MRestRequest> handler, MRestHandlerConfig config, HttpMethod... methods) {
+        return mapping(url, new MRestHandlerConsumerReq<>(url, handler, config, methods), config, methods);
     }
 
     public MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, HttpMethod... methods) {
@@ -316,18 +269,8 @@ public class MRestServer {
         return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
     }
 
-    public synchronized MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, MRestHandlerConfig config, HttpMethod... methods) {
-        checkServerState();
-        mappingTaskList.add(() -> {
-            checkMappingUrl(url);
-            MRestHandlerConsumerReqResp<MRestRequest, MRestResponse> restHandler = new MRestHandlerConsumerReqResp<>(url, handler, config, methods);
-            consumerHandlerMap2.put(url, restHandler);
-            mappingUrlSet.add(url);
-            if (logger.isInfoEnabled()) {
-                logger.info("server: {} register url handler success, {}, {}", serverName, methods, url);
-            }
-        });
-        return this;
+    public MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, MRestHandlerConfig config, HttpMethod... methods) {
+        return mapping(url, new MRestHandlerConsumerReqResp<>(url, handler, config, methods), config, methods);
     }
 
     public <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, HttpMethod... methods) {
@@ -338,18 +281,25 @@ public class MRestServer {
         return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
     }
 
-    public synchronized <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, MRestHandlerConfig config, HttpMethod... methods) {
+    public <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, MRestHandlerConfig config, HttpMethod... methods) {
+        return mapping(url, new MRestHandlerFunction<>(url, handler, config, methods), config, methods);
+    }
+
+    private synchronized MRestServer mapping(String url, MRestHandler handler, MRestHandlerConfig config, HttpMethod... methods) {
         checkServerState();
         mappingTaskList.add(() -> {
             checkMappingUrl(url);
-            MRestHandlerFunction<MRestRequest, R> restHandler = new MRestHandlerFunction<>(url, handler, config, methods);
-            functionHandlerMap.put(url, restHandler);
-            mappingUrlSet.add(url);
+            checkMappingHandler(handler);
+            urlMappingHandler.put(url, handler);
             if (logger.isInfoEnabled()) {
                 logger.info("server: {} register url handler success, {}, {}", serverName, methods, url);
             }
         });
         return this;
+    }
+
+    public MRestHandler getUrlMappingHandler(String requestURL) {
+        return urlMappingHandler.get(requestURL);
     }
 
     public MRestServer get(String url, Consumer<MRestRequest> handler) {
@@ -422,26 +372,6 @@ public class MRestServer {
 
     public MRestServer post(String url, BiConsumer<MRestRequest, MRestResponse> handler, MRestHandlerConfig config) {
         return mapping(url, handler, config, HttpMethod.POST);
-    }
-
-    public MRestHandlerSupplier<?> getSupplierHandler(String requestURL) {
-        return supplierHandlerMap.get(requestURL);
-    }
-
-    public MRestHandlerConsumerVoid getConsumerHandler0(String requestURL) {
-        return consumerHandlerMap0.get(requestURL);
-    }
-
-    public MRestHandlerConsumerReq<MRestRequest> getConsumerHandler1(String requestURL) {
-        return consumerHandlerMap1.get(requestURL);
-    }
-
-    public MRestHandlerConsumerReqResp<MRestRequest, MRestResponse> getConsumerHandler2(String requestURL) {
-        return consumerHandlerMap2.get(requestURL);
-    }
-
-    public MRestHandlerFunction<MRestRequest, ?> getFunctionHandler(String requestURL) {
-        return functionHandlerMap.get(requestURL);
     }
 
 
