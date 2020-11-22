@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * @author jiashunx
@@ -195,6 +196,10 @@ public class MRestServer {
      */
     private final Map<String, MRestHandlerFunction<MRestRequest, ?>> functionHandlerMap = new HashMap<>();
     /**
+     * 无输入有输出.
+     */
+    private final Map<String, MRestHandlerSupplier<?>> supplierHandlerMap = new HashMap<>();
+    /**
      * 无输入无输出.
      */
     private final Map<String, MRestHandlerConsumerVoid> consumerHandlerMap0 = new HashMap<>();
@@ -235,6 +240,28 @@ public class MRestServer {
         if (isMappingURL(url)) {
             throw new MRestServerInitializeException(String.format("url mapping conflict: %s", url));
         }
+    }
+
+    public MRestServer mapping(String url, Supplier<?> handler, HttpMethod... methods) {
+        return mapping(url, handler, MRestHeaderBuilder.Build(), methods);
+    }
+
+    public MRestServer mapping(String url, Supplier<?> handler, Map<String, Object> headers, HttpMethod... methods) {
+        return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
+    }
+
+    public synchronized MRestServer mapping(String url, Supplier<?> handler, MRestHandlerConfig config, HttpMethod... methods) {
+        checkServerState();
+        mappingTaskList.add(() -> {
+            checkMappingUrl(url);
+            MRestHandlerSupplier<?> restHandler = new MRestHandlerSupplier<>(url, handler, config, methods);
+            supplierHandlerMap.put(url, restHandler);
+            mappingUrlSet.add(url);
+            if (logger.isInfoEnabled()) {
+                logger.info("server: {} register url handler success, {}, {}", serverName, methods, url);
+            }
+        });
+        return this;
     }
 
     public MRestServer mapping(String url, Runnable handler, HttpMethod... methods) {
