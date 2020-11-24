@@ -1,11 +1,13 @@
 package io.github.jiashunx.masker.rest.framework;
 
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
+import io.github.jiashunx.masker.rest.framework.exception.MRestFlushException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerException;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.model.MRestHeader;
 import io.github.jiashunx.masker.rest.framework.model.MRestHeaders;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
+import io.github.jiashunx.masker.rest.framework.util.SharedObjects;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
@@ -28,7 +30,7 @@ public class MRestResponse {
     private final MRestServer restServer;
     private final MRestHeaders $headers = new MRestHeaders();
     private volatile FlushTask flushTask = null;
-    private boolean flushed = false;
+    private boolean $flushed = false;
 
     public MRestResponse(ChannelHandlerContext ctx, MRestServer restServer) {
         this.$channelHandlerContext = Objects.requireNonNull(ctx);
@@ -116,6 +118,14 @@ public class MRestResponse {
         return flushTask != null;
     }
 
+    public boolean isFlushed() {
+        return $flushed;
+    }
+
+    public void setFlushed(boolean flushed) {
+        this.$flushed = flushed;
+    }
+
     public void setHeader(String key, Object value) {
         this.$headers.add(key, value);
     }
@@ -149,12 +159,11 @@ public class MRestResponse {
     }
 
     public synchronized void flush() {
-        if (flushed) {
+        if (isFlushed()) {
             throw new MRestServerException("flush method has already been invoked.");
         }
         if (isWriteMethodInvoked()) {
             flushTask.execute();
-            flushed = true;
         } else {
             flushTask = new FlushTask(HttpResponseStatus.OK, null, null);
             flush();
@@ -171,8 +180,15 @@ public class MRestResponse {
             this.headers = headers == null ? new MRestHeaders() : headers;
         }
         void execute() {
-            this.headers.addAll($headers);
-            write($channelHandlerContext, status, bytes, this.headers);
+            try {
+                this.headers.addAll($headers);
+                write($channelHandlerContext, status, bytes, this.headers);
+            } catch (Throwable throwable) {
+                throw new MRestFlushException(throwable);
+            } finally {
+                setFlushed(true);
+                SharedObjects.clearServerThreadModel();
+            }
         }
     }
 

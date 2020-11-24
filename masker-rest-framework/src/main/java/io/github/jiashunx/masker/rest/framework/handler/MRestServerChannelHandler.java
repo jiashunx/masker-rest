@@ -5,7 +5,9 @@ import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.MRestServer;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
+import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
+import io.github.jiashunx.masker.rest.framework.util.SharedObjects;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
@@ -41,6 +43,14 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
                 restResponse.flush();
                 return;
             }
+
+            // reset thread local
+            MRestServerThreadModel serverThreadModel = new MRestServerThreadModel();
+            serverThreadModel.setRestRequest(restRequest);
+            serverThreadModel.setRestResponse(restResponse);
+            serverThreadModel.setRestServer(restServer);
+            SharedObjects.resetServerThreadModel(serverThreadModel);
+
             String contextPath = restServer.getContextPath();
             String url = restRequest.getUrl();
             if (!url.startsWith(contextPath)) {
