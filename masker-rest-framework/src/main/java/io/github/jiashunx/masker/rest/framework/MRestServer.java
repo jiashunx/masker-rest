@@ -302,6 +302,30 @@ public class MRestServer {
         return urlMappingHandler.get(requestURL);
     }
 
+    public <R> MRestServer get(String url, Supplier<R> handler) {
+        return mapping(url, handler, HttpMethod.GET);
+    }
+
+    public <R> MRestServer get(String url, Supplier<R> handler, Map<String, Object> headers) {
+        return mapping(url, handler, headers, HttpMethod.GET);
+    }
+
+    public <R> MRestServer get(String url, Supplier<R> handler, MRestHandlerConfig config) {
+        return mapping(url, handler, config, HttpMethod.GET);
+    }
+
+    public MRestServer get(String url, Runnable handler) {
+        return mapping(url, handler, HttpMethod.GET);
+    }
+
+    public MRestServer get(String url, Runnable handler, Map<String, Object> headers) {
+        return mapping(url, handler, headers, HttpMethod.GET);
+    }
+
+    public MRestServer get(String url, Runnable handler, MRestHandlerConfig config) {
+        return mapping(url, handler, config, HttpMethod.GET);
+    }
+
     public MRestServer get(String url, Consumer<MRestRequest> handler) {
         return mapping(url, handler, HttpMethod.GET);
     }

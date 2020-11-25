@@ -7,8 +7,10 @@ import io.github.jiashunx.masker.rest.framework.exception.MRestJWTException;
 import io.github.jiashunx.masker.rest.framework.filter.Filter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
+import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.github.jiashunx.masker.rest.framework.util.MRestJWTHelper;
+import io.github.jiashunx.masker.rest.framework.util.SharedObjects;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.cookie.Cookie;
@@ -39,6 +41,11 @@ public class MaskerRestMain {
                 .bossThreadNum(1)
 
                 // get请求样例
+                .get("/get-NoParam-NoRet", () -> {
+                    MRestServerThreadModel threadModel = SharedObjects.getServerThreadModel();
+                    MRestRequest request = threadModel.getRestRequest();
+                    logger.info("get, origin-url: {}", request.getOriginUrl());
+                })
                 .get("/get-ParamReq-NoRet", request -> {
                     logger.info("get, param-req, no ret");
                 })
