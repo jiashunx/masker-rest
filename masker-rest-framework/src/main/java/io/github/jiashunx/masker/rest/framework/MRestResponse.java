@@ -53,6 +53,11 @@ public class MRestResponse {
         redirect($channelHandlerContext, targetURL);
     }
 
+    public void redirectCrossDomain(String targetURL) {
+        // 不需考虑context-path, 直接重定向就完事了.
+        redirect($channelHandlerContext, targetURL);
+    }
+
     public void forward(String targetURL, MRestRequest request) {
         request.setUrl(targetURL);
         MRestFilterChain filterChain = getRestServer().getFilterChain(targetURL);
