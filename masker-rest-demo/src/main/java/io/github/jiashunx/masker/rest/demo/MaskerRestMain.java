@@ -1,7 +1,5 @@
 package io.github.jiashunx.masker.rest.demo;
 
-import com.alibaba.fastjson.JSON;
-import com.google.gson.Gson;
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.MRestServer;
@@ -11,7 +9,10 @@ import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.github.jiashunx.masker.rest.framework.util.MRestJWTHelper;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.util.NettyRuntime;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -25,6 +26,137 @@ import java.util.HashMap;
 public class MaskerRestMain {
 
     private static final Logger logger = LoggerFactory.getLogger(MaskerRestMain.class);
+
+    private static final MRestJWTHelper JWT_HELPER = new MRestJWTHelper("qwerasdfzxcv09876543231");
+
+    public static void main(String[] args) {
+        new MRestServer()
+                .listenPort(21700)
+                .contextPath("/demo")
+                .serverName("demo-21700")
+                .connectionKeepAlive(false)
+                .workerThreadNum(NettyRuntime.availableProcessors() * 2)
+                .bossThreadNum(1)
+
+                // get请求样例
+                .get("/get-ParamReq-NoRet", request -> {
+                    logger.info("get, param-req, no ret");
+                })
+                .get("/get-html", request -> {
+                    logger.info("get, param-req, return html");
+                    return "<html><body>this is a html page !</body></html>";
+                }, MRestHeaderBuilder.Build("Content-Type", "text/html"))
+                .get("/get-text", request -> {
+                    logger.info("get, param-req, return text");
+                    return "text.......";
+                }, MRestHeaderBuilder.Build("Content-Type", "text/plain"))
+
+                // post请求样例
+                .post(("/post-form"), request -> {
+                    logger.info("post, form data: {}", request.parseBodyToObj(Vo.class));
+                    return new HashMap<String, Object>();
+                })
+
+                // forward请求样例, 服务端转发
+                .post("/post-forward", (request, response) -> {
+                    logger.info("post forward, forward to /post-forward-target");
+                    request.setAttribute("hk-01", "hk-01-value");
+                    response.forward("/post-forward-target", request);
+                })
+                .post("/post-forward-target", (request, response) -> {
+                    logger.info("/post forward target, receive attribute: hk-01={}", request.getAttribute("hk-01"));
+                    response.write(HttpResponseStatus.OK);
+                })
+
+                // redirect请求样例, 客户端重定向
+                .get("/get-redirect.html", (request, response) -> {
+                    logger.info("get redirect, redirect to /get-redirect-target.html");
+                    response.redirect("/get-redirect-target.html");
+                })
+                .get("/get-redirect-target.html", (request) -> {
+                    return "<html><body>this is an redirected html page !</body></html>";
+                }, MRestHeaderBuilder.Build("Content-Type", "text/html"))
+
+                // 过滤器样例(过滤器执行顺序按照order值从小到大顺序执行)
+                .filter("/filter-test/*", new Filter0(), new Filter1())
+                .get("/filter-test/get0", request -> {
+                    // do nothing.
+                    logger.info("get, /filter-test/get0");
+                })
+
+                // cookie样例
+                .get("/cookie/set-cookie", (request, response) -> {
+                    String cookieVal = "xxxxxxxxxxxxxxxxxx";
+                    logger.info("set-cookie, hello=\"{}\"", cookieVal);
+                    response.setCookie("hello", cookieVal);
+                })
+                .get("/cookie/get-cookie", request -> {
+                    logger.info("get-cookie, map: {}", request.getCookieMap());
+                    logger.info("get-cookie, list: {}", request.getCookies());
+                })
+
+                // jwt会话过滤样例
+                // /jwt/login请求body: {"username": "admin"} 进行会话登录验证
+                // /jwt/xxx获取资源
+                .post("/jwt/xxx", request -> {})
+                .filter("/jwt/*", (request, response, filterChain) -> {
+                    String requestURL = request.getUrl();
+                    if ("/jwt/login".equals(requestURL) && request.getMethod() == HttpMethod.POST) {
+                        Vo vo = request.parseBodyToObj(Vo.class);
+                        if (vo.username.equals("admin")) {
+                            String jwtToken = JWT_HELPER.newToken();
+                            Cookie jwtCookie = new DefaultCookie("mmm-jwt-token", jwtToken);
+                            jwtCookie.setMaxAge(10*60*1000L);
+                            response.setCookie(jwtCookie);
+                            response.setHeader("MMM-JWT-TOKEN", jwtToken);
+                            response.write(HttpResponseStatus.OK);
+                        } else {
+                            response.write(HttpResponseStatus.UNAUTHORIZED);
+                        }
+                    } else {
+                        Cookie cookie = request.getCookie("mmm-jwt-token");
+                        String jwtToken = cookie == null ? null : cookie.value();
+                        if (StringUtils.isBlank(jwtToken)) {
+                            response.write(HttpResponseStatus.UNAUTHORIZED);
+                            return;
+                        }
+                        try {
+                            if (!JWT_HELPER.isTokenTimeout(jwtToken) && JWT_HELPER.isTokenValid(jwtToken)) {
+                                filterChain.doFilter(request, response);
+                                String newToken = JWT_HELPER.updateToken(jwtToken);
+                                Cookie jwtCookie = new DefaultCookie("mmm-jwt-token", newToken);
+                                jwtCookie.setMaxAge(10*60*1000L);
+                                response.setCookie(jwtCookie);
+                                response.setHeader("MMM-JWT-TOKEN", newToken);
+                                return;
+                            }
+                        } catch (MRestJWTException e) {
+                            logger.error("", e);
+                        }
+                        response.write(HttpResponseStatus.UNAUTHORIZED);
+                    }
+                })
+
+                .start();
+    }
+
+    @Filter(order = 123)
+    private static class Filter0 implements MRestFilter {
+        @Override
+        public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {
+            logger.info("filter0 second(order=123) -->> " + restRequest.getUrl());
+            filterChain.doFilter(restRequest, restResponse);
+        }
+    }
+
+    @Filter(order = -123)
+    private static class Filter1 implements MRestFilter {
+        @Override
+        public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {
+            logger.info("filter1 first(order=-123) -->> " + restRequest.getUrl());
+            filterChain.doFilter(restRequest, restResponse);
+        }
+    }
 
     private static class Vo {
         String username;
@@ -43,119 +175,6 @@ public class MaskerRestMain {
                     "username='" + username + '\'' +
                     '}';
         }
-    }
-
-    @Filter(order = 123)
-    private static class Filter0 implements MRestFilter {
-        @Override
-        public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {
-            logger.info("filter0 -->> " + restRequest.getUrl());
-            filterChain.doFilter(restRequest, restResponse);
-        }
-    }
-
-    @Filter(order = -123)
-    private static class Filter1 implements MRestFilter {
-        @Override
-        public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {
-            logger.info("filter1 -->> " + restRequest.getUrl());
-            filterChain.doFilter(restRequest, restResponse);
-        }
-    }
-
-    private static void startNewServer(int port, String serverName) {
-        MRestJWTHelper jwtHelper = new MRestJWTHelper("qwerasdfzxcv09876543231");
-        new MRestServer(port, serverName)
-                .listenPort(port).serverName(serverName)
-                .bossThreadNum(1).workerThreadNum(NettyRuntime.availableProcessors() * 2)
-                .connectionKeepAlive(true)
-                .contextPath("/demo")
-                .filter("/x/*", (restRequest, restResponse, filterChain) -> {
-                    String requestURL = restRequest.getUrl();
-                    if ("/login".equals(requestURL)) {
-                        Vo vo = restRequest.parseBodyToObj(Vo.class);
-                        if (vo.username.equals("admin")) {
-                            String jwtToken = jwtHelper.newToken();
-                            restResponse.write(HttpResponseStatus.OK, MRestHeaderBuilder.Build("Authorization", jwtToken));
-                        } else {
-                            restResponse.write(HttpResponseStatus.UNAUTHORIZED);
-                        }
-                    } else {
-                        String jwtToken = restRequest.getHeader("Authorization");
-                        if (StringUtils.isBlank(jwtToken)) {
-                            restResponse.write(HttpResponseStatus.UNAUTHORIZED);
-                            return;
-                        }
-                        try {
-                            if (!jwtHelper.isTokenTimeout(jwtToken) && jwtHelper.isTokenValid(jwtToken)) {
-                                filterChain.doFilter(restRequest, restResponse);
-                                restResponse.setHeader("Authroization", jwtHelper.updateToken(jwtToken));
-                                return;
-                            }
-                        } catch (MRestJWTException e) {
-                            logger.error("", e);
-                        }
-                        restResponse.write(HttpResponseStatus.UNAUTHORIZED);
-                    }
-                })
-
-                .get("/get0", request -> {
-                    logger.info("get0 -->> username=" + request.getParameter("username"));
-                })
-                .get("/get1", (request, response) -> {
-                    logger.info("get1 -->> body=" + request.bodyToString());
-                    response.write(HttpResponseStatus.OK);
-                })
-                .post("/post0", request -> {
-                    logger.info("post0 -->> body=" + request.bodyToString());
-                })
-                .post("/post1", (request, response) -> {
-                    logger.info("post1 -->> body=" + request.bodyToString());
-                    logger.info("post1 -->> body=" + request.parseBodyToObj(Vo.class));
-                    response.write(HttpResponseStatus.OK);
-                })
-                .post("/post2", (request, response) -> {
-                    logger.info("post2(redirect) -->> redirect to /post1");
-                    logger.info("post2(redirect) -->> attribute->hell0: " + request.getAttribute("hello"));
-                    response.redirect("/post1");
-                })
-                .post("/post3", (request, response) -> {
-                    logger.info("post3(forward) -->> forward to /post2");
-                    request.setAttribute("hello", "I'm fine, thank you, and you?");
-                    response.forward("/post2", request);
-                })
-                .filter("/*", (restRequest, restResponse, filterChain) -> {
-                    logger.info("cookie: mmmm -> {}", restRequest.getCookie("mmmm"));
-                    logger.info("cookieList: {}", restRequest.getCookies());
-                    logger.info("filter* -->> " + restRequest.getUrl());
-                    filterChain.doFilter(restRequest, restResponse);
-                    restResponse.setCookie("mmmm", "nnnnn");
-                })
-                .post("/post-data", request -> {
-                    logger.info("post-data -->> " + request.parseBodyToObj(Vo.class));
-                    return new HashMap<>();
-                })
-                .get("/get-html", request -> {
-                    logger.info("get-html -->> ");
-                    return "<html><body>this is a html page !</body></html>";
-                }, MRestHeaderBuilder.Build("Content-Type", "text/html"))
-                .get("/get-text", request -> {
-                    logger.info("get-text -->> ");
-                    return "text.......";
-                }, MRestHeaderBuilder.Build("Content-Type", "text/plain"))
-                .filter("/post*", new Filter0(), new Filter1())
-                .start();
-    }
-
-    public static void main(String[] args) {
-        startNewServer(21700, "mrest-demo");
-        startNewServer(21701, "mrest-demo1");
-        startNewServer(21702, "mrest-demo2");
-        startNewServer(21703, "mrest-demo3");
-        logger.info(JSON.toJSONString("asldfjl"));
-        logger.info(new Gson().toJson("asldfjl"));
-        logger.info(JSON.toJSONString(new Vo()));
-        logger.info(new Gson().toJson(new Vo()));
     }
 
 }
