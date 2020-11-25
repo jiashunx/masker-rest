@@ -428,24 +428,29 @@ public class MRestServer {
     }
 
     /**
-     * 添加filter, 如果filter未配置注解, 则根据传入urlPattern来进行匹配, 否则将注解指定的urlPattern和urlPattern参数进行合并.
+     * 添加filter, 根据传入urlPattern来进行匹配.
      * @param urlPattern urlPattern
      * @param filterArr filterArr
      * @return MRestServer
      */
     public synchronized MRestServer filter(String urlPattern, MRestFilter... filterArr) {
         for (MRestFilter filter: filterArr) {
-            Set<String> urlPatterns = new HashSet<>(Arrays.asList(filter.urlPatterns()));
-            if (!filter.hasFilterAnnotation()) {
-                urlPatterns.clear();
-            }
-            urlPatterns.add(urlPattern);
-            filter0(filter, urlPatterns.toArray(new String[0]));
+            filter0(filter, urlPattern);
         }
         return this;
     }
 
-    private synchronized void filter0(MRestFilter filter, String... urlPatterns) {
+    /**
+     * 添加filter, 一次指定多个urlPattern.
+     * @param filter filter
+     * @param urlPatterns urlPattern array.
+     * @return MRestServer
+     */
+    public synchronized MRestServer filter(MRestFilter filter, String... urlPatterns) {
+        return filter0(filter, urlPatterns);
+    }
+
+    private synchronized MRestServer filter0(MRestFilter filter, String... urlPatterns) {
         checkServerState();
         filterTaskList.add(() -> {
             MRestFilter restFilter = Objects.requireNonNull(filter);
@@ -459,6 +464,7 @@ public class MRestServer {
                 }
             }
         });
+        return this;
     }
 
 
