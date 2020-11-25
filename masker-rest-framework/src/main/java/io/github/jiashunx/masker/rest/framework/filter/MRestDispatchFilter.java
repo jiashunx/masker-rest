@@ -112,7 +112,7 @@ public class MRestDispatchFilter implements MRestFilter {
         }
         String contentType = Constants.CONTENT_TYPE_APPLICATION_JSON;
         MRestHandlerConfig config = restHandler.getConfig();
-        if (config != null) {
+        if (config.containsHeader(Constants.HTTP_HEADER_CONTENT_TYPE)) {
             contentType = config.getHeaderToStr(Constants.HTTP_HEADER_CONTENT_TYPE);
         }
         byte[] retBytes = null;

@@ -15,7 +15,7 @@ public abstract class MRestHandler {
 
     private String url;
     private List<HttpMethod> httpMethods;
-    private MRestHandlerConfig config;
+    private final MRestHandlerConfig config;
 
     public MRestHandler(String url, HttpMethod... methodArr) {
         this(url, null, methodArr);
@@ -24,7 +24,7 @@ public abstract class MRestHandler {
     public MRestHandler(String url, MRestHandlerConfig config, HttpMethod... methodArr) {
         this.url = Objects.requireNonNull(url);
         this.httpMethods = Arrays.asList(methodArr);
-        this.config = Objects.requireNonNull(config);
+        this.config = config == null ? new MRestHandlerConfig() : config;
     }
 
     public String getUrl() {
@@ -45,10 +45,6 @@ public abstract class MRestHandler {
 
     public MRestHandlerConfig getConfig() {
         return config;
-    }
-
-    public void setConfig(MRestHandlerConfig config) {
-        this.config = config;
     }
 
     public abstract Object getHandler();

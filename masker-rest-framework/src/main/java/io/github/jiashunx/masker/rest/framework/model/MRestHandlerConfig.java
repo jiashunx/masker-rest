@@ -34,6 +34,10 @@ public class MRestHandlerConfig {
         return config;
     }
 
+    public boolean containsHeader(String key) {
+        return getHeader(key) != null;
+    }
+
     public Map<String, Object> getHeaders() {
         return headers;
     }
