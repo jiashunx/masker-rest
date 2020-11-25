@@ -405,7 +405,7 @@ public class MRestServer {
         filterList.sort((filter0, filter1) -> {
             int order0 = filter0.order();
             int order1 = filter1.order();
-            return order1 - order0;
+            return order0 - order1;
         });
         filterList.addLast(requestFilter);
         return new MRestFilterChain(this, filterList.toArray(new MRestFilter[0]));

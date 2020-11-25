@@ -13,7 +13,7 @@ import java.lang.annotation.*;
 public @interface Filter {
 
     /**
-     * filter顺序, 实际执行时filter执行顺序按此顺序从大到小顺序执行
+     * filter顺序, 实际执行时filter执行顺序按此值大小从小到大顺序执行.
      * @return int
      */
     int order() default Constants.DEFAULT_FILTER_ORDER;
