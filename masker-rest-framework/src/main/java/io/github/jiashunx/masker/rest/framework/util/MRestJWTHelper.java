@@ -80,26 +80,30 @@ public class MRestJWTHelper {
         Optional.ofNullable(claims).ifPresent(_claims::putAll);
         Optional.ofNullable(headers).ifPresent(_headers::putAll);
         try {
-            return addTokenHeader(Jwts.builder()
+            return Jwts.builder()
                     .setClaims(_claims)
                     .setHeader(_headers)
                     .setHeaderParam(HEADER_KEY_TYP, HEADER_VALUE_TYP)
                     .setIssuedAt(new Date(currentTimeMillis))
                     .setExpiration(new Date(currentTimeMillis + timeoutMillis))
                     .signWith(SignatureAlgorithm.HS256, secretKey)
-                    .compact());
+                    .compact();
         } catch (Throwable throwable) {
             throw new MRestJWTException(String.format("create jwt token failed, claims: %s, headers: %s", claims, headers), throwable);
         }
     }
 
-    private String addTokenHeader(String jwtToken) {
-        return JWT_TOKEN_PREFIX + jwtToken;
+    public String addTokenHeader(String jwtToken) {
+        String token = Objects.requireNonNull(jwtToken);
+        if (!jwtToken.trim().startsWith(JWT_TOKEN_PREFIX)) {
+            token = JWT_TOKEN_PREFIX + token;
+        }
+        return token;
     }
 
-    private String removeTokenHeader(String jwtToken) {
+    public String removeTokenHeader(String jwtToken) {
         String token = Objects.requireNonNull(jwtToken);
-        if (jwtToken.startsWith(JWT_TOKEN_PREFIX)) {
+        if (jwtToken.trim().startsWith(JWT_TOKEN_PREFIX)) {
             token = jwtToken.substring(JWT_TOKEN_PREFIX.length());
         }
         return token;
