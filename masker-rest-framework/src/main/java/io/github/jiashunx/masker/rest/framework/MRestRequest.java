@@ -23,6 +23,14 @@ public class MRestRequest {
 
     private Map<String, String> attributes = new HashMap<>();
     private HttpMethod method;
+    private String contextPath;
+    /**
+     * 带context-path的url.
+     */
+    private String originUrl;
+    /**
+     * 不带context-path的url.
+     */
     private String url;
     private String urlQuery;
     private Map<String, String> parameters;
@@ -85,6 +93,22 @@ public class MRestRequest {
 
     public void setMethod(HttpMethod method) {
         this.method = method;
+    }
+
+    public String getContextPath() {
+        return contextPath;
+    }
+
+    public void setContextPath(String contextPath) {
+        this.contextPath = contextPath;
+    }
+
+    public String getOriginUrl() {
+        return originUrl;
+    }
+
+    public void setOriginUrl(String originUrl) {
+        this.originUrl = originUrl;
     }
 
     public String getUrl() {

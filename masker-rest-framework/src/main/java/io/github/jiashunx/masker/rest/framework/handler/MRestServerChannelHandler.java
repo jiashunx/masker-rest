@@ -52,21 +52,15 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
             SharedObjects.resetServerThreadModel(serverThreadModel);
 
             String contextPath = restServer.getContextPath();
-            String url = restRequest.getUrl();
-            if (!url.startsWith(contextPath)) {
+            if (!restRequest.getOriginUrl().startsWith(contextPath)) {
                 if (logger.isWarnEnabled()) {
-                    logger.warn("current server contextPath: {}, can't resolve request url: {}", contextPath, url);
+                    logger.warn("current server contextPath: {}, can't resolve request url: {}", contextPath, restRequest.getOriginUrl());
                 }
                 restResponse.write(HttpResponseStatus.NOT_FOUND);
                 restResponse.flush();
                 return;
             }
-            if (url.equals(contextPath)) {
-                url = Constants.ROOT_PATH;
-            } else {
-                url = url.substring(contextPath.length());
-            }
-            restRequest.setUrl(url);
+
             MRestFilterChain filterChain = restServer.getFilterChain(restRequest.getUrl());
             filterChain.doFilter(restRequest, restResponse);
             restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_NAME, MRestUtils.getFrameworkName());
@@ -113,7 +107,16 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
             if (path.length() > 1 && path.endsWith("/")) {
                 path = path.substring(0, path.length() - 1);
             }
-            restRequest.setUrl(path);
+            restRequest.setOriginUrl(path);
+            String contextPath = restServer.getContextPath();
+            restRequest.setContextPath(contextPath);
+            String url = path;
+            if (url.equals(contextPath)) {
+                url = Constants.ROOT_PATH;
+            } else if (url.startsWith(contextPath)) {
+                url = url.substring(contextPath.length());
+            }
+            restRequest.setUrl(url);
             restRequest.setUrlQuery(queryStringDecoder.rawQuery());
             Map<String, List<String>> originParameters = queryStringDecoder.parameters();
             restRequest.setOriginParameters(originParameters);
