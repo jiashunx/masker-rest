@@ -44,7 +44,12 @@
    - version 1.2.1
       - feature：server支持自定义context-path
    - version 1.3.0
+      - feature: request添加context-path字段
       - refactor：默认请求处理实现类重构
+      - refactor: filter的执行顺序调整, 按order从小到大顺序执行
+      - refactor: jwt token默认不添加"Bearer: "头
+      - refactor: redirect支持重定向至其他server url.
+      - bugfix: 响应头设置Content-Type报NullPonterException问题解决
 
    - TODO
       - 支持静态资源处理
