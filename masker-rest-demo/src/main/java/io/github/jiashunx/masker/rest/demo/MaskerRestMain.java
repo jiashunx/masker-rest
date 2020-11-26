@@ -96,6 +96,8 @@ public class MaskerRestMain {
                     String cookieVal = "xxxxxxxxxxxxxxxxxx";
                     logger.info("set-cookie, hello=\"{}\"", cookieVal);
                     response.setCookie("hello", cookieVal);
+                    Cookie nCookie = new DefaultCookie("hello0", "hhhhhh");
+                    response.setCookie(nCookie);
                 })
                 .get("/cookie/get-cookie", request -> {
                     logger.info("get-cookie, map: {}", request.getCookieMap());
