@@ -11,7 +11,12 @@
     <dependency>
       <groupId>io.github.jiashunx</groupId>
       <artifactId>masker-rest-framework</artifactId>
-      <version>${version}</version>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.jiashunx</groupId>
+      <artifactId>masker-rest-jwt</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.code.gson</groupId>
