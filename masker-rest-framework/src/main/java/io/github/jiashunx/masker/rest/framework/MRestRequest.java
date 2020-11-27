@@ -147,6 +147,32 @@ public class MRestRequest {
         this.originParameters = originParameters;
     }
 
+    /**
+     * get header of "Accept".
+     * @return Accept
+     */
+    public String getAccept() {
+        return getHeader(Constants.HTTP_HEADER_ACCEPT);
+    }
+
+    /**
+     * get first "Accept" from header.
+     * @return Accept
+     */
+    public String getAcceptFirst() {
+        String acceptFirst = getAccept();
+        if (acceptFirst != null) {
+            int idx = acceptFirst.indexOf(",");
+            if (idx > 0) {
+                acceptFirst = acceptFirst.substring(0, idx);
+            }
+        }
+        if ("*/*".equals(acceptFirst)) {
+            acceptFirst = null;
+        }
+        return acceptFirst;
+    }
+
     public HttpHeaders getHeaders() {
         return headers;
     }

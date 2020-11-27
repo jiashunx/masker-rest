@@ -5,6 +5,7 @@ import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeE
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.filter.MRestDispatchFilter;
+import io.github.jiashunx.masker.rest.framework.filter.StaticResourceFilter;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
 import io.github.jiashunx.masker.rest.framework.type.MRestNettyThreadType;
@@ -412,6 +413,10 @@ public class MRestServer {
      */
     private final MRestFilter requestFilter = new MRestDispatchFilter();
     /**
+     * 静态资源处理.
+     */
+    private final MRestFilter staticResourceFilter = new StaticResourceFilter();
+    /**
      * 添加filter的任务(在服务启动时统一添加).
      */
     private final List<Runnable> filterTaskList = new ArrayList<>();
@@ -431,6 +436,7 @@ public class MRestServer {
             int order1 = filter1.order();
             return order0 - order1;
         });
+        filterList.addLast(staticResourceFilter);
         filterList.addLast(requestFilter);
         return new MRestFilterChain(this, filterList.toArray(new MRestFilter[0]));
     }

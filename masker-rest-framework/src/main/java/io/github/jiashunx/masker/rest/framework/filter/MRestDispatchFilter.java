@@ -34,7 +34,6 @@ public class MRestDispatchFilter implements MRestFilter {
             handleRequest(restRequest, restResponse, restHandler);
             return;
         }
-        // TODO 处理静态资源
         restResponse.write(HttpResponseStatus.NOT_FOUND);
     }
 

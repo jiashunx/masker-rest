@@ -50,6 +50,8 @@
       - refactor: jwt token默认不添加"Bearer: "头
       - refactor: redirect支持重定向至其他server url.
       - bugfix: 响应头设置Content-Type报NullPonterException问题解决
+   - version 1.4.0
+      - feature: 支持静态资源处理
 
    - TODO
       - 支持静态资源处理
