@@ -89,7 +89,7 @@ public final class StaticResourceHolder {
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available());
                     byte[] buffer = new byte[1024];
                     int readSize = 0;
-                    while ((readSize = inputStream.read(buffer)) != 0) {
+                    while ((readSize = inputStream.read(buffer)) >= 0) {
                         outputStream.write(buffer, 0, readSize);
                     }
                     contentBytes = outputStream.toByteArray();
