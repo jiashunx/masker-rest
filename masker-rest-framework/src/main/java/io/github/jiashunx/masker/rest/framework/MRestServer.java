@@ -26,10 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 /**
  * @author jiashunx
@@ -286,6 +283,18 @@ public class MRestServer {
         return mapping(url, new MRestHandlerFunction<>(url, handler, config, methods), config, methods);
     }
 
+    public <R> MRestServer mapping(String url, BiFunction<MRestRequest, MRestResponse, R> handler, HttpMethod... methods) {
+        return mapping(url, handler, MRestHeaderBuilder.Build(), methods);
+    }
+
+    public <R> MRestServer mapping(String url, BiFunction<MRestRequest, MRestResponse, R> handler, Map<String, Object> headers, HttpMethod... methods) {
+        return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
+    }
+
+    public <R> MRestServer mapping(String url, BiFunction<MRestRequest, MRestResponse, R> handler, MRestHandlerConfig config, HttpMethod... methods) {
+        return mapping(url, new MRestHandlerBiFunction<>(url, handler, config, methods), config, methods);
+    }
+
     private synchronized MRestServer mapping(String url, MRestHandler handler, MRestHandlerConfig config, HttpMethod... methods) {
         checkServerState();
         mappingTaskList.add(() -> {
@@ -351,6 +360,18 @@ public class MRestServer {
         return mapping(url, handler, config, HttpMethod.GET);
     }
 
+    public <R> MRestServer get(String url, BiFunction<MRestRequest, MRestResponse, R> handler) {
+        return mapping(url, handler, HttpMethod.GET);
+    }
+
+    public <R> MRestServer get(String url, BiFunction<MRestRequest, MRestResponse, R> handler, Map<String, Object> headers) {
+        return mapping(url, handler, headers, HttpMethod.GET);
+    }
+
+    public <R> MRestServer get(String url, BiFunction<MRestRequest, MRestResponse, R> handler, MRestHandlerConfig config) {
+        return mapping(url, handler, config, HttpMethod.GET);
+    }
+
     public MRestServer get(String url, BiConsumer<MRestRequest, MRestResponse> handler) {
         return mapping(url, handler, HttpMethod.GET);
     }
@@ -384,6 +405,18 @@ public class MRestServer {
     }
 
     public <R> MRestServer post(String url, Function<MRestRequest, R> handler, MRestHandlerConfig config) {
+        return mapping(url, handler, config, HttpMethod.POST);
+    }
+
+    public <R> MRestServer post(String url, BiFunction<MRestRequest, MRestResponse, R> handler) {
+        return mapping(url, handler, HttpMethod.POST);
+    }
+
+    public <R> MRestServer post(String url, BiFunction<MRestRequest, MRestResponse, R> handler, Map<String, Object> headers) {
+        return mapping(url, handler, headers, HttpMethod.POST);
+    }
+
+    public <R> MRestServer post(String url, BiFunction<MRestRequest, MRestResponse, R> handler, MRestHandlerConfig config) {
         return mapping(url, handler, config, HttpMethod.POST);
     }
 

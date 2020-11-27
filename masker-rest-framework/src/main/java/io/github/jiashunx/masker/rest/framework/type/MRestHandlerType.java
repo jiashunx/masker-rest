@@ -14,6 +14,10 @@ public enum MRestHandlerType {
      */
     NoRet_ReqResp,
     /**
+     * 有返回值, 输入参数req.
+     */
+    Ret_Req,
+    /**
      * 有返回值, 输入参数req resp.
      */
     Ret_ReqResp,

@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 
 public class MRestHandlerSupplier<R> extends MRestHandler {
 
-    private Supplier<R> handler;
+    private final Supplier<R> handler;
 
     public MRestHandlerSupplier(String url, Supplier<R> handler, HttpMethod... methodArr) {
         this(url, handler, MRestHandlerConfig.newInstance(), methodArr);

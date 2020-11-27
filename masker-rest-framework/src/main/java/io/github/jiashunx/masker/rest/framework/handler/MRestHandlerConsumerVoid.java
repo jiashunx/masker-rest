@@ -11,7 +11,7 @@ import java.util.Objects;
  */
 public class MRestHandlerConsumerVoid extends MRestHandler {
 
-    private Runnable handler;
+    private final Runnable handler;
 
     public MRestHandlerConsumerVoid(String url, Runnable handler, HttpMethod... methodArr) {
         this(url, handler, MRestHandlerConfig.newInstance(), methodArr);

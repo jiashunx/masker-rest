@@ -7,30 +7,31 @@ import io.github.jiashunx.masker.rest.framework.type.MRestHandlerType;
 import io.netty.handler.codec.http.HttpMethod;
 
 import java.util.Objects;
-import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 /**
  * @author jiashunx
  */
-public class MRestHandlerConsumerReqResp<T1 extends MRestRequest, T2 extends MRestResponse> extends MRestHandler {
+public class MRestHandlerBiFunction<T extends MRestRequest, U extends MRestResponse, R> extends MRestHandler {
 
-    private final BiConsumer<T1, T2> handler;
+    private final BiFunction<T, U, R> handler;
 
-    public MRestHandlerConsumerReqResp(String url, BiConsumer<T1, T2> handler, HttpMethod... methodArr) {
+    public MRestHandlerBiFunction(String url, BiFunction<T, U, R> handler, HttpMethod... methodArr) {
         this(url, handler, MRestHandlerConfig.newInstance(), methodArr);
     }
 
-    public MRestHandlerConsumerReqResp(String url, BiConsumer<T1, T2> handler, MRestHandlerConfig config, HttpMethod... methodArr) {
+    public MRestHandlerBiFunction(String url, BiFunction<T, U, R> handler, MRestHandlerConfig config, HttpMethod... methodArr) {
         super(url, config, methodArr);
         this.handler = Objects.requireNonNull(handler);
     }
 
-    public BiConsumer<T1, T2> getHandler() {
+    @Override
+    public BiFunction<T, U, R> getHandler() {
         return handler;
     }
 
     @Override
     public MRestHandlerType getType() {
-        return MRestHandlerType.NoRet_ReqResp;
+        return MRestHandlerType.Ret_ReqResp;
     }
 }

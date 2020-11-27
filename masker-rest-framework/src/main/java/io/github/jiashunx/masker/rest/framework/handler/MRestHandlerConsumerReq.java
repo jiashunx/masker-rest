@@ -13,7 +13,7 @@ import java.util.function.Consumer;
  */
 public class MRestHandlerConsumerReq<T extends MRestRequest> extends MRestHandler {
 
-    private Consumer<T> handler;
+    private final Consumer<T> handler;
 
     public MRestHandlerConsumerReq(String url, Consumer<T> handler, HttpMethod... methodArr) {
         this(url, handler, MRestHandlerConfig.newInstance(), methodArr);

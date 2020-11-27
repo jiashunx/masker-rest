@@ -13,7 +13,7 @@ import java.util.function.Function;
  */
 public class MRestHandlerFunction<T extends MRestRequest, R> extends MRestHandler {
 
-    private Function<T, R> handler;
+    private final Function<T, R> handler;
 
     public MRestHandlerFunction(String url, Function<T, R> handler, HttpMethod... methodArr) {
         this(url, handler, MRestHandlerConfig.newInstance(), methodArr);
@@ -30,6 +30,6 @@ public class MRestHandlerFunction<T extends MRestRequest, R> extends MRestHandle
 
     @Override
     public MRestHandlerType getType() {
-        return MRestHandlerType.Ret_ReqResp;
+        return MRestHandlerType.Ret_Req;
     }
 }
