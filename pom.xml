@@ -39,6 +39,7 @@
   </developers>
   <modules>
     <module>masker-rest-framework</module>
+    <module>masker-rest-jwt</module>
     <module>masker-rest-demo</module>
   </modules>
   <distributionManagement>
