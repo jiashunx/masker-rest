@@ -16,17 +16,25 @@ new MRestServer()
 
 ```text
 restServer
+    .get("/get-NoParam-NoRet", () -> {
+        MRestServerThreadModel threadModel = SharedObjects.getServerThreadModel();
+        MRestRequest request = threadModel.getRestRequest();
+        logger.info("get, origin-url: {}", request.getOriginUrl());
+    })
     .get("/get-ParamReq-NoRet", request -> {
-      logger.info("get, param-req, no ret");
+        logger.info("get, param-req, no ret");
     })
     .get("/get-html", request -> {
-      logger.info("get, param-req, return html");
-      return "<html><body>this is a html page !</body></html>";
+        logger.info("get, param-req, return html");
+        return "<html><body>this is a html page !</body></html>";
     }, MRestHeaderBuilder.Build("Content-Type", "text/html"))
     .get("/get-text", request -> {
-      logger.info("get, param-req, return text");
-      return "text.......";
+        logger.info("get, param-req, return text");
+        return "text.......";
     }, MRestHeaderBuilder.Build("Content-Type", "text/plain"))
+    .get("/get-ParamReqResp-NoRet", (request, response) -> {
+        logger.info("get, param-req-resp, no ret");
+    })
 ```
 
 - 2、post请求样例

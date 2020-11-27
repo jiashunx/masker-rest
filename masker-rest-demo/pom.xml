@@ -28,6 +28,11 @@
       <artifactId>logback-classic</artifactId>
       <version>1.2.3</version>
     </dependency>
+    <dependency>
+      <groupId>org.fujion.webjars</groupId>
+      <artifactId>webjar-jquery</artifactId>
+      <version>3.5.1</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

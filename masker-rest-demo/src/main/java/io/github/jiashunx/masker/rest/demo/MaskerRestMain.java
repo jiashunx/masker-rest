@@ -57,6 +57,9 @@ public class MaskerRestMain {
                     logger.info("get, param-req, return text");
                     return "text.......";
                 }, MRestHeaderBuilder.Build("Content-Type", "text/plain"))
+                .get("/get-ParamReqResp-NoRet", (request, response) -> {
+                    logger.info("get, param-req-resp, no ret");
+                })
 
                 // post请求样例
                 .post(("/post-form"), request -> {
