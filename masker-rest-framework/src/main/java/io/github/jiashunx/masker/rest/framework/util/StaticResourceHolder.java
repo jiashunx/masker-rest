@@ -2,13 +2,13 @@ package io.github.jiashunx.masker.rest.framework.util;
 
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.model.StaticResource;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -85,9 +85,24 @@ public final class StaticResourceHolder {
                 if (!url.startsWith(Constants.URL_PATH_SEP)) {
                     url = Constants.URL_PATH_SEP + url;
                 }
-                InputStream inputStream = resource.getInputStream();
-                byte[] contentBytes = new byte[inputStream.available()];
-                IOUtils.readFully(inputStream, contentBytes);
+                byte[] contentBytes = null;
+                try(InputStream inputStream = resource.getInputStream()) {
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available());
+                    byte[] buffer = new byte[1024];
+                    int readSize = 0;
+                    while ((readSize = inputStream.read(buffer)) != 0) {
+                        outputStream.write(buffer, 0, readSize);
+                    }
+                    contentBytes = outputStream.toByteArray();
+                } catch (Throwable throwable) {
+                    if (logger.isErrorEnabled()) {
+                        logger.error("load static resource failed: {}", uri, throwable);
+                    }
+                } finally {
+                    if (contentBytes == null) {
+                        contentBytes = new byte[0];
+                    }
+                }
                 resourceList.add(new StaticResource(uri, url, contentBytes));
             }
         } catch (Throwable throwable) {
