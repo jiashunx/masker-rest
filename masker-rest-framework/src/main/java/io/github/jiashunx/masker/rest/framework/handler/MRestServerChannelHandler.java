@@ -15,10 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author jiashunx
@@ -26,6 +23,11 @@ import java.util.Objects;
 public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpObject> {
 
     private static final Logger logger = LoggerFactory.getLogger(MRestServerChannelHandler.class);
+
+    private static final Set<String> COMMON_STATIC_RESOURCE_URL = new HashSet<>();
+    static {
+        COMMON_STATIC_RESOURCE_URL.add("/favicon.ico");
+    }
 
     private final MRestServer restServer;
 
@@ -51,17 +53,24 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
             serverThreadModel.setRestServer(restServer);
             SharedObjects.resetServerThreadModel(serverThreadModel);
 
-            String contextPath = restServer.getContextPath();
-            if (!restRequest.getOriginUrl().startsWith(contextPath)) {
-                if (logger.isWarnEnabled()) {
-                    logger.warn("current server contextPath: {}, can't resolve request url: {}", contextPath, restRequest.getOriginUrl());
-                }
-                restResponse.write(HttpResponseStatus.NOT_FOUND);
-                restResponse.flush();
-                return;
-            }
+            String originUrl = restRequest.getOriginUrl();
+            String requestUrl = restRequest.getUrl();
 
-            MRestFilterChain filterChain = restServer.getFilterChain(restRequest.getUrl());
+            MRestFilterChain filterChain = null;
+            if (isCommonStaticResource(originUrl)) {
+                filterChain = restServer.getCommonStaticResourceFilterChain(originUrl);
+            } else {
+                String contextPath = restServer.getContextPath();
+                if (!originUrl.startsWith(contextPath)) {
+                    if (logger.isWarnEnabled()) {
+                        logger.warn("current server contextPath: {}, can't resolve request url: {}", contextPath, restRequest.getOriginUrl());
+                    }
+                    restResponse.write(HttpResponseStatus.NOT_FOUND);
+                    restResponse.flush();
+                    return;
+                }
+                filterChain = restServer.getFilterChain(requestUrl);
+            }
             filterChain.doFilter(restRequest, restResponse);
             restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_NAME, MRestUtils.getFrameworkName());
             restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_VERSION, MRestUtils.getFrameworkVersion());
@@ -94,6 +103,10 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         super.userEventTriggered(ctx, evt);
+    }
+
+    private boolean isCommonStaticResource(String url) {
+        return COMMON_STATIC_RESOURCE_URL.contains(url);
     }
 
     private MRestRequest parseRestRequest(HttpRequest request) {

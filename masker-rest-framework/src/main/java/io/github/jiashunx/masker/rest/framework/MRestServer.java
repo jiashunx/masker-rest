@@ -454,6 +454,13 @@ public class MRestServer {
      */
     private final List<Runnable> filterTaskList = new ArrayList<>();
 
+    public MRestFilterChain getCommonStaticResourceFilterChain(String requestURL) {
+        List<MRestFilter> filterList = new LinkedList<>();
+        filterList.add(staticResourceFilter);
+        filterList.add(requestFilter);
+        return new MRestFilterChain(this, filterList.toArray(new MRestFilter[0]));
+    }
+
     public MRestFilterChain getFilterChain(String requestURL) {
         Set<MRestFilter> filterSet = new HashSet<>();
         filterMap.forEach((urlPattern, filterList) -> {
