@@ -43,6 +43,28 @@ public class MRestRequest {
 
     public MRestRequest() {}
 
+    public MRestRequest(MRestRequest restRequest) {
+        this.httpRequest = restRequest.httpRequest;
+        this.attributes = restRequest.attributes;
+        this.method = restRequest.method;
+        this.contextPath = restRequest.contextPath;
+        this.originUrl = restRequest.originUrl;
+        this.url = restRequest.url;
+        this.urlQuery = restRequest.urlQuery;
+        this.parameters = restRequest.parameters;
+        this.originParameters = restRequest.originParameters;
+        this.headers = restRequest.headers;
+        this.headerKeys = restRequest.headerKeys;
+        this.cookies = restRequest.cookies;
+        this.cookieMap = restRequest.cookieMap;
+        this.bodyBytes = restRequest.bodyBytes;
+    }
+
+    @Override
+    protected MRestRequest clone() throws CloneNotSupportedException {
+        return (MRestRequest) super.clone();
+    }
+
     public String bodyToString() {
         return new String(bodyBytes, StandardCharsets.UTF_8);
     }
@@ -145,6 +167,18 @@ public class MRestRequest {
 
     public void setOriginParameters(Map<String, List<String>> originParameters) {
         this.originParameters = originParameters;
+    }
+
+    public boolean isUploadFile() {
+        String contentType = getHeader(Constants.HTTP_HEADER_CONTENT_TYPE);
+        if (contentType != null) {
+            int idx = contentType.indexOf(";");
+            if (idx > 0) {
+                contentType = contentType.substring(0, idx);
+            }
+            contentType = contentType.trim();
+        }
+        return Constants.CONTENT_TYPE_MULTIPART_FORMDATA.equals(contentType);
     }
 
     /**

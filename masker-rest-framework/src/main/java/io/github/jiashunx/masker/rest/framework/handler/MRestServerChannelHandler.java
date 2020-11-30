@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.framework.handler;
 
+import io.github.jiashunx.masker.rest.framework.MRestFileUploadRequest;
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.MRestServer;
@@ -11,6 +12,10 @@ import io.github.jiashunx.masker.rest.framework.util.SharedObjects;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.multipart.Attribute;
+import io.netty.handler.codec.http.multipart.FileUpload;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,13 +149,32 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
             restRequest.setParameters(parameters);
             restRequest.setMethod(httpRequest.method());
             restRequest.setHeaders(httpRequest.headers());
-            byte[] bodyBytes = null;
-            int byteSize = httpRequest.content().readableBytes();
-            if (byteSize >= 0) {
-                bodyBytes = new byte[byteSize];
-                httpRequest.content().readBytes(bodyBytes, 0, byteSize);
+            // 处理文件上传特定逻辑.
+            if (restRequest.isUploadFile()) {
+                MRestFileUploadRequest fileUploadRequest = new MRestFileUploadRequest(restRequest);
+                //decode multipart data, request为FullHttpRequest类型
+                HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(request);
+                while (decoder.hasNext()) {
+                    InterfaceHttpData httpData = decoder.next();
+                    if (httpData instanceof Attribute) {
+                        Attribute attribute = (Attribute) httpData;
+                        fileUploadRequest.addAttribute(attribute);
+                    } else if (httpData instanceof FileUpload) {
+                        FileUpload fileUpload = (FileUpload) httpData;
+                        fileUploadRequest.addFileUploadObj(fileUpload);
+                    }
+                }
+                decoder.destroy();
+                restRequest = fileUploadRequest;
+            } else {
+                byte[] bodyBytes = null;
+                int byteSize = httpRequest.content().readableBytes();
+                if (byteSize >= 0) {
+                    bodyBytes = new byte[byteSize];
+                    httpRequest.content().readBytes(bodyBytes, 0, byteSize);
+                }
+                restRequest.setBodyBytes(bodyBytes);
             }
-            restRequest.setBodyBytes(bodyBytes);
         }
         if (restRequest == null && request != null) {
             if (logger.isWarnEnabled()) {

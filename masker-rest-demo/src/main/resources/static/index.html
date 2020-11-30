@@ -5,9 +5,31 @@
     <title>测试页面01</title>
 </head>
 <body>
+    <div>
+        <label>文件上传测试（基于FormData）</label>
+        <br>
+        <input type="file" id="file-upload" name="avatar">
+        <button type="button" id="btn-file-upload">保存</button>
+    </div>
+    <div>
+        <label>文件上传测试（基于form表单）</label>
+        <br>
+    </div>
     <script type="text/javascript" src="./webjars/webjar-jquery/3.5.1/dist/jquery.min.js"></script>
     <script>
-        console.log($);
+        $("#btn-file-upload").click(function () {
+            var files = $('#file-upload').prop('files');
+            var data = new FormData();
+            data.append('avatar', files[0]);
+            $.ajax({
+                url: './fileupload/test0',
+                type: 'POST',
+                data: data,
+                cache: false,
+                processData: false,
+                contentType: false
+            });
+        });
     </script>
 </body>
 </html>
