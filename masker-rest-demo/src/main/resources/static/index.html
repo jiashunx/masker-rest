@@ -6,28 +6,47 @@
 </head>
 <body>
     <div>
-        <label>文件上传测试（基于FormData）</label>
+        <label>文件上传测试（基于FormData，单选）</label>
         <br>
-        <input type="file" id="file-upload" name="avatar">
-        <button type="button" id="btn-file-upload">保存</button>
+        <input type="file" id="file-upload0" name="avatar">
+        <button type="button" id="btn-file-upload0">保存</button>
     </div>
     <div>
-        <label>文件上传测试（基于form表单）</label>
+        <label>文件上传测试（基于form表单，多选）</label>
         <br>
+        <form id="file-upload-form1">
+            <input type="file" id="file" name="file-upload1" multiple="multiple">
+        </form>
+        <button type="button" id="btn-file-upload1">保存</button>
+
     </div>
     <script type="text/javascript" src="./webjars/webjar-jquery/3.5.1/dist/jquery.min.js"></script>
     <script>
-        $("#btn-file-upload").click(function () {
-            var files = $('#file-upload').prop('files');
-            var data = new FormData();
-            data.append('avatar', files[0]);
+        $("#btn-file-upload0").click(function () {
+            var files = $('#file-upload0').prop('files');
+            var formData = new FormData();
+            formData.append('avatar', files[0]);
             $.ajax({
                 url: './fileupload/test0',
                 type: 'POST',
-                data: data,
+                data: formData,
                 cache: false,
                 processData: false,
                 contentType: false
+            });
+        });
+        $("#btn-file-upload1").click(function () {
+            var formData = new FormData($("#file-upload-form1")[0]);
+            $.ajax({
+                url: './fileupload/test1',
+                type: 'POST',
+                data: formData,
+                cache: false,
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    console.log("upload files success.", data);
+                }
             });
         });
     </script>

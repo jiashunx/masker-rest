@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.demo;
 
+import io.github.jiashunx.masker.rest.framework.MRestFileUploadRequest;
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.MRestServer;
@@ -7,8 +8,10 @@ import io.github.jiashunx.masker.rest.framework.exception.MRestJWTException;
 import io.github.jiashunx.masker.rest.framework.filter.Filter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
+import io.github.jiashunx.masker.rest.framework.model.MRestFileUpload;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
+import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.SharedObjects;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 import io.github.jiashunx.masker.rest.jwt.MRestJWTHelper;
@@ -20,7 +23,10 @@ import io.netty.util.NettyRuntime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * @author jiashunx
@@ -147,6 +153,30 @@ public class MaskerRestMain {
                         }
                         response.write(HttpResponseStatus.UNAUTHORIZED);
                     }
+                })
+
+                .fileupload("/fileupload/test0", (request, response) -> {
+                    MRestFileUploadRequest fileUploadRequest = (MRestFileUploadRequest) request;
+                    MRestFileUpload fileUpload = fileUploadRequest.getFileUploadOnlyOne();
+                    logger.info("[upload one] upload file: {}", fileUpload.getFilePath());
+                    String newFilePath = MRestUtils.getUserDirPath() + "logs/" + fileUpload.getFilename();
+                    File newFile = new File(newFilePath);
+                    try {
+                        fileUpload.copyFile(newFile);
+                        logger.info("[upload one] copy file to path: {}", newFilePath);
+                    } catch (Throwable throwable) {
+                        logger.error("[upload one] copy file to path {} failed.", newFilePath, throwable);
+                    }
+                })
+                .fileupload("/fileupload/test1", (request, response) -> {
+                    MRestFileUploadRequest fileUploadRequest = (MRestFileUploadRequest) request;
+                    List<MRestFileUpload> fileUploadList = fileUploadRequest.getFileUploadList();
+                    List<String> fileNames = new ArrayList<>();
+                    for (MRestFileUpload fileUpload: fileUploadList) {
+                        logger.info("[upload more than one] upload file: {}", fileUpload.getFilePath());
+                        fileNames.add(fileUpload.getFilename());
+                    }
+                    return fileNames;
                 })
 
                 .start();
