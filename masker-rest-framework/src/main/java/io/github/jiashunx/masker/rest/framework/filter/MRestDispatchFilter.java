@@ -14,10 +14,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 /**
  * @author jiashunx
@@ -90,6 +87,9 @@ public class MRestDispatchFilter implements MRestFilter {
             Object handler = restHandler.getHandler();
             switch (restHandler.getType()) {
                 case Ret_ReqResp:
+                    retObj = ((BiFunction) handler).apply(restRequest, restResponse);
+                    break;
+                case Ret_Req:
                     retObj = ((Function) handler).apply(restRequest);
                     break;
                 case Ret_Void:
