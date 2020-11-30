@@ -186,3 +186,82 @@ restServer
         }
     })
 ```
+
+- 8、文件上传
+
+```text
+<body>
+    <div>
+        <label>文件上传测试（基于FormData，单选）</label>
+        <br>
+        <input type="file" id="file-upload0" name="avatar">
+        <button type="button" id="btn-file-upload0">保存</button>
+    </div>
+    <div>
+        <label>文件上传测试（基于form表单，多选）</label>
+        <br>
+        <form id="file-upload-form1">
+            <input type="file" id="file" name="file-upload1" multiple="multiple">
+        </form>
+        <button type="button" id="btn-file-upload1">保存</button>
+
+    </div>
+    <script type="text/javascript" src="./webjars/webjar-jquery/3.5.1/dist/jquery.min.js"></script>
+    <script>
+        $("#btn-file-upload0").click(function () {
+            var files = $('#file-upload0').prop('files');
+            var formData = new FormData();
+            formData.append('avatar', files[0]);
+            $.ajax({
+                url: './fileupload/test0',
+                type: 'POST',
+                data: formData,
+                cache: false,
+                processData: false,
+                contentType: false
+            });
+        });
+        $("#btn-file-upload1").click(function () {
+            var formData = new FormData($("#file-upload-form1")[0]);
+            $.ajax({
+                url: './fileupload/test1',
+                type: 'POST',
+                data: formData,
+                cache: false,
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    console.log("upload files success.", data);
+                }
+            });
+        });
+    </script>
+</body>
+```
+
+```text
+restServer.fileupload("/fileupload/test0", (request, response) -> {
+    MRestFileUploadRequest fileUploadRequest = (MRestFileUploadRequest) request;
+    MRestFileUpload fileUpload = fileUploadRequest.getFileUploadOnlyOne();
+    logger.info("[upload one] upload file: {}", fileUpload.getFilePath());
+    String newFilePath = MRestUtils.getUserDirPath() + "logs/" + fileUpload.getFilename();
+    File newFile = new File(newFilePath);
+    try {
+        fileUpload.copyFile(newFile);
+        logger.info("[upload one] copy file to path: {}", newFilePath);
+    } catch (Throwable throwable) {
+        logger.error("[upload one] copy file to path {} failed.", newFilePath, throwable);
+    }
+})
+.fileupload("/fileupload/test1", (request, response) -> {
+    MRestFileUploadRequest fileUploadRequest = (MRestFileUploadRequest) request;
+    List<MRestFileUpload> fileUploadList = fileUploadRequest.getFileUploadList();
+    List<String> fileNames = new ArrayList<>();
+    for (MRestFileUpload fileUpload: fileUploadList) {
+        logger.info("[upload more than one] upload file: {}", fileUpload.getFilePath());
+        fileNames.add(fileUpload.getFilename());
+    }
+    return fileNames;
+})
+```
+

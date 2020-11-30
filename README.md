@@ -55,8 +55,11 @@
    - version 1.4.1
       - refactor: jwt默认实现调整至独立的masker-rest-jwt工程
       - refactor: 移除冗余maven依赖(commons-codec, commons-lang, commons-io)
+   - version 1.4.2
+      - feature: 支持文件上传(单文件or多文件)
+      - refactor: 重构MRestHandlerType类, 更易理解.
+      - bugfix: 修正各类handler的分发处理逻辑
 
    - TODO
       - 参考spring-core实现jar包资源扫描(本质上是移除spring-core依赖)
-      - 支持静态资源处理
       - 支持文件的上传下载
