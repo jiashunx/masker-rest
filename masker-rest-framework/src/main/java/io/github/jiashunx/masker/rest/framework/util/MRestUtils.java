@@ -4,6 +4,7 @@ import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.Properties;
 
 /**
@@ -15,6 +16,7 @@ public class MRestUtils {
     private static final Logger logger = LoggerFactory.getLogger(MRestUtils.class);
     private static final String frameworkName;
     private static final String frameworkVersion;
+    private static String systemTempDirPath;
     static {
         Properties properties = new Properties();
         try {
@@ -28,6 +30,12 @@ public class MRestUtils {
         }
         frameworkName = "masker-rest";
         frameworkVersion = properties.getProperty("version");
+        // windows: C:\Users\JIASHUNX~1\AppData\Local\Temp\
+        // linux: /tmp
+        systemTempDirPath = System.getProperty("java.io.tmpdir");
+        if (!systemTempDirPath.endsWith(File.separator)) {
+            systemTempDirPath = systemTempDirPath + File.separator;
+        }
     }
 
     public static int getDefaultServerPort() {
@@ -44,6 +52,10 @@ public class MRestUtils {
 
     public static String getFrameworkVersion() {
         return frameworkVersion;
+    }
+
+    public static String getSystemTempDirPath() {
+        return systemTempDirPath;
     }
 
 }

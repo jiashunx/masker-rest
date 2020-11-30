@@ -25,6 +25,8 @@ public class MRestServerChannelInitializer extends ChannelInitializer<SocketChan
     protected void initChannel(SocketChannel socketChannel) throws Exception {
         ChannelPipeline pipeline = socketChannel.pipeline();
         pipeline.addLast(new HttpServerCodec());
+        // 聚合Http请求或响应，否则会收到HttpMessage，HttpContent等对象
+        // 使用此Handler后, 只会收到FullHttpRequest等对象
         pipeline.addLast(new HttpObjectAggregator(1024*1024));
         pipeline.addLast(new HttpServerExpectContinueHandler());
         pipeline.addLast(new MRestServerChannelHandler(this.restServer));
