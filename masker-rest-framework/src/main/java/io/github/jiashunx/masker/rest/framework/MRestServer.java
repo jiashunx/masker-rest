@@ -432,6 +432,22 @@ public class MRestServer {
         return mapping(url, handler, config, HttpMethod.POST);
     }
 
+    public MRestServer fileupload(String url, Consumer<MRestRequest> handler) {
+        return post(url, handler);
+    }
+
+    public <R> MRestServer fileupload(String url, Function<MRestRequest, R> handler) {
+        return post(url, handler);
+    }
+
+    public <R> MRestServer fileupload(String url, BiFunction<MRestRequest, MRestResponse, R> handler) {
+        return post(url, handler);
+    }
+
+    public MRestServer fileupload(String url, BiConsumer<MRestRequest, MRestResponse> handler) {
+        return post(url, handler);
+    }
+
 
     /**************************************************** SEP ****************************************************/
     /**************************************************** SEP ****************************************************/

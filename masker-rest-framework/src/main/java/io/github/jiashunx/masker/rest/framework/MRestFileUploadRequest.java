@@ -20,6 +20,14 @@ public class MRestFileUploadRequest extends MRestRequest {
         super(restRequest);
     }
 
+    @Override
+    public void release() {
+        super.release();
+        for (MRestFileUpload fileUpload: fileUploadList) {
+            fileUpload.release();
+        }
+    }
+
     public List<Attribute> getAttributeList() {
         return this.attributeList;
     }
@@ -29,6 +37,9 @@ public class MRestFileUploadRequest extends MRestRequest {
     }
 
     public MRestFileUpload getFileUploadOnlyOne() {
+        if (this.fileUploadList.size() != 1) {
+            throw new IllegalArgumentException("there is more than one or no fileupload object.");
+        }
         return this.fileUploadList.get(0);
     }
 

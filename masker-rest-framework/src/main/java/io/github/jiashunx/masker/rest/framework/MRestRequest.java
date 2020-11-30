@@ -65,6 +65,10 @@ public class MRestRequest {
         return (MRestRequest) super.clone();
     }
 
+    public void release() {
+
+    }
+
     public String bodyToString() {
         return new String(bodyBytes, StandardCharsets.UTF_8);
     }

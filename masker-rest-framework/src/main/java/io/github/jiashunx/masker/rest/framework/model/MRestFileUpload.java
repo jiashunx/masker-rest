@@ -39,44 +39,17 @@ public class MRestFileUpload {
             if (fileUpload.isInMemory()) {
                 // 创建临时文件.
                 tmpFile = new File(MRestUtils.getSystemTempDirPath() + "mr_" + UUID.randomUUID().toString());
+                tmpFile.createNewFile();
                 ByteArrayInputStream inputStream = new ByteArrayInputStream(fileUpload.get());
-                FileOutputStream outputStream = null;
-                try {
-                    tmpFile.createNewFile();
-                    outputStream = new FileOutputStream(tmpFile);
-                    byte[] buffer = new byte[2048];
-                    int readSize = 0;
-                    while ((readSize = inputStream.read(buffer)) >= 0) {
-                        outputStream.write(buffer, 0, readSize);
-                    }
-                } finally {
-                    if (outputStream != null) {
-                        outputStream.close();
-                    }
-                    inputStream.close();
-                }
+                FileOutputStream outputStream = new FileOutputStream(tmpFile);
+                copy(inputStream, outputStream);
             } else {
                 // 磁盘文件拷贝
                 tmpFile = new File(fileUpload.getFile().getAbsolutePath() + "_mr");
-                FileInputStream inputStream = null;
-                FileOutputStream outputStream = null;
-                try {
-                    tmpFile.createNewFile();
-                    inputStream = new FileInputStream(fileUpload.getFile());
-                    outputStream = new FileOutputStream(tmpFile);
-                    byte[] buffer = new byte[2048];
-                    int readSize = 0;
-                    while ((readSize = inputStream.read(buffer)) >= 0) {
-                        outputStream.write(buffer, 0, readSize);
-                    }
-                } finally {
-                    if (inputStream != null) {
-                        inputStream.close();
-                    }
-                    if (outputStream != null) {
-                        outputStream.close();
-                    }
-                }
+                tmpFile.createNewFile();
+                FileInputStream inputStream = new FileInputStream(fileUpload.getFile());
+                FileOutputStream outputStream = new FileOutputStream(tmpFile);
+                copy(inputStream, outputStream);
             }
             this.file = tmpFile;
         } catch (Throwable throwable) {
@@ -106,6 +79,46 @@ public class MRestFileUpload {
 
     public File getFileDirectory() {
         return getFile().getParentFile();
+    }
+
+    public InputStream getFileInputStream() {
+        try {
+            return new FileInputStream(this.file);
+        } catch (FileNotFoundException e) {}
+        return null;
+    }
+
+    public void copyFile(File newFile) throws IOException {
+        if (!newFile.exists()) {
+            File dirFile = newFile.getParentFile();
+            if (!dirFile.exists()) {
+                dirFile.mkdirs();
+            }
+            newFile.createNewFile();
+        }
+        copy(getFileInputStream(), new FileOutputStream(newFile));
+    }
+
+    private static void copy(InputStream inputStream, OutputStream outputStream) throws IOException {
+        try {
+            byte[] buffer = new byte[2048];
+            int readSize = 0;
+            while ((readSize = inputStream.read(buffer)) >= 0) {
+                outputStream.write(buffer, 0, readSize);
+            }
+        } finally {
+            if (inputStream != null) {
+                inputStream.close();
+            }
+            if (outputStream != null) {
+                outputStream.close();
+            }
+        }
+    }
+
+    public void release() {
+        this.file.delete();
+        this.file = null;
     }
 
 }

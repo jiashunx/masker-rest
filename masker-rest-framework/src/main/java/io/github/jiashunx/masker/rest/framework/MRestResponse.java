@@ -192,6 +192,7 @@ public class MRestResponse {
                 throw new MRestFlushException(throwable);
             } finally {
                 setFlushed(true);
+                SharedObjects.getServerThreadModel().getRestRequest().release();
                 SharedObjects.clearServerThreadModel();
             }
         }
