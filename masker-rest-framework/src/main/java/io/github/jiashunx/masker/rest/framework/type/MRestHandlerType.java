@@ -2,27 +2,28 @@ package io.github.jiashunx.masker.rest.framework.type;
 
 public enum MRestHandlerType {
     /**
-     * 无返回值, 无输入参数.
+     * 输入参数req resp, 无返回值.
      */
-    NoRet_Void,
+    InputReqResp_NoRet,
     /**
-     * 无返回值, 输入参数req.
+     * 输入参数req resp, 有返回值.
      */
-    NoRet_Req,
+    InputReqResp_Ret,
     /**
-     * 无返回值, 输入参数req resp.
+     * 输入参数req, 无返回值.
      */
-    NoRet_ReqResp,
+    InputReq_NoRet,
     /**
-     * 有返回值, 输入参数req.
+     * 输入参数req, 有返回值.
      */
-    Ret_Req,
+    InputReq_Ret,
     /**
-     * 有返回值, 输入参数req resp.
+     * 无输入参数, 无返回值.
      */
-    Ret_ReqResp,
+    NoInput_NoRet,
     /**
-     * 有返回值, 无输入参数.
+     * 无输入参数, 有返回值.
      */
-    Ret_Void;
+    NoInput_Ret;
+
 }

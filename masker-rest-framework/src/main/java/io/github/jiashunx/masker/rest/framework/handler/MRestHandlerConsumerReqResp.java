@@ -31,6 +31,6 @@ public class MRestHandlerConsumerReqResp<T1 extends MRestRequest, T2 extends MRe
 
     @Override
     public MRestHandlerType getType() {
-        return MRestHandlerType.NoRet_ReqResp;
+        return MRestHandlerType.InputReqResp_NoRet;
     }
 }

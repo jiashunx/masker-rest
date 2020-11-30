@@ -26,6 +26,6 @@ public class MRestHandlerSupplier<R> extends MRestHandler {
 
     @Override
     public MRestHandlerType getType() {
-        return MRestHandlerType.Ret_Void;
+        return MRestHandlerType.NoInput_Ret;
     }
 }

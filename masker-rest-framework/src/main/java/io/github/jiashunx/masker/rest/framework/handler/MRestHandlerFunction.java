@@ -30,6 +30,6 @@ public class MRestHandlerFunction<T extends MRestRequest, R> extends MRestHandle
 
     @Override
     public MRestHandlerType getType() {
-        return MRestHandlerType.Ret_Req;
+        return MRestHandlerType.InputReq_Ret;
     }
 }

@@ -30,6 +30,6 @@ public class MRestHandlerConsumerReq<T extends MRestRequest> extends MRestHandle
 
     @Override
     public MRestHandlerType getType() {
-        return MRestHandlerType.NoRet_Req;
+        return MRestHandlerType.InputReq_NoRet;
     }
 }

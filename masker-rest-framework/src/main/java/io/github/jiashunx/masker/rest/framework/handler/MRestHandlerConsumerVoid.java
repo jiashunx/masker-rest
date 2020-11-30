@@ -28,6 +28,6 @@ public class MRestHandlerConsumerVoid extends MRestHandler {
 
     @Override
     public MRestHandlerType getType() {
-        return MRestHandlerType.NoRet_Void;
+        return MRestHandlerType.NoInput_NoRet;
     }
 }

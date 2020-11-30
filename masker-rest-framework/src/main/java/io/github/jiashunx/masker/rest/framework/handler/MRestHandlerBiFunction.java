@@ -32,6 +32,6 @@ public class MRestHandlerBiFunction<T extends MRestRequest, U extends MRestRespo
 
     @Override
     public MRestHandlerType getType() {
-        return MRestHandlerType.Ret_ReqResp;
+        return MRestHandlerType.InputReqResp_Ret;
     }
 }

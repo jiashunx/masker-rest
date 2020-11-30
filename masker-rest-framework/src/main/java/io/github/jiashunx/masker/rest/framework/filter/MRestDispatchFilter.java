@@ -41,13 +41,14 @@ public class MRestDispatchFilter implements MRestFilter {
             return;
         }
         switch (restHandler.getType()) {
-            case NoRet_Req:
-            case NoRet_ReqResp:
-            case NoRet_Void:
+            case NoInput_NoRet:
+            case InputReq_NoRet:
+            case InputReqResp_NoRet:
                 handleRequestWithNoRet(restRequest, restResponse, restHandler);
                 break;
-            case Ret_Void:
-            case Ret_ReqResp:
+            case NoInput_Ret:
+            case InputReq_Ret:
+            case InputReqResp_Ret:
                 handleRequestWithRet(restRequest, restResponse, restHandler);
                 break;
             default:
@@ -60,13 +61,13 @@ public class MRestDispatchFilter implements MRestFilter {
         try {
             Object handler = restHandler.getHandler();
             switch (restHandler.getType()) {
-                case NoRet_Req:
+                case InputReq_NoRet:
                     ((Consumer) handler).accept(restRequest);
                     break;
-                case NoRet_ReqResp:
+                case InputReqResp_NoRet:
                     ((BiConsumer) handler).accept(restRequest, restResponse);
                     break;
-                case NoRet_Void:
+                case NoInput_NoRet:
                     ((Runnable) handler).run();
                     break;
                 default:
@@ -86,13 +87,13 @@ public class MRestDispatchFilter implements MRestFilter {
         try {
             Object handler = restHandler.getHandler();
             switch (restHandler.getType()) {
-                case Ret_ReqResp:
+                case InputReqResp_Ret:
                     retObj = ((BiFunction) handler).apply(restRequest, restResponse);
                     break;
-                case Ret_Req:
+                case InputReq_Ret:
                     retObj = ((Function) handler).apply(restRequest);
                     break;
-                case Ret_Void:
+                case NoInput_Ret:
                     retObj = ((Supplier) handler).get();
                     break;
                 default:
