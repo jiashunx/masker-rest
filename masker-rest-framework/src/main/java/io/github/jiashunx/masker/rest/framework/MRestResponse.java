@@ -1,6 +1,7 @@
 package io.github.jiashunx.masker.rest.framework;
 
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
+import io.github.jiashunx.masker.rest.framework.exception.MRestFileDownloadException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestFlushException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerException;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
@@ -9,12 +10,14 @@ import io.github.jiashunx.masker.rest.framework.model.MRestHeaders;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.github.jiashunx.masker.rest.framework.util.SharedObjects;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 
+import java.io.File;
+import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -119,6 +122,21 @@ public class MRestResponse {
         flushTask = new FlushTask(status, bytes, headers);
     }
 
+    public void write(File downloadedFile) {
+        write(downloadedFile, new HashMap<>());
+    }
+
+    public void write(File downloadedFile, Map<String, Object> headers) {
+        write(downloadedFile, new MRestHeaders(headers));
+    }
+
+    public synchronized void write(File downloadedFile, MRestHeaders headers) {
+        if (isWriteMethodInvoked()) {
+            throw new MRestServerException("write method has already been invoked.");
+        }
+        flushTask = new FlushTask(downloadedFile, headers);
+    }
+
     public boolean isWriteMethodInvoked() {
         return flushTask != null;
     }
@@ -176,18 +194,29 @@ public class MRestResponse {
     }
 
     private class FlushTask {
-        final HttpResponseStatus status;
-        final byte[] bytes;
-        final MRestHeaders headers;
+        HttpResponseStatus status;
+        byte[] bytes;
+        MRestHeaders headers;
+        File downloadedFile;
+        boolean isDownloadFile = false;
         FlushTask(HttpResponseStatus status, byte[] bytes, MRestHeaders headers) {
             this.status = Objects.requireNonNull(status);
             this.bytes = bytes;
             this.headers = headers == null ? new MRestHeaders() : headers;
         }
+        FlushTask(File downloadedFile, MRestHeaders headers) {
+            this.isDownloadFile = true;
+            this.downloadedFile = Objects.requireNonNull(downloadedFile);
+            this.headers = headers == null ? new MRestHeaders() : headers;
+        }
         void execute() {
             try {
                 this.headers.addAll($headers);
-                write($channelHandlerContext, status, bytes, this.headers);
+                if (isDownloadFile) {
+                    write($channelHandlerContext, downloadedFile, this.headers);
+                } else {
+                    write($channelHandlerContext, status, bytes, this.headers);
+                }
             } catch (Throwable throwable) {
                 throw new MRestFlushException(throwable);
             } finally {
@@ -256,6 +285,47 @@ public class MRestResponse {
         httpHeaders.add(Constants.HTTP_HEADER_CONTENT_LENGTH, response.content().readableBytes());
         ctx.write(response);
         ctx.flush();
+    }
+
+    public static void write(ChannelHandlerContext ctx, File downloadedFile) {
+        write(ctx, downloadedFile, new HashMap<>());
+    }
+
+    public static void write(ChannelHandlerContext ctx, File downloadedFile, Map<String, Object> headers) {
+        write(ctx, downloadedFile, new MRestHeaders(headers));
+    }
+
+    public static void write(ChannelHandlerContext ctx, File downloadedFile, MRestHeaders headers) {
+        try {
+            RandomAccessFile randomAccessFile = new RandomAccessFile(downloadedFile, "r");
+            long fileLength = randomAccessFile.length();
+            HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+            HttpHeaders httpHeaders = response.headers();
+            if (headers != null) {
+                List<MRestHeader> headerList = headers.getHeaders();
+                headerList.forEach(header -> {
+                    httpHeaders.add(header.getKey(), header.getValue());
+                });
+            }
+            httpHeaders.add(Constants.HTTP_HEADER_CONTENT_LENGTH, fileLength);
+            httpHeaders.add(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_APPLICATION_OCTETSTREAM);
+            httpHeaders.add(Constants.HTTP_HEADER_CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", downloadedFile.getName()));
+            ctx.write(response);
+            ChannelFuture sendFileFuture = ctx.write(new DefaultFileRegion(randomAccessFile.getChannel(), 0, fileLength), ctx.newProgressivePromise());
+            sendFileFuture.addListener(new ChannelProgressiveFutureListener() {
+                @Override
+                public void operationProgressed(ChannelProgressiveFuture channelProgressiveFuture, long l, long l1) throws Exception {
+
+                }
+                @Override
+                public void operationComplete(ChannelProgressiveFuture channelProgressiveFuture) throws Exception {
+                    randomAccessFile.close();
+                }
+            });
+            ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+        } catch (Throwable throwable) {
+            throw new MRestFileDownloadException(throwable);
+        }
     }
 
 }

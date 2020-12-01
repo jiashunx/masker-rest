@@ -20,6 +20,7 @@ public class Constants {
     public static final String HTTP_HEADER_ACCEPT = "Accept";
     public static final String HTTP_HEADER_CONTENT_TYPE = "Content-Type";
     public static final String HTTP_HEADER_CONTENT_LENGTH = "Content-Length";
+    public static final String HTTP_HEADER_CONTENT_DISPOSITION = "Content-Disposition";
     public static final String HTTP_HEADER_CONNECTION = "Connection";
     public static final String HTTP_HEADER_LOCATION = "Location";
     public static final String HTTP_HEADER_COOKIE = "Cookie";
@@ -30,6 +31,7 @@ public class Constants {
     public static final String CONTENT_TYPE_MULTIPART_FORMDATA = "multipart/form-data";
     public static final String CONTENT_TYPE_APPLICATION_JSON = "application/json";
     public static final String CONTENT_TYPE_TEXT_PLAIN = "text/plain";
+    public static final String CONTENT_TYPE_APPLICATION_OCTETSTREAM = "application/octet-stream";
     public static final String CONNECTION_KEEP_ALIVE = "keep-alive";
 
 }

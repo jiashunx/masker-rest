@@ -448,6 +448,10 @@ public class MRestServer {
         return post(url, handler);
     }
 
+    public MRestServer filedownload(String url, BiConsumer<MRestRequest, MRestResponse> handler) {
+        return get(url, handler);
+    }
+
 
     /**************************************************** SEP ****************************************************/
     /**************************************************** SEP ****************************************************/
