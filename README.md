@@ -59,7 +59,9 @@
       - feature: 支持文件上传(单文件or多文件)
       - refactor: 重构MRestHandlerType类, 更易理解.
       - bugfix: 修正各类handler的分发处理逻辑
+   - version 1.4.3
+      - feature: 支持文件下载
+      - refactor: 调整server接收的请求body最大size为50MB
 
    - TODO
       - 参考spring-core实现jar包资源扫描(本质上是移除spring-core依赖)
-      - 支持文件的上传下载
