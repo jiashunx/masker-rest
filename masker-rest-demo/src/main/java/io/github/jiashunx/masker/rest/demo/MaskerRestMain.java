@@ -155,6 +155,7 @@ public class MaskerRestMain {
                     }
                 })
 
+                // 文件上传样例
                 .fileupload("/fileupload/test0", (request, response) -> {
                     MRestFileUploadRequest fileUploadRequest = (MRestFileUploadRequest) request;
                     MRestFileUpload fileUpload = fileUploadRequest.getFileUploadOnlyOne();
@@ -177,6 +178,13 @@ public class MaskerRestMain {
                         fileNames.add(fileUpload.getFilename());
                     }
                     return fileNames;
+                })
+
+                // 文件下载样例
+                .filedownload("/filedownload/test0", (request, response) -> {
+                    String filePath = MRestUtils.getUserDirPath() + "README.md";
+                    response.write(new File(filePath));
+                    // 也可使用jquery+form表单提交post请求来实现文件下载.
                 })
 
                 .start();

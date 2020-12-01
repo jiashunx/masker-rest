@@ -18,7 +18,11 @@
             <input type="file" id="file" name="file-upload1" multiple="multiple">
         </form>
         <button type="button" id="btn-file-upload1">保存</button>
-
+    </div>
+    <div>
+        <label>文件下载测试（下载项目README.md文件）</label>
+        <br>
+        <button type="button" id="btn-download-test0">下载</button>
     </div>
     <script type="text/javascript" src="./webjars/webjar-jquery/3.5.1/dist/jquery.min.js"></script>
     <script>
@@ -49,6 +53,10 @@
                 }
             });
         });
+        $("#btn-download-test0").click(function () {
+            var _win = window.open("about:blank");
+            _win.location.href = "./filedownload/test0";
+        })
     </script>
 </body>
 </html>
