@@ -65,3 +65,5 @@
 
    - TODO
       - 参考spring-core实现jar包资源扫描(本质上是移除spring-core依赖)
+      - jwt包合并至framework包
+      - 补充完善demo工程的自动化测试用例
