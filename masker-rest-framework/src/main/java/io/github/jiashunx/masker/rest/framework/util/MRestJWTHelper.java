@@ -1,8 +1,7 @@
-package io.github.jiashunx.masker.rest.jwt;
+package io.github.jiashunx.masker.rest.framework.util;
 
 import com.alibaba.fastjson.JSON;
 import io.github.jiashunx.masker.rest.framework.exception.MRestJWTException;
-import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;

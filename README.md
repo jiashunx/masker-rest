@@ -62,6 +62,8 @@
    - version 1.4.3
       - feature: 支持文件下载
       - refactor: 调整server接收的请求body最大size为50MB
+   - version 1.5.0
+      - refactor: jwt默认实现合并至framework工程
 
    - TODO
       - 参考spring-core实现jar包资源扫描(本质上是移除spring-core依赖)
