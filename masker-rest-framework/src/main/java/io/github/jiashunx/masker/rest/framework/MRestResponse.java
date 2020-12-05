@@ -103,12 +103,20 @@ public class MRestResponse {
         write(string.getBytes(StandardCharsets.UTF_8), headers);
     }
 
+    public void write(byte[] bytes) {
+        write(bytes, new HashMap<>());
+    }
+
     public void write(byte[] bytes, Map<String, Object> headers) {
         write(bytes, new MRestHeaders(headers));
     }
 
     public void write(byte[] bytes, MRestHeaders headers) {
         write(HttpResponseStatus.OK, bytes, headers);
+    }
+
+    public void write(HttpResponseStatus status, byte[] bytes) {
+        write(status, bytes, new HashMap<>());
     }
 
     public void write(HttpResponseStatus status, byte[] bytes, Map<String, Object> headers) {
@@ -260,12 +268,20 @@ public class MRestResponse {
         write(ctx, bytes, new MRestHeaders(headers).add(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_APPLICATION_JSON));
     }
 
+    public static void write(ChannelHandlerContext ctx, byte[] bytes) {
+        write(ctx, HttpResponseStatus.OK, bytes, new HashMap<>());
+    }
+
     public static void write(ChannelHandlerContext ctx, byte[] bytes, Map<String, Object> headers) {
         write(ctx, HttpResponseStatus.OK, bytes, headers);
     }
 
     public static void write(ChannelHandlerContext ctx, byte[] bytes, MRestHeaders headers) {
         write(ctx, HttpResponseStatus.OK, bytes, headers);
+    }
+
+    public static void write(ChannelHandlerContext ctx, HttpResponseStatus status, byte[] bytes) {
+        write(ctx, status, bytes, new HashMap<>());
     }
 
     public static void write(ChannelHandlerContext ctx, HttpResponseStatus status, byte[] bytes, Map<String, Object> headers) {
