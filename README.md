@@ -65,6 +65,8 @@
    - version 1.4.4
       - refactor: jwt默认实现合并至framework工程
       - bugfix: 修正未指定context-path时对url的截取异常缺陷
+   - version 1.4.5
+      - refactor: 添加IOUtils工具类
 
    - TODO
       - 参考spring-core实现jar包资源扫描(本质上是移除spring-core依赖)
