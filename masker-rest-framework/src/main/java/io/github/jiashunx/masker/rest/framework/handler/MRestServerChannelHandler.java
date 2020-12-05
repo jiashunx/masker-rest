@@ -131,7 +131,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
             String url = path;
             if (url.equals(contextPath)) {
                 url = Constants.ROOT_PATH;
-            } else if (url.startsWith(contextPath)) {
+            } else if (!Constants.DEFAULT_CONTEXT_PATH.equals(contextPath) && url.startsWith(contextPath)) {
                 url = url.substring(contextPath.length());
             }
             restRequest.setUrl(url);
