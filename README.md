@@ -67,6 +67,7 @@
       - bugfix: 修正未指定context-path时对url的截取异常缺陷
    - version 1.4.5
       - refactor: 添加IOUtils工具类
+      - refactor: response补充write方法
 
    - TODO
       - 参考spring-core实现jar包资源扫描(本质上是移除spring-core依赖)
