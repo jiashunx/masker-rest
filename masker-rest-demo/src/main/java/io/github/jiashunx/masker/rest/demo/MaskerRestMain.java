@@ -182,6 +182,10 @@ public class MaskerRestMain {
                     response.write(new File(filePath));
                     // 也可使用jquery+form表单提交post请求来实现文件下载.
                 })
+                .get("/filedownload/test1", (request, response) -> {
+                    String filePath = MRestUtils.getUserDirPath() + "README.md";
+                    response.write(new File(filePath));
+                })
 
                 .start();
     }
