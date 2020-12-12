@@ -15,6 +15,7 @@ import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -560,5 +561,17 @@ public class MRestServer {
 
     /**************************************************** SEP ****************************************************/
     /**************************************************** SEP ****************************************************/
+
+
+    private BiConsumer<ChannelHandlerContext, Throwable> defaultErrorHandler = null;
+
+    public BiConsumer<ChannelHandlerContext, Throwable> getDefaultErrorHandler() {
+        return defaultErrorHandler;
+    }
+
+    public MRestServer defaultErrorHandler(BiConsumer<ChannelHandlerContext, Throwable> defaultErrorHandler) {
+        this.defaultErrorHandler = Objects.requireNonNull(defaultErrorHandler);
+        return this;
+    }
 
 }

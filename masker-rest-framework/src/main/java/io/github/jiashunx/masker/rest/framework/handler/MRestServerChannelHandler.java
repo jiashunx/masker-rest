@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * @author jiashunx
@@ -91,7 +93,19 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
         if (logger.isErrorEnabled()) {
             logger.error("", cause);
         }
-        MRestResponse.write(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+        BiConsumer<ChannelHandlerContext, Throwable> errorHandler = restServer.getDefaultErrorHandler();
+        if (errorHandler == null) {
+            errorHandler = (a, b) -> {
+                MRestResponse.write(a, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            };
+        }
+        try {
+            errorHandler.accept(ctx, cause);
+        } catch (Throwable throwable) {
+            if (logger.isErrorEnabled()) {
+                logger.error("ErrorHandler execute failed.", throwable);
+            }
+        }
     }
 
     @Override
