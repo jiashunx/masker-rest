@@ -21,7 +21,7 @@
 
    - [UserGuide](./docs/UserGuide.md)
 
-- 版本清单：
+- 版本清单（最新版本：<b>1.4.5</b>）：
 
    - version 1.0.0
       - feature：支持发布rest接口
@@ -68,7 +68,8 @@
    - version 1.4.5
       - refactor: 添加IOUtils工具类
       - refactor: response补充write方法
+   - version 1.4.6-SNAPSHOT
+      - refactor: 添加默认的请求异常处理
 
    - TODO
       - 参考spring-core实现jar包资源扫描(本质上是移除spring-core依赖)
-      - 补充完善demo工程的自动化测试用例

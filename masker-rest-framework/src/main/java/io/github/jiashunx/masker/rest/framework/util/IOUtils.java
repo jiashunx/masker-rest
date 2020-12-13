@@ -158,4 +158,12 @@ public final class IOUtils {
         return null;
     }
 
+    public static void copy(InputStream inputStream, OutputStream outputStream) throws IOException {
+        byte[] buffer = new byte[1024];
+        int readSize = 0;
+        while ((readSize = inputStream.read(buffer)) >= 0) {
+            outputStream.write(buffer, 0, readSize);
+        }
+    }
+
 }

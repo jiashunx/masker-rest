@@ -87,11 +87,7 @@ public final class StaticResourceHolder {
                 byte[] contentBytes = null;
                 try(InputStream inputStream = resource.getInputStream()) {
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available());
-                    byte[] buffer = new byte[1024];
-                    int readSize = 0;
-                    while ((readSize = inputStream.read(buffer)) >= 0) {
-                        outputStream.write(buffer, 0, readSize);
-                    }
+                    IOUtils.copy(inputStream, outputStream);
                     contentBytes = outputStream.toByteArray();
                 } catch (Throwable throwable) {
                     if (logger.isErrorEnabled()) {
