@@ -70,8 +70,8 @@
       - refactor: response补充write方法
    - version 1.4.6 (doing)
       - refactor: 添加默认的请求异常处理
+      - refactor: 序列化依赖从fastjson调整为jackson
       - TODO
-         - 序列化依赖从fastjson调整为jackson
          - 移除spring-core依赖（参考spring-core实现jar包资源扫描）
    - version 1.5.0 (planing)
       - TODO
