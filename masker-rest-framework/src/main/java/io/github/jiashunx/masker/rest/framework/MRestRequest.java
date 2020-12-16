@@ -1,8 +1,5 @@
 package io.github.jiashunx.masker.rest.framework;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -73,20 +70,12 @@ public class MRestRequest {
         return new String(bodyBytes, StandardCharsets.UTF_8);
     }
 
-    public JSONObject bodyToJSONObj() {
-        return MRestSerializer.parseToJSONObject(bodyToString());
-    }
-
-    public JSONArray bodyToJSONArr() {
-        return MRestSerializer.parseToJSONArray(bodyToString());
-    }
-
     public <T> List<T> parseBodyToObjList(Class<T> klass) {
-        return JSON.parseArray(bodyToString(), klass);
+        return MRestSerializer.jsonToList(bodyBytes, klass);
     }
 
     public <T> T parseBodyToObj(Class<T> klass) {
-        return JSON.parseObject(bodyToString(), klass);
+        return MRestSerializer.jsonToObj(bodyBytes, klass);
     }
 
     public HttpRequest getHttpRequest() {

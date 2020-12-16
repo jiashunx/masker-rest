@@ -1,6 +1,7 @@
 package io.github.jiashunx.masker.rest.framework.serialize.impl;
 
-import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.jiashunx.masker.rest.framework.exception.MRestSerializeException;
 import io.github.jiashunx.masker.rest.framework.serialize.ISerializer;
 
 /**
@@ -10,12 +11,20 @@ public class MRestJSONSerializer implements ISerializer {
 
     @Override
     public byte[] serialize(Object object) {
-        return JSON.toJSONBytes(object);
+        try {
+            return new ObjectMapper().writeValueAsBytes(object);
+        } catch (Throwable throwable) {
+            throw new MRestSerializeException(throwable);
+        }
     }
 
     @Override
     public <T> T deserialize(Class<T> klass, byte[] bytes) {
-        return JSON.parseObject(bytes, klass);
+        try {
+            return new ObjectMapper().readValue(bytes, klass);
+        } catch (Throwable throwable) {
+            throw new MRestSerializeException(throwable);
+        }
     }
 
 }

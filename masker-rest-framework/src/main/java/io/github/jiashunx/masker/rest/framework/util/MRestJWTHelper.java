@@ -1,7 +1,7 @@
 package io.github.jiashunx.masker.rest.framework.util;
 
-import com.alibaba.fastjson.JSON;
 import io.github.jiashunx.masker.rest.framework.exception.MRestJWTException;
+import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -135,7 +135,7 @@ public class MRestJWTHelper {
             Map<String, Object> claims = jws.getBody();
             Map<String, Object> headers = (Map<String, Object>) jws.getHeader();
             String newToken = Jwts.builder()
-                    .setPayload(JSON.toJSONString(claims))
+                    .setPayload(MRestSerializer.objectToJson(claims))
                     .setHeader(headers)
                     .setHeaderParam(HEADER_KEY_TYP, HEADER_VALUE_TYP)
                     .signWith(SignatureAlgorithm.HS256, secretKey).compact();
