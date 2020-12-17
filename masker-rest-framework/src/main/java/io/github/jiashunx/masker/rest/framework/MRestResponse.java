@@ -177,8 +177,34 @@ public class MRestResponse {
         return this.$headers.getAll(key);
     }
 
+    public void removeCookie(String name) {
+        removeCookie(Constants.DEFAULT_CONTEXT_PATH, name);
+    }
+
+    public void removeCookie(String path, String name) {
+        Cookie cookie = new DefaultCookie(name, "");
+        cookie.setPath(path);
+        removeCookie(cookie);
+    }
+
+    public void removeCookie(Cookie cookie) {
+        cookie.setMaxAge(0);
+        setCookie(cookie);
+    }
+
     public void setCookie(String name, String value) {
-        setCookie(new DefaultCookie(name, value));
+        setCookie(Constants.DEFAULT_CONTEXT_PATH, name, value);
+    }
+
+    public void setCookie(String path, String name, String value) {
+        setCookie(path, Long.MIN_VALUE, name, value);
+    }
+
+    public void setCookie(String path, long maxAge, String name, String value) {
+        Cookie cookie = new DefaultCookie(name, value);
+        cookie.setPath(path);
+        cookie.setMaxAge(maxAge);
+        setCookie(cookie);
     }
 
     /**
