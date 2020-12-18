@@ -21,7 +21,7 @@
 
    - [UserGuide](./docs/UserGuide.md)
 
-- 版本清单（最新版本：<b>1.4.5</b>）：
+- 版本清单（最新版本：<b>1.4.6</b>）：
 
    - version 1.0.0 (released)
       - feature：支持发布rest接口
@@ -68,11 +68,13 @@
    - version 1.4.5 (released)
       - refactor: 添加IOUtils工具类
       - refactor: response补充write方法
-   - version 1.4.6 (doing)
-      - refactor: 添加默认的请求异常处理
+   - version 1.4.6 (released)
+      - feature: 添加默认的请求异常处理
+      - feature: 添加FileUtils工具类，提供文件新增/删除、压缩/解压相关工具方法
       - refactor: 序列化依赖从fastjson调整为jackson
-      - TODO
-         - 移除spring-core依赖（参考spring-core实现jar包资源扫描）
+      - refactor: jwt处理取消抛出异常
+   - version 1.4.7 (planing)
+      - 移除spring-core依赖（参考spring-core实现jar包资源扫描）
    - version 1.5.0 (planing)
       - TODO
          - 支持WebSocket服务端处理
