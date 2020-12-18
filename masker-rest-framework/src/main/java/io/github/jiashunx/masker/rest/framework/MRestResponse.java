@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * @author jiashunx
@@ -134,15 +135,27 @@ public class MRestResponse {
         write(downloadedFile, new HashMap<>());
     }
 
+    public void write(File downloadedFile, Consumer<File> callback) {
+        write(downloadedFile, new HashMap<>(), callback);
+    }
+
     public void write(File downloadedFile, Map<String, Object> headers) {
         write(downloadedFile, new MRestHeaders(headers));
     }
 
-    public synchronized void write(File downloadedFile, MRestHeaders headers) {
+    public void write(File downloadedFile, Map<String, Object> headers, Consumer<File> callback) {
+        write(downloadedFile, new MRestHeaders(headers), callback);
+    }
+
+    public void write(File downloadedFile, MRestHeaders headers) {
+        write(downloadedFile, headers, null);
+    }
+
+    public synchronized void write(File downloadedFile, MRestHeaders headers, Consumer<File> callback) {
         if (isWriteMethodInvoked()) {
             throw new MRestServerException("write method has already been invoked.");
         }
-        flushTask = new FlushTask(downloadedFile, headers);
+        flushTask = new FlushTask(downloadedFile, headers, callback);
     }
 
     public boolean isWriteMethodInvoked() {
@@ -233,21 +246,23 @@ public class MRestResponse {
         MRestHeaders headers;
         File downloadedFile;
         boolean isDownloadFile = false;
+        Consumer<File> downloadCallback;
         FlushTask(HttpResponseStatus status, byte[] bytes, MRestHeaders headers) {
             this.status = Objects.requireNonNull(status);
             this.bytes = bytes;
             this.headers = headers == null ? new MRestHeaders() : headers;
         }
-        FlushTask(File downloadedFile, MRestHeaders headers) {
+        FlushTask(File downloadedFile, MRestHeaders headers, Consumer<File> downloadCallback) {
             this.isDownloadFile = true;
             this.downloadedFile = Objects.requireNonNull(downloadedFile);
             this.headers = headers == null ? new MRestHeaders() : headers;
+            this.downloadCallback = downloadCallback;
         }
         void execute() {
             try {
                 this.headers.addAll($headers);
                 if (isDownloadFile) {
-                    write($channelHandlerContext, downloadedFile, this.headers);
+                    write($channelHandlerContext, downloadedFile, this.headers, downloadCallback);
                 } else {
                     write($channelHandlerContext, status, bytes, this.headers);
                 }
@@ -333,11 +348,23 @@ public class MRestResponse {
         write(ctx, downloadedFile, new HashMap<>());
     }
 
+    public static void write(ChannelHandlerContext ctx, File downloadedFile, Consumer<File> callback) {
+        write(ctx, downloadedFile, new HashMap<>(), callback);
+    }
+
     public static void write(ChannelHandlerContext ctx, File downloadedFile, Map<String, Object> headers) {
         write(ctx, downloadedFile, new MRestHeaders(headers));
     }
 
+    public static void write(ChannelHandlerContext ctx, File downloadedFile, Map<String, Object> headers, Consumer<File> callback) {
+        write(ctx, downloadedFile, new MRestHeaders(headers), callback);
+    }
+
     public static void write(ChannelHandlerContext ctx, File downloadedFile, MRestHeaders headers) {
+        write(ctx, downloadedFile, headers, null);
+    }
+
+    public static void write(ChannelHandlerContext ctx, File downloadedFile, MRestHeaders headers, Consumer<File> callback) {
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(downloadedFile, "r");
             long fileLength = randomAccessFile.length();
@@ -362,6 +389,9 @@ public class MRestResponse {
                 @Override
                 public void operationComplete(ChannelProgressiveFuture channelProgressiveFuture) throws Exception {
                     randomAccessFile.close();
+                    if (callback != null) {
+                        callback.accept(downloadedFile);
+                    }
                 }
             });
             ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
