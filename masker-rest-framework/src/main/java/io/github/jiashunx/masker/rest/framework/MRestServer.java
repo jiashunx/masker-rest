@@ -189,7 +189,7 @@ public class MRestServer {
     /**************************************************** SEP ****************************************************/
     /**************************************************** SEP ****************************************************/
 
-    private final Map<String, MRestHandler> urlMappingHandler = new HashMap<>();
+    private final Map<String, Map<HttpMethod, MRestHandler>> urlMappingHandler = new HashMap<>();
 
     /**
      * 添加url映射处理的任务(在服务启动时统一添加).
@@ -199,21 +199,31 @@ public class MRestServer {
     /**
      * 指定url是否是已指定映射处理.
      * @param requestURL requestURL
+     * @param methods methods
      * @return boolean
      */
-    public boolean isMappingURL(String requestURL) {
-        return urlMappingHandler.containsKey(requestURL);
+    public boolean isMappingURL(String requestURL, HttpMethod... methods) {
+        if (urlMappingHandler.containsKey(requestURL)) {
+            Map<HttpMethod, MRestHandler> handlerMap = urlMappingHandler.get(requestURL);
+            for (HttpMethod method: methods) {
+                if (handlerMap.get(method) != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
      * 检查映射url正确性.
      * @param url url
+     * @param methods methods
      */
-    private void checkMappingUrl(String url) {
+    private void checkMappingUrl(String url, HttpMethod... methods) {
         if (StringUtils.isBlank(url)) {
             throw new IllegalArgumentException(String.format("illegal mapping url: %s", url));
         }
-        if (isMappingURL(url)) {
+        if (isMappingURL(url, methods)) {
             throw new MRestServerInitializeException(String.format("url mapping conflict: %s", url));
         }
     }
@@ -233,7 +243,7 @@ public class MRestServer {
     }
 
     public MRestServer mapping(String url, Supplier<?> handler, MRestHandlerConfig config, HttpMethod... methods) {
-        return mapping(url, new MRestHandlerSupplier<>(url, handler, config, methods), config, methods);
+        return mapping(url, new MRestHandlerSupplier<>(url, handler, config, methods), methods);
     }
 
     public MRestServer mapping(String url, Runnable handler, HttpMethod... methods) {
@@ -245,7 +255,7 @@ public class MRestServer {
     }
 
     public MRestServer mapping(String url, Runnable handler, MRestHandlerConfig config, HttpMethod... methods) {
-        return mapping(url, new MRestHandlerConsumerVoid(url, handler, config, methods), config, methods);
+        return mapping(url, new MRestHandlerConsumerVoid(url, handler, config, methods), methods);
     }
 
     public MRestServer mapping(String url, Consumer<MRestRequest> handler, HttpMethod... methods) {
@@ -257,7 +267,7 @@ public class MRestServer {
     }
 
     public MRestServer mapping(String url, Consumer<MRestRequest> handler, MRestHandlerConfig config, HttpMethod... methods) {
-        return mapping(url, new MRestHandlerConsumerReq<>(url, handler, config, methods), config, methods);
+        return mapping(url, new MRestHandlerConsumerReq<>(url, handler, config, methods), methods);
     }
 
     public MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, HttpMethod... methods) {
@@ -269,7 +279,7 @@ public class MRestServer {
     }
 
     public MRestServer mapping(String url, BiConsumer<MRestRequest, MRestResponse> handler, MRestHandlerConfig config, HttpMethod... methods) {
-        return mapping(url, new MRestHandlerConsumerReqResp<>(url, handler, config, methods), config, methods);
+        return mapping(url, new MRestHandlerConsumerReqResp<>(url, handler, config, methods), methods);
     }
 
     public <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, HttpMethod... methods) {
@@ -281,7 +291,7 @@ public class MRestServer {
     }
 
     public <R> MRestServer mapping(String url, Function<MRestRequest, R> handler, MRestHandlerConfig config, HttpMethod... methods) {
-        return mapping(url, new MRestHandlerFunction<>(url, handler, config, methods), config, methods);
+        return mapping(url, new MRestHandlerFunction<>(url, handler, config, methods), methods);
     }
 
     public <R> MRestServer mapping(String url, BiFunction<MRestRequest, MRestResponse, R> handler, HttpMethod... methods) {
@@ -293,15 +303,18 @@ public class MRestServer {
     }
 
     public <R> MRestServer mapping(String url, BiFunction<MRestRequest, MRestResponse, R> handler, MRestHandlerConfig config, HttpMethod... methods) {
-        return mapping(url, new MRestHandlerBiFunction<>(url, handler, config, methods), config, methods);
+        return mapping(url, new MRestHandlerBiFunction<>(url, handler, config, methods), methods);
     }
 
-    private synchronized MRestServer mapping(String url, MRestHandler handler, MRestHandlerConfig config, HttpMethod... methods) {
+    private synchronized MRestServer mapping(String url, MRestHandler handler, HttpMethod... methods) {
         checkServerState();
         mappingTaskList.add(() -> {
-            checkMappingUrl(url);
+            checkMappingUrl(url, methods);
             checkMappingHandler(handler);
-            urlMappingHandler.put(url, handler);
+            Map<HttpMethod, MRestHandler> handlerMap = urlMappingHandler.computeIfAbsent(url, k -> new HashMap<>());
+            for (HttpMethod method: methods) {
+                handlerMap.put(method, handler);
+            }
             if (logger.isInfoEnabled()) {
                 logger.info("server: {} register url handler success, {}, {}", serverName, methods, url);
             }
@@ -309,8 +322,12 @@ public class MRestServer {
         return this;
     }
 
-    public MRestHandler getUrlMappingHandler(String requestURL) {
-        return urlMappingHandler.get(requestURL);
+    public MRestHandler getUrlMappingHandler(String requestURL, HttpMethod method) {
+        Map<HttpMethod, MRestHandler> handlerMap = urlMappingHandler.get(requestURL);
+        if (handlerMap != null) {
+            return handlerMap.get(method);
+        }
+        return null;
     }
 
     public <R> MRestServer get(String url, Supplier<R> handler) {

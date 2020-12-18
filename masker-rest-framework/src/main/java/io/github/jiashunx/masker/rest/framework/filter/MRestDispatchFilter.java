@@ -26,7 +26,7 @@ public class MRestDispatchFilter implements MRestFilter {
         // dispatch request handler
         String requestURL = restRequest.getUrl();
         MRestServer restServer = filterChain.getRestServer();
-        MRestHandler restHandler = restServer.getUrlMappingHandler(requestURL);
+        MRestHandler restHandler = restServer.getUrlMappingHandler(requestURL, restRequest.getMethod());
         if (restHandler != null) {
             handleRequest(restRequest, restResponse, restHandler);
             return;
