@@ -73,11 +73,12 @@
       - feature: 添加FileUtils工具类，提供文件新增/删除、压缩/解压相关工具方法
       - refactor: 序列化依赖从fastjson调整为jackson
       - refactor: jwt处理取消抛出异常
-   - version 1.4.7 (doing)
+   - version 1.4.7 (release)
+      - feature: 下载文件支持回调（文件下载完成时执行）
       - bugfix: 修正同一url映射处理对象分别进行映射时报冲突的缺陷
-      - 移除spring-core依赖（参考spring-core实现jar包资源扫描）
    - version 1.5.0 (planing)
       - TODO
+         - 移除spring-core依赖（参考spring-core实现jar包资源扫描）
          - 支持WebSocket服务端处理
          - 支持WebSocket前端处理
          - 添加WebSocket简易demo
