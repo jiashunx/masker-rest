@@ -1,6 +1,7 @@
 package io.github.jiashunx.masker.rest.framework.model;
 
 import io.github.jiashunx.masker.rest.framework.exception.MRestFileUploadException;
+import io.github.jiashunx.masker.rest.framework.util.IOUtils;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.netty.handler.codec.http.multipart.FileUpload;
 
@@ -42,14 +43,14 @@ public class MRestFileUpload {
                 tmpFile.createNewFile();
                 ByteArrayInputStream inputStream = new ByteArrayInputStream(fileUpload.get());
                 FileOutputStream outputStream = new FileOutputStream(tmpFile);
-                copy(inputStream, outputStream);
+                IOUtils.copy(inputStream, outputStream);
             } else {
                 // 磁盘文件拷贝
                 tmpFile = new File(fileUpload.getFile().getAbsolutePath() + "_mr");
                 tmpFile.createNewFile();
                 FileInputStream inputStream = new FileInputStream(fileUpload.getFile());
                 FileOutputStream outputStream = new FileOutputStream(tmpFile);
-                copy(inputStream, outputStream);
+                IOUtils.copy(inputStream, outputStream);
             }
             this.file = tmpFile;
         } catch (Throwable throwable) {
@@ -96,29 +97,14 @@ public class MRestFileUpload {
             }
             newFile.createNewFile();
         }
-        copy(getFileInputStream(), new FileOutputStream(newFile));
+        IOUtils.copy(getFileInputStream(), new FileOutputStream(newFile));
     }
 
-    private static void copy(InputStream inputStream, OutputStream outputStream) throws IOException {
-        try {
-            byte[] buffer = new byte[2048];
-            int readSize = 0;
-            while ((readSize = inputStream.read(buffer)) >= 0) {
-                outputStream.write(buffer, 0, readSize);
-            }
-        } finally {
-            if (inputStream != null) {
-                inputStream.close();
-            }
-            if (outputStream != null) {
-                outputStream.close();
-            }
+    public synchronized void release() {
+        if (this.file != null) {
+            this.file.delete();
+            this.file = null;
         }
-    }
-
-    public void release() {
-        this.file.delete();
-        this.file = null;
     }
 
 }
