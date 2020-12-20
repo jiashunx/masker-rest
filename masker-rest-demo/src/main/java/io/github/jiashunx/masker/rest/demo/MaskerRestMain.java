@@ -34,6 +34,7 @@ public class MaskerRestMain {
     private static final MRestJWTHelper JWT_HELPER = new MRestJWTHelper("qwerasdfzxcv09876543231");
 
     public static void main(String[] args) {
+        new MRestServer(21701).start();
         new MRestServer()
                 .listenPort(21700)
                 .contextPath("/demo")

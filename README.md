@@ -76,6 +76,9 @@
    - version 1.4.7 (release)
       - feature: 下载文件支持回调（文件下载完成时执行）
       - bugfix: 修正同一url映射处理对象分别进行映射时报冲突的缺陷
+   - version 1.4.8 (doing)
+      - feature: 对于未指定 "/" 或 "/index.html" 路径映射的服务，输出默认masker-rest主页面
+      - refactor: 文件上传优化部分代码
    - version 1.5.0 (planing)
       - TODO
          - 移除spring-core依赖（参考spring-core实现jar包资源扫描）

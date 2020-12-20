@@ -31,6 +31,7 @@ public class Constants {
     public static final String CONTENT_TYPE_MULTIPART_FORMDATA = "multipart/form-data";
     public static final String CONTENT_TYPE_APPLICATION_JSON = "application/json";
     public static final String CONTENT_TYPE_TEXT_PLAIN = "text/plain";
+    public static final String CONTENT_TYPE_TEXT_HTML = "text/html";
     public static final String CONTENT_TYPE_APPLICATION_OCTETSTREAM = "application/octet-stream";
     public static final String CONNECTION_KEEP_ALIVE = "keep-alive";
 

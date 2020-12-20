@@ -8,6 +8,7 @@ import io.github.jiashunx.masker.rest.framework.exception.MRestHandleException;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
 import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
+import io.github.jiashunx.masker.rest.framework.util.IOUtils;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -21,6 +22,8 @@ import java.util.function.*;
  */
 public class MRestDispatchFilter implements MRestFilter {
 
+    private static final byte[] DEFAULT_PAGE_BYTES = IOUtils.loadFileBytesFromClasspath("template/index.html", MRestDispatchFilter.class.getClassLoader());
+
     @Override
     public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {
         // dispatch request handler
@@ -29,6 +32,11 @@ public class MRestDispatchFilter implements MRestFilter {
         MRestHandler restHandler = restServer.getUrlMappingHandler(requestURL, restRequest.getMethod());
         if (restHandler != null) {
             handleRequest(restRequest, restResponse, restHandler);
+            return;
+        }
+        if ("/".equals(requestURL) || "/index.html".equals(requestURL)) {
+            // 输出默认masker-rest主页面
+            restResponse.write(DEFAULT_PAGE_BYTES, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_TEXT_HTML));
             return;
         }
         restResponse.write(HttpResponseStatus.NOT_FOUND);
