@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.framework.util;
 
+import io.github.jiashunx.masker.rest.framework.exception.MRestFileOperateException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestZipException;
 
 import java.io.*;
@@ -15,7 +16,7 @@ public class FileUtils {
 
     private FileUtils() {}
 
-    public static void deleteFile(File[] files) {
+    public static void deleteFile(File[] files) throws MRestFileOperateException {
         if (files == null || files.length == 0) {
             return;
         }
@@ -24,29 +25,41 @@ public class FileUtils {
         }
     }
 
-    public static boolean deleteFile(File file) {
+    public static boolean deleteFile(File file) throws MRestFileOperateException {
         if (file == null || !file.exists()) {
             return false;
         }
-        if (file.isDirectory()) {
-            deleteFile(file.listFiles());
+        try {
+            if (file.isDirectory()) {
+                deleteFile(file.listFiles());
+            }
+            return file.delete();
+        } catch (Throwable throwable) {
+            throw new MRestFileOperateException(throwable);
         }
-        return file.delete();
     }
 
-    public static File newDirectory(String path) {
+    public static File newDirectory(String path) throws MRestFileOperateException {
         File newDirectory = new File(path);
-        if (!newDirectory.exists()) {
-            newDirectory.mkdirs();
+        try {
+            if (!newDirectory.exists()) {
+                newDirectory.mkdirs();
+            }
+            return newDirectory;
+        } catch (Throwable throwable) {
+            throw new MRestFileOperateException(throwable);
         }
-        return newDirectory;
     }
 
-    public static File newFile(String path) throws IOException {
+    public static File newFile(String path) throws MRestFileOperateException {
         File newFile = new File(path);
-        if (!newFile.exists()) {
-            newDirectory(newFile.getParentFile().getAbsolutePath());
-            newFile.createNewFile();
+        try {
+            if (!newFile.exists()) {
+                newDirectory(newFile.getParentFile().getAbsolutePath());
+                newFile.createNewFile();
+            }
+        } catch (Throwable throwable) {
+            throw new MRestFileOperateException(throwable);
         }
         return newFile;
     }
@@ -55,10 +68,9 @@ public class FileUtils {
      * 压缩文件
      * @param srcFileArr 待压缩的文件列表
      * @param targetFile 目标压缩文件
-     * @throws IOException IOException
      * @throws MRestZipException MRestZipException
      */
-    public static void zip(File[] srcFileArr, File targetFile) throws IOException, MRestZipException {
+    public static void zip(File[] srcFileArr, File targetFile) throws MRestZipException {
         newFile(targetFile.getAbsolutePath());
         try(FileOutputStream fileOutputStream = new FileOutputStream(targetFile);
             ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream)) {
@@ -104,7 +116,7 @@ public class FileUtils {
      * @param targetDir 解压目录
      * @param unzipDirName 指定文件夹名称
      */
-    public static void unzip(File zipFile, File targetDir, String unzipDirName) {
+    public static void unzip(File zipFile, File targetDir, String unzipDirName) throws MRestZipException {
         unzip(zipFile, new File(targetDir.getAbsolutePath() + File.separator + unzipDirName));
     }
 
@@ -113,7 +125,7 @@ public class FileUtils {
      * @param zipFile 待解压文件
      * @param targetDir 解压目录
      */
-    public static void unzip(File zipFile, File targetDir) {
+    public static void unzip(File zipFile, File targetDir) throws MRestZipException {
         try {
             newDirectory(targetDir.getAbsolutePath());
             ZipFile zip = new ZipFile(zipFile);
