@@ -21,7 +21,7 @@
 
    - [UserGuide](./docs/UserGuide.md)
 
-- 版本清单（最新版本：<b>1.4.8</b>）：
+- 版本清单（最新版本：<b>1.4.9</b>）：
 
    - version 1.0.0 (released)
       - feature：支持发布rest接口
@@ -80,6 +80,9 @@
       - feature: 对于未指定 "/" 或 "/index.html" 路径映射的服务，输出默认masker-rest主页面
       - refactor: 文件上传优化部分代码
       - refactor: 优化文件操作代码，增加运行时异常类：FileOperateException
+   - version 1.4.9 (release)
+      - refactor: 优化序列化相应代码
+      - refactor: 补充IOUtils工具类中写文件方法
    - version 1.5.0 (planing)
       - TODO
          - 移除spring-core依赖（参考spring-core实现jar包资源扫描）
