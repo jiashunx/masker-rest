@@ -1,6 +1,8 @@
 package io.github.jiashunx.masker.rest.framework.util;
 
+import io.github.jiashunx.masker.rest.framework.exception.MRestFileOperateException;
 import io.github.jiashunx.masker.rest.framework.model.DiskFileResource;
+import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -163,6 +165,32 @@ public final class IOUtils {
         int readSize = 0;
         while ((readSize = inputStream.read(buffer)) >= 0) {
             outputStream.write(buffer, 0, readSize);
+        }
+    }
+
+    public static void write(Object object, File file) {
+        write(object, false, file);
+    }
+
+    public static void write(Object object, boolean pretty, File file) {
+        write(MRestSerializer.objectToJson(object, pretty), file);
+    }
+
+    public static void write(String string, File file) {
+        write(string, StandardCharsets.UTF_8, file);
+    }
+
+    public static void write(String string, Charset charset, File file) {
+        write(string.getBytes(charset), file);
+    }
+
+    public static void write(byte[] bytes, File file) {
+        FileUtils.newFile(file.getAbsolutePath());
+        try (InputStream inputStream = new ByteArrayInputStream(bytes);
+            OutputStream outputStream = new FileOutputStream(file);) {
+            copy(inputStream, outputStream);
+        } catch (Throwable throwable) {
+            throw new MRestFileOperateException(throwable);
         }
     }
 
