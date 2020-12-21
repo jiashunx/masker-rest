@@ -64,16 +64,34 @@ public class MRestSerializer {
     }
 
     public static String objectToJson(Object object) {
+        return objectToJson(object, false);
+    }
+
+    public static String objectToJson(Object object, boolean pretty) {
         try {
-            return new ObjectMapper().writeValueAsString(object);
+            ObjectMapper objectMapper = new ObjectMapper();
+            if (pretty) {
+                return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
+            } else {
+                return objectMapper.writeValueAsString(object);
+            }
         } catch (Throwable throwable) {
             throw new MRestSerializeException(throwable);
         }
     }
 
     public static byte[] objectToJsonBytes(Object object) {
+        return objectToJsonBytes(object, false);
+    }
+
+    public static byte[] objectToJsonBytes(Object object, boolean pretty) {
         try {
-            return new ObjectMapper().writeValueAsBytes(object);
+            ObjectMapper objectMapper = new ObjectMapper();
+            if (pretty) {
+                return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(object);
+            } else {
+                return objectMapper.writeValueAsBytes(object);
+            }
         } catch (Throwable throwable) {
             throw new MRestSerializeException(throwable);
         }
