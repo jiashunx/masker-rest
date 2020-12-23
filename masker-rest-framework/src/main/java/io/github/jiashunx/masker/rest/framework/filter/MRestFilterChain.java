@@ -3,7 +3,6 @@ package io.github.jiashunx.masker.rest.framework.filter;
 import io.github.jiashunx.masker.rest.framework.MRestContext;
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
-import io.github.jiashunx.masker.rest.framework.MRestServer;
 
 import java.util.Objects;
 
@@ -38,10 +37,6 @@ public class MRestFilterChain {
             index++;
         }
         return filter;
-    }
-
-    public MRestServer getRestServer() {
-        return getRestContext().getRestServer();
     }
 
     public MRestContext getRestContext() {

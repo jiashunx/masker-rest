@@ -41,22 +41,17 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
     protected void channelRead0(ChannelHandlerContext ctx, HttpObject httpObject) throws Exception {
         if (httpObject instanceof HttpRequest) {
             MRestRequest restRequest = parseRestRequest((HttpRequest) httpObject);
-            MRestContext restContext = restServer.context();
-            if (restRequest != null) {
-                restContext = restRequest.getRestContext();
-            }
-            MRestResponse restResponse = new MRestResponse(ctx, restContext);
             if (restRequest == null) {
-                restResponse.write(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-                restResponse.flush();
+                MRestResponse.write(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
                 return;
             }
+            MRestContext restContext = restRequest.getRestContext();
+            MRestResponse restResponse = new MRestResponse(ctx, restContext);
 
             // reset thread local
             MRestServerThreadModel serverThreadModel = new MRestServerThreadModel();
             serverThreadModel.setRestRequest(restRequest);
             serverThreadModel.setRestResponse(restResponse);
-            serverThreadModel.setRestServer(restServer);
             serverThreadModel.setRestContext(restContext);
             SharedObjects.resetServerThreadModel(serverThreadModel);
 
