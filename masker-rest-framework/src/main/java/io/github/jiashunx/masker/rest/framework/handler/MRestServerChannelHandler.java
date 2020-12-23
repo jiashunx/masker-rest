@@ -165,7 +165,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
             }
             MRestContext restContext = restServer.getContext(_ctxPath);
             if (restContext == null) {
-                restContext = restServer.getContext(Constants.DEFAULT_CONTEXT_PATH);
+                restContext = restServer.context();
             }
             restRequest.setRestContext(restContext);
             String contextPath = restContext.getContextPath();

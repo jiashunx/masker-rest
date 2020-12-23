@@ -100,7 +100,7 @@ public class MRestServer {
         return context(Constants.DEFAULT_CONTEXT_PATH);
     }
 
-    public MRestContext context(String contextPath) {
+    public synchronized MRestContext context(String contextPath) {
         MRestContext context = getContext(contextPath);
         if (context == null) {
             String _ctxPath = MRestContext.formatContextPath(contextPath);

@@ -6,10 +6,6 @@ package io.github.jiashunx.masker.rest.framework.cons;
  */
 public class Constants {
 
-    public static final int DEFAULT_SERVER_PORT = 21700;
-
-    public static final String DEFAULT_SERVER_NAME = "mrest-server";
-
     public static final String ROOT_PATH = "/";
     public static final String DEFAULT_CONTEXT_PATH = "/";
     public static final String URL_PATH_SEP = "/";
