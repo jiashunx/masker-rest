@@ -85,15 +85,6 @@ public final class StaticResourceHolder {
                 throw new IllegalArgumentException("classpath directory location can't be empty");
             }
             String location = cpDirLocation.trim();
-            if (!location.endsWith(Constants.URL_PATH_SEP)) {
-                location = location + Constants.URL_PATH_SEP;
-            }
-            while (location.startsWith(Constants.URL_PATH_SEP)) {
-                if (location.length() == 1) {
-                    break;
-                }
-                location = location.substring(1);
-            }
             int urlPrefixLen = location.length();
             String _location = String.format("classpath*:%s**", location);
             if (logger.isInfoEnabled()) {
