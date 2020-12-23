@@ -30,20 +30,28 @@ public final class IOUtils {
     }
 
     public static Properties loadPropertiesFromClasspath(String filePath, ClassLoader classLoader) {
-        return loadPropertiesFromByteArray(loadBytesFromClasspath(filePath, classLoader));
+        return loadProperties(loadBytesFromClasspath(filePath, classLoader));
+    }
+
+    public static Properties loadPropertiesFromDisk(File file) {
+        return loadProperties(loadBytesFromDisk(file));
     }
 
     public static Properties loadPropertiesFromDisk(String filePath) {
-        return loadPropertiesFromByteArray(loadBytesFromDisk(filePath));
+        return loadProperties(loadBytesFromDisk(filePath));
     }
 
-    private static Properties loadPropertiesFromByteArray(byte[] bytes) {
+    public static Properties loadProperties(byte[] bytes) {
+        return loadProperties(new ByteArrayInputStream(bytes));
+    }
+
+    public static Properties loadProperties(InputStream inputStream) {
         Properties properties = new Properties();
-        try (InputStream inputStream = new ByteArrayInputStream(bytes)) {
+        try  {
             properties.load(inputStream);
-        } catch (Throwable e) {
+        } catch (Throwable throwable) {
             if (logger.isErrorEnabled()) {
-                logger.error("load properties from byte array failed.", e);
+                logger.error("load properties from byte array failed.", throwable);
             }
         }
         return properties;
