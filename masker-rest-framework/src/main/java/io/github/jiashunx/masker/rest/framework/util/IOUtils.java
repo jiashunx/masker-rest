@@ -86,6 +86,10 @@ public final class IOUtils {
         return null;
     }
 
+    public static Map<String, DiskFileResource> loadResourceFromDiskDir(File file) {
+        return loadResourceFromDiskDir(file.getAbsolutePath());
+    }
+
     public static Map<String, DiskFileResource> loadResourceFromDiskDir(String dirPath) {
         Map<String, DiskFileResource> resourceModelMap = new HashMap<>();
         File parentDir = new File(dirPath);
@@ -103,6 +107,10 @@ public final class IOUtils {
             }
         }
         return resourceModelMap;
+    }
+
+    public static DiskFileResource loadResourceFromDisk(File file) {
+        return loadResourceFromDisk(file.getAbsolutePath());
     }
 
     public static DiskFileResource loadResourceFromDisk(String filePath) {
@@ -143,8 +151,16 @@ public final class IOUtils {
         return null;
     }
 
+    public static Map<String, String> loadContentFromDiskDir(File file) {
+        return loadContentFromDiskDir(file.getAbsolutePath());
+    }
+
     public static Map<String, String> loadContentFromDiskDir(String dirPath) {
         return loadContentFromDiskDir(dirPath, StandardCharsets.UTF_8);
+    }
+
+    public static Map<String, String> loadContentFromDiskDir(File file, Charset charset) {
+        return loadContentFromDiskDir(file.getAbsolutePath(), charset);
     }
 
     public static Map<String, String> loadContentFromDiskDir(String dirPath, Charset charset) {
@@ -156,8 +172,16 @@ public final class IOUtils {
         return contentMap;
     }
 
+    public static String loadContentFromDisk(File file) {
+        return loadContentFromDisk(file.getAbsolutePath());
+    }
+
     public static String loadContentFromDisk(String filePath) {
         return loadContentFromDisk(filePath, StandardCharsets.UTF_8);
+    }
+
+    public static String loadContentFromDisk(File file, Charset charset) {
+        return loadContentFromDisk(file.getAbsolutePath(), charset);
     }
 
     public static String loadContentFromDisk(String filePath, Charset charset) {
@@ -186,8 +210,11 @@ public final class IOUtils {
 
     public static void write(byte[] bytes, File file) {
         FileUtils.newFile(file.getAbsolutePath());
-        try (InputStream inputStream = new ByteArrayInputStream(bytes);
-            OutputStream outputStream = new FileOutputStream(file);) {
+        write(new ByteArrayInputStream(bytes), file);
+    }
+
+    public static void write(InputStream inputStream, File file) {
+        try (OutputStream outputStream = new FileOutputStream(file)) {
             copy(inputStream, outputStream);
         } catch (Throwable throwable) {
             throw new MRestFileOperateException(throwable);
