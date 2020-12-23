@@ -1,6 +1,7 @@
 package io.github.jiashunx.masker.rest.framework.model;
 
 import io.github.jiashunx.masker.rest.framework.exception.MRestFileUploadException;
+import io.github.jiashunx.masker.rest.framework.util.FileUtils;
 import io.github.jiashunx.masker.rest.framework.util.IOUtils;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.netty.handler.codec.http.multipart.FileUpload;
@@ -39,18 +40,14 @@ public class MRestFileUpload {
             // 将内存数据持久化到磁盘
             if (fileUpload.isInMemory()) {
                 // 创建临时文件.
-                tmpFile = new File(MRestUtils.getSystemTempDirPath() + "mr_" + UUID.randomUUID().toString());
-                tmpFile.createNewFile();
-                ByteArrayInputStream inputStream = new ByteArrayInputStream(fileUpload.get());
-                FileOutputStream outputStream = new FileOutputStream(tmpFile);
-                IOUtils.copy(inputStream, outputStream);
+                String filePath = MRestUtils.getSystemTempDirPath() + "mr_" + UUID.randomUUID().toString();
+                tmpFile = FileUtils.newFile(filePath);
+                IOUtils.write(fileUpload.get(), tmpFile);
             } else {
                 // 磁盘文件拷贝
-                tmpFile = new File(fileUpload.getFile().getAbsolutePath() + "_mr");
-                tmpFile.createNewFile();
-                FileInputStream inputStream = new FileInputStream(fileUpload.getFile());
-                FileOutputStream outputStream = new FileOutputStream(tmpFile);
-                IOUtils.copy(inputStream, outputStream);
+                String filePath = fileUpload.getFile().getAbsolutePath() + "_mr";
+                tmpFile = FileUtils.newFile(filePath);
+                IOUtils.write(fileUpload.getFile(), tmpFile);
             }
             this.file = tmpFile;
         } catch (Throwable throwable) {
@@ -90,19 +87,13 @@ public class MRestFileUpload {
     }
 
     public void copyFile(File newFile) throws IOException {
-        if (!newFile.exists()) {
-            File dirFile = newFile.getParentFile();
-            if (!dirFile.exists()) {
-                dirFile.mkdirs();
-            }
-            newFile.createNewFile();
-        }
+        FileUtils.newFile(newFile.getAbsolutePath());
         IOUtils.copy(getFileInputStream(), new FileOutputStream(newFile));
     }
 
     public synchronized void release() {
         if (this.file != null) {
-            this.file.delete();
+            FileUtils.deleteFile(this.file);
             this.file = null;
         }
     }

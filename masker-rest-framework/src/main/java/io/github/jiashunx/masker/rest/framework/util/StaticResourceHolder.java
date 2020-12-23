@@ -86,9 +86,10 @@ public final class StaticResourceHolder {
                 }
                 byte[] contentBytes = null;
                 try(InputStream inputStream = resource.getInputStream()) {
-                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available());
-                    IOUtils.copy(inputStream, outputStream);
-                    contentBytes = outputStream.toByteArray();
+                    contentBytes = IOUtils.readBytes(inputStream);
+                    if (contentBytes == null) {
+                        throw new NullPointerException();
+                    }
                 } catch (Throwable throwable) {
                     if (logger.isErrorEnabled()) {
                         logger.error("load static resource failed: {}", uri, throwable);

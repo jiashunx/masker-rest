@@ -21,7 +21,10 @@ public class MRestUtils {
     static {
         Properties properties = new Properties();
         try {
-            properties.load(MRestUtils.class.getResourceAsStream("/META-INF/maven/io.github.jiashunx/masker-rest-framework/pom.properties"));
+            properties.putAll(IOUtils.loadPropertiesFromClasspath("META-INF/maven/io.github.jiashunx/masker-rest-framework/pom.properties"));
+            if (properties.isEmpty()) {
+                throw new NullPointerException();
+            }
         } catch (Throwable throwable) {
             if (logger.isWarnEnabled()) {
                 logger.warn("get bundle version failed, error reason: {}", throwable.getMessage());
