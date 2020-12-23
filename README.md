@@ -21,7 +21,7 @@
 
    - [UserGuide](./docs/UserGuide.md)
 
-- 版本清单（最新版本：<b>1.4.10</b>）：
+- 版本清单（最新版本：<b>1.5.0</b>）：
 
    - version 1.0.0 (released)
       - feature：支持发布rest接口
@@ -85,10 +85,10 @@
       - refactor: 补充IOUtils工具类中写文件方法
    - verion 1.4.10 (release)
       - refactor: 优化补充IOUtils工具类中相应方法.
-   - version 1.5.0 (doing)
+   - version 1.5.0 (release)
       - feature: 单个server支持发布多个context-path的服务
       - feature: 支持自定义静态资源classpath扫描路径或磁盘文件扫描路径
-      - feature: 增加rest server运行时配置文件读取
+      - feature: 增加rest server默认配置文件读取
       - refactor: 补充样例代码
    - TODO
       - 移除spring-core依赖（参考spring-core实现jar包资源扫描）

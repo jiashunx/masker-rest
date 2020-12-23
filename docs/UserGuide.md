@@ -2,13 +2,35 @@
 - 0、启动server样例
 
 ```text
+# 未指定默认context-path为"/"，默认端口为8080，默认serverName为mrest-server.
 new MRestServer()
     .listenPort(21700)
-    .contextPath("/demo")
     .serverName("demo-21700")
     .connectionKeepAlive(false)
     .workerThreadNum(NettyRuntime.availableProcessors() * 2)
     .bossThreadNum(1)
+    .start();
+
+# 自行指定context(同一server可指定多个context-path，也可对不同context-path指定不同的url映射处理)
+new MRestServer()
+        .context("/demo")
+    .getRestServer()
+        .context("/demo2")
+    .getRestServer()
+    .start();
+
+# 可指定默认的classpath静态资源扫描目录(优先级从高到底："META-INF/resources/", "resources/", "static/", "public/")
+# 可指定自定义的classpath静态资源扫描目录(支持多个)
+# 可指定自定义的磁盘文件扫描目录(支持多个)
+new MRestServer()
+        // 默认context：context-path为"/"
+        .context()
+        .addDefaultClasspathResource()
+        .addClasspathResource("re/01/")
+        .addClasspathResource(new String[] { "re/02/", "re/03/" })
+        .addDiskResource("/root/html/")
+        .addDiskResource(new String[] { "/root/html/", "/root/html1/"})
+    .getRestServer()
     .start();
 ```
 
@@ -16,6 +38,7 @@ new MRestServer()
 
 ```text
 restServer
+    .context("/demo")
     .get("/get-NoParam-NoRet", () -> {
         MRestServerThreadModel threadModel = SharedObjects.getServerThreadModel();
         MRestRequest request = threadModel.getRestRequest();
@@ -35,16 +58,21 @@ restServer
     .get("/get-ParamReqResp-NoRet", (request, response) -> {
         logger.info("get, param-req-resp, no ret");
     })
+    .getRestServer()
+    .start();
 ```
 
 - 2、post请求样例
 
 ```text
 restServer
+    .context("/demo")
     .post(("/post-form"), request -> {
         logger.info("post, form data: {}", request.parseBodyToObj(Vo.class));
         return new HashMap<String, Object>();
     })
+    .getRestServer()
+    .start();
 
 private static class Vo {
     String username;
@@ -70,6 +98,7 @@ private static class Vo {
 
 ```text
 restServer
+    .context("/demo")
     .post("/post-forward", (request, response) -> {
         logger.info("post forward, forward to /post-forward-target");
         request.setAttribute("hk-01", "hk-01-value");
@@ -79,12 +108,15 @@ restServer
         logger.info("/post forward target, receive attribute: hk-01={}", request.getAttribute("hk-01"));
         response.write(HttpResponseStatus.OK);
     })
+    .getRestServer()
+    .start();
 ```
 
 - 4、redirect请求样例
 
 ```text
 restServer
+    .context("/demo")
     .get("/get-redirect.html", (request, response) -> {
         logger.info("get redirect, redirect to /get-redirect-target.html");
         response.redirect("/get-redirect-target.html");
@@ -92,17 +124,22 @@ restServer
     .get("/get-redirect-target.html", (request) -> {
         return "<html><body>this is an redirected html page !</body></html>";
     }, MRestHeaderBuilder.Build("Content-Type", "text/html"))
+    .getRestServer()
+    .start();
 ```
 
 - 5、filter样例
 
 ```text
 restServer
+    .context("/demo")
     .filter("/filter-test/*", new Filter0(), new Filter1())
     .get("/filter-test/get0", request -> {
         // do nothing.
         logger.info("get, /filter-test/get0");
     })
+    .getRestServer()
+    .start();
 
 
 @Filter(order = 123)
@@ -128,6 +165,7 @@ private static class Filter1 implements MRestFilter {
 
 ```text
 restServer
+    .context("/demo")
     .get("/cookie/set-cookie", (request, response) -> {
         String cookieVal = "xxxxxxxxxxxxxxxxxx";
         logger.info("set-cookie, hello=\"{}\"", cookieVal);
@@ -139,6 +177,8 @@ restServer
         logger.info("get-cookie, map: {}", request.getCookieMap());
         logger.info("get-cookie, list: {}", request.getCookies());
     })
+    .getRestServer()
+    .start();
 ```
 
 - 7、jwt会话过滤样例
@@ -147,6 +187,7 @@ restServer
 // /jwt/login请求body: {"username": "admin"} 进行会话登录验证
 // /jwt/xxx获取资源
 restServer
+    .context("/demo")
     .post("/jwt/xxx", request -> {})
     .filter("/jwt/*", (request, response, filterChain) -> {
         String requestURL = request.getUrl();
@@ -185,6 +226,8 @@ restServer
             response.write(HttpResponseStatus.UNAUTHORIZED);
         }
     })
+    .getRestServer()
+    .start();
 ```
 
 - 8、文件上传
@@ -240,7 +283,9 @@ restServer
 ```
 
 ```text
-restServer.fileupload("/fileupload/test0", (request, response) -> {
+restServer
+.context("/demo")
+.fileupload("/fileupload/test0", (request, response) -> {
     MRestFileUploadRequest fileUploadRequest = (MRestFileUploadRequest) request;
     MRestFileUpload fileUpload = fileUploadRequest.getFileUploadOnlyOne();
     logger.info("[upload one] upload file: {}", fileUpload.getFilePath());
@@ -263,12 +308,16 @@ restServer.fileupload("/fileupload/test0", (request, response) -> {
     }
     return fileNames;
 })
+.getRestServer()
+.start();
 ```
 
 - 9、文件下载
 
 ```text
-restServer.filedownload("/filedownload/test0", (request, response) -> {
+restServer
+.context("/demo")
+.filedownload("/filedownload/test0", (request, response) -> {
     String filePath = MRestUtils.getUserDirPath() + "README.md";
     response.write(new File(filePath));
     // 也可使用jquery+form表单提交post请求来实现文件下载.
@@ -277,4 +326,6 @@ restServer.filedownload("/filedownload/test0", (request, response) -> {
     String filePath = MRestUtils.getUserDirPath() + "README.md";
     response.write(new File(filePath));
 })
+.getRestServer()
+.start();
 ```
