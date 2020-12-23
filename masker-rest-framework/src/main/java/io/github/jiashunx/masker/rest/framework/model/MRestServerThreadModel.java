@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.framework.model;
 
+import io.github.jiashunx.masker.rest.framework.MRestContext;
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.MRestServer;
@@ -12,11 +13,13 @@ import java.util.Objects;
 public class MRestServerThreadModel {
 
     private MRestServer restServer;
+    private MRestContext restContext;
     private MRestRequest restRequest;
     private MRestResponse restResponse;
 
     public MRestServerThreadModel assertNotNull() {
         Objects.requireNonNull(restServer);
+        Objects.requireNonNull(restContext);
         Objects.requireNonNull(restRequest);
         Objects.requireNonNull(restResponse);
         return this;
@@ -28,6 +31,14 @@ public class MRestServerThreadModel {
 
     public void setRestServer(MRestServer restServer) {
         this.restServer = restServer;
+    }
+
+    public MRestContext getRestContext() {
+        return restContext;
+    }
+
+    public void setRestContext(MRestContext restContext) {
+        this.restContext = restContext;
     }
 
     public MRestRequest getRestRequest() {

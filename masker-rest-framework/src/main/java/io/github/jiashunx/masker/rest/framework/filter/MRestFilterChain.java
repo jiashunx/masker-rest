@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.framework.filter;
 
+import io.github.jiashunx.masker.rest.framework.MRestContext;
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.MRestServer;
@@ -11,13 +12,13 @@ import java.util.Objects;
  */
 public class MRestFilterChain {
 
-    private final MRestServer restServer;
+    private final MRestContext restContext;
     private final MRestFilter[] filterArr;
     private int index;
     private final int size;
 
-    public MRestFilterChain(MRestServer restServer, MRestFilter[] filterArr) {
-        this.restServer = Objects.requireNonNull(restServer);
+    public MRestFilterChain(MRestContext restContext, MRestFilter[] filterArr) {
+        this.restContext = Objects.requireNonNull(restContext);
         this.filterArr = Objects.requireNonNull(filterArr);
         this.size = this.filterArr.length;
         this.index = 0;
@@ -40,6 +41,11 @@ public class MRestFilterChain {
     }
 
     public MRestServer getRestServer() {
-        return restServer;
+        return getRestContext().getRestServer();
     }
+
+    public MRestContext getRestContext() {
+        return restContext;
+    }
+
 }

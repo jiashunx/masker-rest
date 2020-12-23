@@ -31,14 +31,18 @@ import java.util.function.Consumer;
 public class MRestResponse {
 
     private final ChannelHandlerContext $channelHandlerContext;
-    private final MRestServer restServer;
+    private MRestServer restServer;
+    private final MRestContext restContext;
     private final MRestHeaders $headers = new MRestHeaders();
     private volatile FlushTask flushTask = null;
     private boolean $flushed = false;
 
-    public MRestResponse(ChannelHandlerContext ctx, MRestServer restServer) {
+    public MRestResponse(ChannelHandlerContext ctx, MRestContext restContext) {
         this.$channelHandlerContext = Objects.requireNonNull(ctx);
-        this.restServer = restServer;
+        this.restContext = restContext;
+        if (restContext != null) {
+            this.restServer = restContext.getRestServer();
+        }
     }
 
     public ChannelHandlerContext getChannelHandlerContext() {
@@ -49,8 +53,12 @@ public class MRestResponse {
         return restServer;
     }
 
+    public MRestContext getRestContext() {
+        return restContext;
+    }
+
     public void redirect(String targetURL) {
-        String contextPath = getRestServer().getContextPath();
+        String contextPath = getRestContext().getContextPath();
         if (!contextPath.equals(Constants.DEFAULT_CONTEXT_PATH)) {
             targetURL = contextPath + targetURL;
         }
@@ -64,7 +72,7 @@ public class MRestResponse {
 
     public void forward(String targetURL, MRestRequest request) {
         request.setUrl(targetURL);
-        MRestFilterChain filterChain = getRestServer().getFilterChain(targetURL);
+        MRestFilterChain filterChain = getRestContext().getFilterChain(targetURL);
         filterChain.doFilter(request, this);
     }
 

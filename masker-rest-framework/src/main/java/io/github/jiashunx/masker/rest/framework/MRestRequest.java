@@ -16,6 +16,7 @@ import java.util.*;
  */
 public class MRestRequest {
 
+    private MRestContext restContext;
     private HttpRequest httpRequest;
 
     private Map<String, String> attributes = new HashMap<>();
@@ -41,6 +42,7 @@ public class MRestRequest {
     public MRestRequest() {}
 
     public MRestRequest(MRestRequest restRequest) {
+        this.restContext = restRequest.restContext;
         this.httpRequest = restRequest.httpRequest;
         this.attributes = restRequest.attributes;
         this.method = restRequest.method;
@@ -64,6 +66,14 @@ public class MRestRequest {
 
     public void release() {
 
+    }
+
+    public MRestContext getRestContext() {
+        return restContext;
+    }
+
+    public void setRestContext(MRestContext restContext) {
+        this.restContext = restContext;
     }
 
     public String bodyToString() {

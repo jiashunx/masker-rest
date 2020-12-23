@@ -1,8 +1,8 @@
 package io.github.jiashunx.masker.rest.framework.filter;
 
+import io.github.jiashunx.masker.rest.framework.MRestContext;
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
-import io.github.jiashunx.masker.rest.framework.MRestServer;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestHandleException;
 import io.github.jiashunx.masker.rest.framework.handler.*;
@@ -28,8 +28,8 @@ public class MRestDispatchFilter implements MRestFilter {
     public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {
         // dispatch request handler
         String requestURL = restRequest.getUrl();
-        MRestServer restServer = filterChain.getRestServer();
-        MRestHandler restHandler = restServer.getUrlMappingHandler(requestURL, restRequest.getMethod());
+        MRestContext restContext = filterChain.getRestContext();
+        MRestHandler restHandler = restContext.getUrlMappingHandler(requestURL, restRequest.getMethod());
         if (restHandler != null) {
             handleRequest(restRequest, restResponse, restHandler);
             return;

@@ -1,9 +1,6 @@
 package io.github.jiashunx.masker.rest.framework.handler;
 
-import io.github.jiashunx.masker.rest.framework.MRestFileUploadRequest;
-import io.github.jiashunx.masker.rest.framework.MRestRequest;
-import io.github.jiashunx.masker.rest.framework.MRestResponse;
-import io.github.jiashunx.masker.rest.framework.MRestServer;
+import io.github.jiashunx.masker.rest.framework.*;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
@@ -21,8 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 /**
  * @author jiashunx
@@ -46,7 +41,11 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
     protected void channelRead0(ChannelHandlerContext ctx, HttpObject httpObject) throws Exception {
         if (httpObject instanceof HttpRequest) {
             MRestRequest restRequest = parseRestRequest((HttpRequest) httpObject);
-            MRestResponse restResponse = new MRestResponse(ctx, restServer);
+            MRestContext restContext = restServer.context();
+            if (restRequest != null) {
+                restContext = restRequest.getRestContext();
+            }
+            MRestResponse restResponse = new MRestResponse(ctx, restContext);
             if (restRequest == null) {
                 restResponse.write(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                 restResponse.flush();
@@ -58,6 +57,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
             serverThreadModel.setRestRequest(restRequest);
             serverThreadModel.setRestResponse(restResponse);
             serverThreadModel.setRestServer(restServer);
+            serverThreadModel.setRestContext(restContext);
             SharedObjects.resetServerThreadModel(serverThreadModel);
 
             String originUrl = restRequest.getOriginUrl();
@@ -65,9 +65,9 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
 
             MRestFilterChain filterChain = null;
             if (isCommonStaticResource(originUrl)) {
-                filterChain = restServer.getCommonStaticResourceFilterChain(originUrl);
+                filterChain = restContext.getCommonStaticResourceFilterChain(originUrl);
             } else {
-                String contextPath = restServer.getContextPath();
+                String contextPath = restContext.getContextPath();
                 if (!originUrl.startsWith(contextPath)) {
                     if (logger.isWarnEnabled()) {
                         logger.warn("current server contextPath: {}, can't resolve request url: {}", contextPath, restRequest.getOriginUrl());
@@ -76,7 +76,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
                     restResponse.flush();
                     return;
                 }
-                filterChain = restServer.getFilterChain(requestUrl);
+                filterChain = restContext.getFilterChain(requestUrl);
             }
             filterChain.doFilter(restRequest, restResponse);
             restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_NAME, MRestUtils.getFrameworkName());
@@ -93,19 +93,19 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
         if (logger.isErrorEnabled()) {
             logger.error("", cause);
         }
-        BiConsumer<ChannelHandlerContext, Throwable> errorHandler = restServer.getDefaultErrorHandler();
-        if (errorHandler == null) {
-            errorHandler = (a, b) -> {
-                MRestResponse.write(a, HttpResponseStatus.INTERNAL_SERVER_ERROR);
-            };
-        }
-        try {
-            errorHandler.accept(ctx, cause);
-        } catch (Throwable throwable) {
-            if (logger.isErrorEnabled()) {
-                logger.error("ErrorHandler execute failed.", throwable);
-            }
-        }
+//        BiConsumer<ChannelHandlerContext, Throwable> errorHandler = restServer.getDefaultErrorHandler();
+//        if (errorHandler == null) {
+//            errorHandler = (a, b) -> {
+//                MRestResponse.write(a, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+//            };
+//        }
+//        try {
+//            errorHandler.accept(ctx, cause);
+//        } catch (Throwable throwable) {
+//            if (logger.isErrorEnabled()) {
+//                logger.error("ErrorHandler execute failed.", throwable);
+//            }
+//        }
     }
 
     @Override
@@ -140,7 +140,23 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
                 path = path.substring(0, path.length() - 1);
             }
             restRequest.setOriginUrl(path);
-            String contextPath = restServer.getContextPath();
+            // 根据url和已配置的context-path来解析出实际context-path
+            String _ctxPath = Constants.DEFAULT_CONTEXT_PATH;
+            if (path.length() > 1) {
+                String _p = path.substring(1);
+                int i = _p.indexOf("/");
+                if (i > 0) {
+                    _ctxPath = _ctxPath + _p.substring(0, i);
+                } else {
+                    _ctxPath = path;
+                }
+            }
+            MRestContext restContext = restServer.getContext(_ctxPath);
+            if (restContext == null) {
+                restContext = restServer.getContext(Constants.DEFAULT_CONTEXT_PATH);
+            }
+            restRequest.setRestContext(restContext);
+            String contextPath = restContext.getContextPath();
             restRequest.setContextPath(contextPath);
             String url = path;
             if (url.equals(contextPath)) {

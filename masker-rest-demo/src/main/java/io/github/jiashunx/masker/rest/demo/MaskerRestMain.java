@@ -37,11 +37,11 @@ public class MaskerRestMain {
         new MRestServer(21701).start();
         new MRestServer()
                 .listenPort(21700)
-                .contextPath("/demo")
                 .serverName("demo-21700")
                 .connectionKeepAlive(false)
                 .workerThreadNum(NettyRuntime.availableProcessors() * 2)
                 .bossThreadNum(1)
+                .context("/demo")
 
                 // get请求样例
                 .get("/get-NoParam-NoRet", () -> {
@@ -188,6 +188,7 @@ public class MaskerRestMain {
                     response.write(new File(filePath));
                 })
 
+                .getRestServer()
                 .start();
     }
 
