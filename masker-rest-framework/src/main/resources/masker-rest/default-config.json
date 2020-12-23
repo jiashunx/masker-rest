@@ -1,0 +1,10 @@
+{
+  "serverPort": 8080,
+  "serverName": "mrest-server",
+  "classpathResources": [
+    "META-INF/resources/",
+    "resources/",
+    "static/",
+    "public/"
+  ]
+}

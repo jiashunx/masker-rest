@@ -124,7 +124,7 @@ public class MRestServer {
      */
     public void checkServerState() throws MRestServerInitializeException {
         if (started) {
-            throw new MRestServerInitializeException(String.format("server: %s has already been initialized", serverName));
+            throw new MRestServerInitializeException(String.format("Server[%s] has already been initialized", serverName));
         }
     }
 
@@ -135,7 +135,7 @@ public class MRestServer {
     public synchronized void start() throws MRestServerInitializeException {
         checkServerState();
         if (logger.isInfoEnabled()) {
-            logger.info("start server: {}[ContextPath: {}], listening on port: {}", serverName, getContextList(), listenPort);
+            logger.info("Server[{}] start, ListenPort: {}, Context: {}", serverName, listenPort, getContextList());
         }
         try {
             contextMap.forEach((key, restContext) -> {
@@ -153,14 +153,14 @@ public class MRestServer {
                     .childHandler(new MRestServerChannelInitializer(this));
             Channel channel = bootstrap.bind(listenPort).sync().channel();
             if (logger.isInfoEnabled()) {
-                logger.info("start server: {} success, listening on port: {}", serverName, listenPort);
+                logger.info("Server[{}] start succeed, ListenPort: {}", serverName, listenPort);
             }
             final Thread syncThread = new Thread(() -> {
                 try {
                     channel.closeFuture().syncUninterruptibly();
                 } catch (Throwable throwable) {
                     if (logger.isErrorEnabled()) {
-                        logger.error("server: {} channel close future synchronized failed", serverName, throwable);
+                        logger.error("Server[{}] channel close future synchronized failed", serverName, throwable);
                     }
                 }
             });
@@ -169,7 +169,7 @@ public class MRestServer {
             syncThread.start();
             started = true;
         } catch (Throwable throwable) {
-            throw new MRestServerInitializeException(String.format("start server: %s failed", serverName), throwable);
+            throw new MRestServerInitializeException(String.format("Server[%s] start failed", serverName), throwable);
         }
     }
 

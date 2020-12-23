@@ -1,6 +1,7 @@
 package io.github.jiashunx.masker.rest.framework.util;
 
-import io.github.jiashunx.masker.rest.framework.cons.Constants;
+import io.github.jiashunx.masker.rest.framework.model.MRestServerConfig;
+import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,11 +48,11 @@ public class MRestUtils {
     }
 
     public static int getDefaultServerPort() {
-        return Constants.DEFAULT_SERVER_PORT;
+        return getDefaultServerConfig().getServerPort();
     }
 
     public static String getDefaultServerName() {
-        return Constants.DEFAULT_SERVER_NAME;
+        return getDefaultServerConfig().getServerName();
     }
 
     public static String getFrameworkName() {
@@ -68,6 +69,21 @@ public class MRestUtils {
 
     public static String getUserDirPath() {
         return userDirPath;
+    }
+
+    private static volatile MRestServerConfig serverDefaultConfig;
+
+    public static MRestServerConfig getDefaultServerConfig() {
+        if (serverDefaultConfig == null) {
+            synchronized (MRestUtils.class) {
+                if (serverDefaultConfig == null) {
+                    serverDefaultConfig = MRestSerializer.jsonToObj(
+                            IOUtils.loadBytesFromClasspath("masker-rest/default-config.json")
+                            , MRestServerConfig.class);
+                }
+            }
+        }
+        return serverDefaultConfig;
     }
 
 }

@@ -9,6 +9,7 @@ import io.github.jiashunx.masker.rest.framework.filter.StaticResourceFilter;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
+import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpMethod;
@@ -479,12 +480,8 @@ public class MRestContext {
     }
 
     public MRestContext addDefaultClasspathResource() {
-        return addClasspathResources(new String[] {
-                "META-INF/resources/"
-                , "resources/"
-                , "static/"
-                , "public/"
-        });
+        return addClasspathResources(
+                MRestUtils.getDefaultServerConfig().getClasspathResources().toArray(new String[0]));
     }
 
     public MRestContext addClasspathResource(String path) {
