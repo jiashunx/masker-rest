@@ -22,7 +22,7 @@ import java.util.function.*;
  */
 public class MRestDispatchFilter implements MRestFilter {
 
-    private static final byte[] DEFAULT_PAGE_BYTES = IOUtils.loadFileBytesFromClasspath("template/index.html", MRestDispatchFilter.class.getClassLoader());
+    private static final byte[] DEFAULT_PAGE_BYTES = IOUtils.loadBytesFromClasspath("template/index.html", MRestDispatchFilter.class.getClassLoader());
 
     @Override
     public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {

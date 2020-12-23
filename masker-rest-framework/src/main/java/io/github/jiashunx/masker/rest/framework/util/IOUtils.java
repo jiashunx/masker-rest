@@ -30,18 +30,18 @@ public final class IOUtils {
     }
 
     public static Properties loadPropertiesFromClasspath(String filePath, ClassLoader classLoader) {
-        return loadPropertiesFromByteArray(loadFileBytesFromClasspath(filePath, classLoader));
+        return loadPropertiesFromByteArray(loadBytesFromClasspath(filePath, classLoader));
     }
 
     public static Properties loadPropertiesFromDisk(String filePath) {
-        return loadPropertiesFromByteArray(loadFileBytesFromDisk(filePath).getBytes());
+        return loadPropertiesFromByteArray(loadBytesFromDisk(filePath));
     }
 
     private static Properties loadPropertiesFromByteArray(byte[] bytes) {
         Properties properties = new Properties();
         try (InputStream inputStream = new ByteArrayInputStream(bytes)) {
             properties.load(inputStream);
-        } catch (IOException e) {
+        } catch (Throwable e) {
             if (logger.isErrorEnabled()) {
                 logger.error("load properties from byte array failed.", e);
             }
@@ -49,20 +49,16 @@ public final class IOUtils {
         return properties;
     }
 
-    public static byte[] loadFileBytesFromClasspath(String filePath) {
-        return loadFileBytesFromClasspath(filePath, IOUtils.class.getClassLoader());
+    public static byte[] loadBytesFromClasspath(String filePath) {
+        return loadBytesFromClasspath(filePath, IOUtils.class.getClassLoader());
     }
 
-    public static byte[] loadFileBytesFromClasspath(String filePath, ClassLoader classLoader) {
-        byte[] tmp = new byte[1024];
-        int size = 0;
+    public static byte[] loadBytesFromClasspath(String filePath, ClassLoader classLoader) {
         try (InputStream inputStream = classLoader.getResourceAsStream(filePath);
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            while ((size = inputStream.read(tmp)) != -1) {
-                outputStream.write(tmp, 0, size);
-            }
+            copy(inputStream, outputStream);
             return outputStream.toByteArray();
-        } catch (IOException e) {
+        } catch (Throwable e) {
             if (logger.isErrorEnabled()) {
                 logger.error("load classpath file [{}] failed, classloader [{}]", filePath, classLoader, e);
             }
@@ -70,54 +66,49 @@ public final class IOUtils {
         return null;
     }
 
-    public static String loadFileContentFromClasspath(String filePath) {
-        return loadFileContentFromClasspath(filePath, StandardCharsets.UTF_8);
+    public static String loadContentFromClasspath(String filePath) {
+        return loadContentFromClasspath(filePath, IOUtils.class.getClassLoader());
     }
 
-    public static String loadFileContentFromClasspath(String filePath, ClassLoader classLoader) {
-        return loadFileContentFromClasspath(filePath, classLoader, StandardCharsets.UTF_8);
+    public static String loadContentFromClasspath(String filePath, ClassLoader classLoader) {
+        return loadContentFromClasspath(filePath, classLoader, StandardCharsets.UTF_8);
     }
 
-    public static String loadFileContentFromClasspath(String filePath, Charset charset) {
-        byte[] bytes = loadFileBytesFromClasspath(filePath);
+    public static String loadContentFromClasspath(String filePath, Charset charset) {
+        return loadContentFromClasspath(filePath, IOUtils.class.getClassLoader(), StandardCharsets.UTF_8);
+    }
+
+    public static String loadContentFromClasspath(String filePath, ClassLoader classLoader, Charset charset) {
+        byte[] bytes = loadBytesFromClasspath(filePath, classLoader);
         if (bytes != null) {
             return new String(bytes, charset);
         }
         return null;
     }
 
-    public static String loadFileContentFromClasspath(String filePath, ClassLoader classLoader, Charset charset) {
-        byte[] bytes = loadFileBytesFromClasspath(filePath, classLoader);
-        if (bytes != null) {
-            return new String(bytes, charset);
-        }
-        return null;
-    }
-
-    public static Map<String, DiskFileResource> loadFilesBytesFromDiskDir(String dirPath) {
+    public static Map<String, DiskFileResource> loadResourceFromDiskDir(String dirPath) {
         Map<String, DiskFileResource> resourceModelMap = new HashMap<>();
         File parentDir = new File(dirPath);
         File[] files = Objects.requireNonNull(parentDir.listFiles());
         for (File file: files) {
             String filePath = file.getAbsolutePath();
             if (file.isDirectory()) {
-                resourceModelMap.putAll(loadFilesBytesFromDiskDir(filePath));
+                resourceModelMap.putAll(loadResourceFromDiskDir(filePath));
             }
             if (file.isFile()) {
-                resourceModelMap.put(filePath, loadFileBytesFromDisk(filePath));
+                DiskFileResource resource = loadResourceFromDisk(filePath);
+                if (resource != null) {
+                    resourceModelMap.put(filePath, resource);
+                }
             }
         }
         return resourceModelMap;
     }
 
-    public static DiskFileResource loadFileBytesFromDisk(String filePath) {
-        byte[] tmp = new byte[1024];
-        int size = 0;
+    public static DiskFileResource loadResourceFromDisk(String filePath) {
         try (InputStream inputStream = new FileInputStream(filePath);
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            while ((size = inputStream.read(tmp)) != -1) {
-                outputStream.write(tmp, 0, size);
-            }
+            copy(inputStream, outputStream);
             DiskFileResource model = new DiskFileResource();
             model.setBytes(outputStream.toByteArray());
             model.setUrl(filePath);
@@ -127,7 +118,7 @@ public final class IOUtils {
 //            String contentType = URLConnection.getFileNameMap().getContentTypeFor(filePath);
             model.setContentType(contentType);
             return model;
-        } catch (IOException e) {
+        } catch (Throwable e) {
             if (logger.isErrorEnabled()) {
                 logger.error("load disk file [{}] failed", filePath, e);
             }
@@ -135,37 +126,46 @@ public final class IOUtils {
         return null;
     }
 
-    public static Map<String, String> loadFilesContentsFromDiskDir(String dirPath) {
-        return loadFilesContentsFromDiskDir(dirPath, StandardCharsets.UTF_8);
-    }
-
-    public static Map<String, String> loadFilesContentsFromDiskDir(String dirPath, Charset charset) {
-        Map<String, DiskFileResource> resourceModelMap = loadFilesBytesFromDiskDir(dirPath);
-        Map<String, String> contentMap = new HashMap<>();
-        resourceModelMap.forEach((filePath, model) -> {
-            contentMap.put(filePath, new String(model.getBytes(), charset));
+    public static Map<String, byte[]> loadBytesFromDiskDir(String dirPath) {
+        Map<String, byte[]> retMap = new HashMap<>();
+        Map<String, DiskFileResource> resourceMap = loadResourceFromDiskDir(dirPath);
+        resourceMap.forEach((key, value) -> {
+            retMap.put(key, value.getBytes());
         });
-        return contentMap;
+        return retMap;
     }
 
-    public static String loadFileContentFromDisk(String filePath) {
-        return loadFileContentFromDisk(filePath, StandardCharsets.UTF_8);
-    }
-
-    public static String loadFileContentFromDisk(String filePath, Charset charset) {
-        DiskFileResource model = loadFileBytesFromDisk(filePath);
+    public static byte[] loadBytesFromDisk(String filePath) {
+        DiskFileResource model = loadResourceFromDisk(filePath);
         if (model != null) {
-            return new String(model.getBytes(), charset);
+            return model.getBytes();
         }
         return null;
     }
 
-    public static void copy(InputStream inputStream, OutputStream outputStream) throws IOException {
-        byte[] buffer = new byte[1024];
-        int readSize = 0;
-        while ((readSize = inputStream.read(buffer)) >= 0) {
-            outputStream.write(buffer, 0, readSize);
+    public static Map<String, String> loadContentFromDiskDir(String dirPath) {
+        return loadContentFromDiskDir(dirPath, StandardCharsets.UTF_8);
+    }
+
+    public static Map<String, String> loadContentFromDiskDir(String dirPath, Charset charset) {
+        Map<String, String> contentMap = new HashMap<>();
+        Map<String, byte[]> bytesMap = loadBytesFromDiskDir(dirPath);
+        bytesMap.forEach((key, value) -> {
+            contentMap.put(key, new String(value, charset));
+        });
+        return contentMap;
+    }
+
+    public static String loadContentFromDisk(String filePath) {
+        return loadContentFromDisk(filePath, StandardCharsets.UTF_8);
+    }
+
+    public static String loadContentFromDisk(String filePath, Charset charset) {
+        byte[] bytes = loadBytesFromDisk(filePath);
+        if (bytes != null) {
+            return new String(bytes, charset);
         }
+        return null;
     }
 
     public static void write(Object object, File file) {
@@ -192,6 +192,46 @@ public final class IOUtils {
         } catch (Throwable throwable) {
             throw new MRestFileOperateException(throwable);
         }
+    }
+
+    public static void copy(InputStream inputStream, OutputStream outputStream) throws IOException {
+        byte[] buffer = new byte[1024];
+        int readSize = 0;
+        while ((readSize = inputStream.read(buffer)) >= 0) {
+            outputStream.write(buffer, 0, readSize);
+        }
+    }
+
+    public static void copy(InputStream inputStream, File targetFile)throws IOException {
+        copy(inputStream, new FileOutputStream(targetFile));
+    }
+
+    public static void copy(File sourceFile, OutputStream outputStream) throws IOException {
+        copy(new FileInputStream(sourceFile), outputStream);
+    }
+
+    public static void copy(File sourceFile, File targetFile) throws IOException {
+        copy(sourceFile, new FileOutputStream(targetFile));
+    }
+
+    public static void copy(String sourceFilePath, OutputStream outputStream) throws IOException {
+        copy(new File(sourceFilePath), outputStream);
+    }
+
+    public static void copy(String sourceFilePath, File targetFile) throws IOException {
+        copy(sourceFilePath, new FileOutputStream(targetFile));
+    }
+
+    public static void copy(String sourceFilePath, String targetFilePath) throws IOException {
+        copy(sourceFilePath, new File(targetFilePath));
+    }
+
+    public static void copy(InputStream inputStream, String targetFilePath) throws IOException {
+        copy(inputStream, new File(targetFilePath));
+    }
+
+    public static void copy(File sourceFile, String targetFilePath) throws IOException {
+        copy(sourceFile, new File(targetFilePath));
     }
 
 }
