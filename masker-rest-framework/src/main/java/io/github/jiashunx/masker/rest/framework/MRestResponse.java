@@ -40,9 +40,7 @@ public class MRestResponse {
     public MRestResponse(ChannelHandlerContext ctx, MRestContext restContext) {
         this.$channelHandlerContext = Objects.requireNonNull(ctx);
         this.restContext = restContext;
-        if (restContext != null) {
-            this.restServer = restContext.getRestServer();
-        }
+        this.restServer = restContext.getRestServer();
     }
 
     public ChannelHandlerContext getChannelHandlerContext() {
@@ -276,10 +274,6 @@ public class MRestResponse {
                 }
             } catch (Throwable throwable) {
                 throw new MRestFlushException(throwable);
-            } finally {
-                setFlushed(true);
-                SharedObjects.getServerThreadModel().getRestRequest().release();
-                SharedObjects.clearServerThreadModel();
             }
         }
     }

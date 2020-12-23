@@ -7,11 +7,11 @@ import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.filter.StaticResourceFilter;
 import io.github.jiashunx.masker.rest.framework.handler.*;
+import io.github.jiashunx.masker.rest.framework.model.ExceptionCallbackVo;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -541,13 +541,13 @@ public class MRestContext {
     /**************************************************** SEP ****************************************************/
 
 
-    private BiConsumer<ChannelHandlerContext, Throwable> defaultErrorHandler = null;
+    private Consumer<ExceptionCallbackVo> defaultErrorHandler = null;
 
-    public BiConsumer<ChannelHandlerContext, Throwable> getDefaultErrorHandler() {
+    public Consumer<ExceptionCallbackVo> getDefaultErrorHandler() {
         return defaultErrorHandler;
     }
 
-    public MRestContext defaultErrorHandler(BiConsumer<ChannelHandlerContext, Throwable> defaultErrorHandler) {
+    public MRestContext defaultErrorHandler(Consumer<ExceptionCallbackVo> defaultErrorHandler) {
         this.defaultErrorHandler = Objects.requireNonNull(defaultErrorHandler);
         return this;
     }

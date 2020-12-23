@@ -3,6 +3,7 @@ package io.github.jiashunx.masker.rest.framework.handler;
 import io.github.jiashunx.masker.rest.framework.*;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
+import io.github.jiashunx.masker.rest.framework.model.ExceptionCallbackVo;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.SharedObjects;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * @author jiashunx
@@ -58,49 +60,64 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<HttpO
             String originUrl = restRequest.getOriginUrl();
             String requestUrl = restRequest.getUrl();
 
-            MRestFilterChain filterChain = null;
-            if (isCommonStaticResource(originUrl)) {
-                filterChain = restContext.getCommonStaticResourceFilterChain(originUrl);
-            } else {
-                String contextPath = restContext.getContextPath();
-                if (!originUrl.startsWith(contextPath)) {
-                    if (logger.isWarnEnabled()) {
-                        logger.warn("current server contextPath: {}, can't resolve request url: {}", contextPath, restRequest.getOriginUrl());
-                    }
-                    restResponse.write(HttpResponseStatus.NOT_FOUND);
-                    restResponse.flush();
-                    return;
+            Exception exception = null;
+            try {
+                MRestFilterChain filterChain = null;
+                if (isCommonStaticResource(originUrl)) {
+                    filterChain = restContext.getCommonStaticResourceFilterChain(originUrl);
+                } else {
+                    filterChain = restContext.getFilterChain(requestUrl);
                 }
-                filterChain = restContext.getFilterChain(requestUrl);
+                filterChain.doFilter(restRequest, restResponse);
+                restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_NAME, MRestUtils.getFrameworkName());
+                restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_VERSION, MRestUtils.getFrameworkVersion());
+                if (restResponse.getRestServer().isConnectionKeepAlive()) {
+                    restResponse.setHeader(Constants.HTTP_HEADER_CONNECTION, Constants.CONNECTION_KEEP_ALIVE);
+                }
+                restResponse.flush();
+            } catch (Throwable throwable) {
+                if (logger.isErrorEnabled()) {
+                    logger.error("request handle failed, url: {}", requestUrl, throwable);
+                }
+                exception = handleException(ctx, restRequest, restResponse, throwable);
+            } finally {
+                restResponse.setFlushed(true);
+                SharedObjects.getServerThreadModel().getRestRequest().release();
+                SharedObjects.clearServerThreadModel();
             }
-            filterChain.doFilter(restRequest, restResponse);
-            restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_NAME, MRestUtils.getFrameworkName());
-            restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_VERSION, MRestUtils.getFrameworkVersion());
-            if (restResponse.getRestServer().isConnectionKeepAlive()) {
-                restResponse.setHeader(Constants.HTTP_HEADER_CONNECTION, Constants.CONNECTION_KEEP_ALIVE);
+            if (exception != null) {
+                throw exception;
             }
-            restResponse.flush();
         }
+    }
+
+    private Exception handleException(ChannelHandlerContext ctx, MRestRequest request
+            , MRestResponse response, Throwable cause) {
+        Consumer<ExceptionCallbackVo> errHandler = request.getRestContext().getDefaultErrorHandler();
+        if (errHandler == null) {
+            errHandler = vo -> {
+                MRestResponse.write(vo.getChannelHandlerContext(), HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            };
+        }
+        ExceptionCallbackVo callbackVo = new ExceptionCallbackVo();
+        callbackVo.setChannelHandlerContext(ctx);
+        callbackVo.setRestRequest(request);
+        callbackVo.setRestResponse(response);
+        callbackVo.setThrowable(cause);
+        try {
+            errHandler.accept(callbackVo);
+        } catch (Exception e) {
+            if (logger.isErrorEnabled()) {
+                logger.error("ErrorHandler execute failed.", e);
+            }
+            return e;
+        }
+        return null;
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        if (logger.isErrorEnabled()) {
-            logger.error("", cause);
-        }
-//        BiConsumer<ChannelHandlerContext, Throwable> errorHandler = restServer.getDefaultErrorHandler();
-//        if (errorHandler == null) {
-//            errorHandler = (a, b) -> {
-//                MRestResponse.write(a, HttpResponseStatus.INTERNAL_SERVER_ERROR);
-//            };
-//        }
-//        try {
-//            errorHandler.accept(ctx, cause);
-//        } catch (Throwable throwable) {
-//            if (logger.isErrorEnabled()) {
-//                logger.error("ErrorHandler execute failed.", throwable);
-//            }
-//        }
+        super.exceptionCaught(ctx, cause);
     }
 
     @Override
