@@ -2,12 +2,15 @@ package io.github.jiashunx.masker.rest.framework.util;
 
 import io.github.jiashunx.masker.rest.framework.MRestContext;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
+import io.github.jiashunx.masker.rest.framework.model.DiskFileResource;
 import io.github.jiashunx.masker.rest.framework.model.StaticResource;
+import io.github.jiashunx.masker.rest.framework.type.StaticResourceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.*;
 
@@ -44,38 +47,75 @@ public final class StaticResourceHolder {
     private synchronized void mergeResourceMap() {
         Map<String, StaticResource> resourceMap = new HashMap<>();
         resourceMap.putAll(diskResourceMap);
+        // classpath文件优先级高于磁盘文件优先级
         resourceMap.putAll(classpathResourceMap);
         this.resourceMap = resourceMap;
     }
 
     public synchronized void reloadDiskResourceMap(List<String> pathList) {
-        this.diskResourceMap = new HashMap<>();
+        // 从上到下优先级依次从高到低.
+        List<StaticResource> $resourceList = new ArrayList<>();
+        if (pathList != null && !pathList.isEmpty()) {
+            pathList.forEach(diskDirPath -> {
+                $resourceList.addAll(getDiskResources(diskDirPath));
+            });
+        }
+        Map<String, StaticResource> $resourceMap = resourceListToMap($resourceList);
+        if (logger.isInfoEnabled()) {
+            $resourceMap.forEach((key, resource) -> {
+                logger.info("Context[{}] load static resource from disk: {}", restContext.getContextPath(), resource.getUrl());
+            });
+        }
+        this.diskResourceMap = $resourceMap;
         mergeResourceMap();
     }
 
     public synchronized void reloadClasspathResourceMap(List<String> pathList) {
-        Map<String, StaticResource> resourceMap = new HashMap<>();
         // 从上到下优先级依次从高到低.
-        List<StaticResource> resourceList = new ArrayList<>();
+        List<StaticResource> $resourceList = new ArrayList<>();
         if (pathList != null && !pathList.isEmpty()) {
             pathList.forEach(cpDirLocation -> {
-                resourceList.addAll(getClasspathResources(cpDirLocation));
+                $resourceList.addAll(getClasspathResources(cpDirLocation));
             });
         }
-        for (StaticResource resource: resourceList) {
+        Map<String, StaticResource> $resourceMap = resourceListToMap($resourceList);
+        if (logger.isInfoEnabled()) {
+            $resourceMap.forEach((key, resource) -> {
+                logger.info("Context[{}] load static resource from classpath: {}", restContext.getContextPath(), resource.getUrl());
+            });
+        }
+        this.classpathResourceMap = $resourceMap;
+        mergeResourceMap();
+    }
+
+    private static Map<String, StaticResource> resourceListToMap(List<StaticResource> $resourceList) {
+        Map<String, StaticResource> $resourceMap = new HashMap<>();
+        for (StaticResource resource: $resourceList) {
             String url = resource.getUrl();
-            if (resourceMap.containsKey(url)) {
+            if ($resourceMap.containsKey(url)) {
                 continue;
             }
-            resourceMap.put(url, resource);
+            $resourceMap.put(url, resource);
         }
-        if (logger.isInfoEnabled()) {
-            resourceMap.forEach((key, resource) -> {
-                logger.info("Context[{}] load static resource: {}", restContext.getContextPath(), key);
+        return $resourceMap;
+    }
+
+    public static List<StaticResource> getDiskResources(String dirPath) {
+        List<StaticResource> resourceList = new ArrayList<>();
+        try {
+            String filePrefix = new File(dirPath).getAbsolutePath().replace("\\", "/");
+            Map<String, DiskFileResource> resourceMap =IOUtils.loadResourceFromDiskDir(dirPath);
+            resourceMap.forEach((diskPath, resourceObj) -> {
+                String uri = resourceObj.getDiskFilePath().replace("\\", "/");
+                String url = uri.substring(filePrefix.length());
+                resourceList.add(new StaticResource(StaticResourceType.DISK_FILE, uri, url, resourceObj.getBytes()));
             });
+        } catch (Throwable throwable) {
+            if (logger.isErrorEnabled()) {
+                logger.error("get resources from disk directory location: [{}] failed.", dirPath, throwable);
+            }
         }
-        this.classpathResourceMap = resourceMap;
-        mergeResourceMap();
+        return resourceList;
     }
 
     public static List<StaticResource> getClasspathResources(String cpDirLocation) {
@@ -117,7 +157,7 @@ public final class StaticResourceHolder {
                         contentBytes = new byte[0];
                     }
                 }
-                resourceList.add(new StaticResource(uri, url, contentBytes));
+                resourceList.add(new StaticResource(StaticResourceType.CLASSPATH_FILE, uri, url, contentBytes));
             }
         } catch (Throwable throwable) {
             if (logger.isErrorEnabled()) {

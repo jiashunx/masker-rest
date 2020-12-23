@@ -1,6 +1,7 @@
 package io.github.jiashunx.masker.rest.framework.model;
 
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
+import io.github.jiashunx.masker.rest.framework.type.StaticResourceType;
 
 import javax.activation.MimetypesFileTypeMap;
 import java.util.Objects;
@@ -10,6 +11,10 @@ import java.util.Objects;
  */
 public class StaticResource {
 
+    /**
+     * resource type.
+     */
+    private final StaticResourceType type;
     /**
      * resource uri.
      */
@@ -31,12 +36,17 @@ public class StaticResource {
      */
     private final String contentType;
 
-    public StaticResource(String uri, String url, byte[] contents) {
+    public StaticResource(StaticResourceType type, String uri, String url, byte[] contents) {
+        this.type = Objects.requireNonNull(type);
         this.uri = Objects.requireNonNull(uri);
         this.url = Objects.requireNonNull(url);
         this.contents = Objects.requireNonNull(contents);
         this.fileName = url.substring(url.lastIndexOf(Constants.URL_PATH_SEP) + 1);
         this.contentType = new MimetypesFileTypeMap().getContentType(this.fileName);
+    }
+
+    public StaticResourceType getType() {
+        return type;
     }
 
     public String getUri() {

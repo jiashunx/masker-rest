@@ -44,6 +44,7 @@ public class MaskerRestMain {
                 .context("/demo")
 
                 .addDefaultClasspathResource()
+                .addDiskResource("C:\\Workspace\\GitHub\\jiashunx\\masker-rest\\masker-rest-framework\\src\\main\\resources")
 
                 // get请求样例
                 .get("/get-NoParam-NoRet", () -> {
