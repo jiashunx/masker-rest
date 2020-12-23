@@ -21,7 +21,7 @@
 
    - [UserGuide](./docs/UserGuide.md)
 
-- 版本清单（最新版本：<b>1.4.9</b>）：
+- 版本清单（最新版本：<b>1.4.10</b>）：
 
    - version 1.0.0 (released)
       - feature：支持发布rest接口
@@ -83,8 +83,12 @@
    - version 1.4.9 (release)
       - refactor: 优化序列化相应代码
       - refactor: 补充IOUtils工具类中写文件方法
+   - verion 1.4.10 (release)
+      - refactor: 优化补充IOUtils工具类中相应方法.
    - version 1.5.0 (planing)
       - TODO
+         - 单个server支持发布多个context-path的服务
+         - 支持自定义静态资源classpath路径
          - 移除spring-core依赖（参考spring-core实现jar包资源扫描）
          - 支持WebSocket服务端处理
          - 支持WebSocket前端处理
