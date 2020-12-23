@@ -134,6 +134,10 @@ public final class IOUtils {
         return null;
     }
 
+    public static Map<String, byte[]> loadBytesFromDiskDir(File dir) {
+        return loadBytesFromDiskDir(dir.getAbsolutePath());
+    }
+
     public static Map<String, byte[]> loadBytesFromDiskDir(String dirPath) {
         Map<String, byte[]> retMap = new HashMap<>();
         Map<String, DiskFileResource> resourceMap = loadResourceFromDiskDir(dirPath);
@@ -141,6 +145,10 @@ public final class IOUtils {
             retMap.put(key, value.getBytes());
         });
         return retMap;
+    }
+
+    public static byte[] loadBytesFromDisk(File file) {
+        return loadBytesFromDisk(file.getAbsolutePath());
     }
 
     public static byte[] loadBytesFromDisk(String filePath) {
@@ -219,6 +227,18 @@ public final class IOUtils {
         } catch (Throwable throwable) {
             throw new MRestFileOperateException(throwable);
         }
+    }
+
+    public static byte[] readBytes(InputStream inputStream) {
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available());) {
+            copy(inputStream, outputStream);
+            return outputStream.toByteArray();
+        } catch (Throwable throwable) {}
+        return null;
+    }
+
+    public static byte[] readBytes(File file) {
+        return loadBytesFromDisk(file.getAbsolutePath());
     }
 
     public static void copy(InputStream inputStream, OutputStream outputStream) throws IOException {
