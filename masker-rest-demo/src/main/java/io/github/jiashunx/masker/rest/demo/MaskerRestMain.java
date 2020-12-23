@@ -43,6 +43,8 @@ public class MaskerRestMain {
                 .bossThreadNum(1)
                 .context("/demo")
 
+                .addDefaultClasspathResource()
+
                 // get请求样例
                 .get("/get-NoParam-NoRet", () -> {
                     MRestServerThreadModel threadModel = SharedObjects.getServerThreadModel();

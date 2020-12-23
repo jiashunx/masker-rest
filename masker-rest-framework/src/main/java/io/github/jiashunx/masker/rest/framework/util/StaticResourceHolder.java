@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.framework.util;
 
+import io.github.jiashunx.masker.rest.framework.MRestContext;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.model.StaticResource;
 import org.slf4j.Logger;
@@ -7,12 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author jiashunx
@@ -21,37 +18,67 @@ public final class StaticResourceHolder {
 
     private static final Logger logger = LoggerFactory.getLogger(StaticResourceHolder.class);
 
-    private StaticResourceHolder() {}
+    private final MRestContext restContext;
 
-    private static final Map<String, StaticResource> STATIC_RESOURCE_MAP = new HashMap<>();
-    static {
+    private volatile Map<String, StaticResource> classpathResourceMap = new HashMap<>();
+    private volatile Map<String, StaticResource> diskResourceMap = new HashMap<>();
+    private volatile Map<String, StaticResource> resourceMap = new HashMap<>();
+
+    public StaticResourceHolder(MRestContext restContext) {
+        this.restContext = Objects.requireNonNull(restContext);
+        reloadClasspathResourceMap(Collections.emptyList());
+    }
+
+    public Map<String, StaticResource> getResourceMap() {
+        return resourceMap;
+    }
+
+    public Map<String, StaticResource> getClasspathResourceMap() {
+        return classpathResourceMap;
+    }
+
+    public Map<String, StaticResource> getDiskResourceMap() {
+        return diskResourceMap;
+    }
+
+    private synchronized void mergeResourceMap() {
+        Map<String, StaticResource> resourceMap = new HashMap<>();
+        resourceMap.putAll(diskResourceMap);
+        resourceMap.putAll(classpathResourceMap);
+        this.resourceMap = resourceMap;
+    }
+
+    public synchronized void reloadDiskResourceMap(List<String> pathList) {
+        this.diskResourceMap = new HashMap<>();
+        mergeResourceMap();
+    }
+
+    public synchronized void reloadClasspathResourceMap(List<String> pathList) {
+        Map<String, StaticResource> resourceMap = new HashMap<>();
         // 从上到下优先级依次从高到低.
         List<StaticResource> resourceList = new ArrayList<>();
-        resourceList.addAll(getResources("META-INF/resources/"));
-        resourceList.addAll(getResources("resources/"));
-        resourceList.addAll(getResources("static/"));
-        resourceList.addAll(getResources("public/"));
-        for (StaticResource resource: resourceList) {
-            String url = resource.getUrl();
-            if (STATIC_RESOURCE_MAP.containsKey(url)) {
-                continue;
-            }
-            STATIC_RESOURCE_MAP.put(url, resource);
-        }
-        if (logger.isInfoEnabled()) {
-            STATIC_RESOURCE_MAP.forEach((key, resource) -> {
-                logger.info("load static resource: {}", key);
+        if (pathList != null && !pathList.isEmpty()) {
+            pathList.forEach(cpDirLocation -> {
+                resourceList.addAll(getClasspathResources(cpDirLocation));
             });
         }
+        for (StaticResource resource: resourceList) {
+            String url = resource.getUrl();
+            if (resourceMap.containsKey(url)) {
+                continue;
+            }
+            resourceMap.put(url, resource);
+        }
+        if (logger.isInfoEnabled()) {
+            resourceMap.forEach((key, resource) -> {
+                logger.info("Context[{}] load static resource: {}", restContext.getContextPath(), key);
+            });
+        }
+        this.classpathResourceMap = resourceMap;
+        mergeResourceMap();
     }
 
-    public static Map<String, StaticResource> getResourceMap() {
-        Map<String, StaticResource> map = new HashMap<>();
-        STATIC_RESOURCE_MAP.forEach(map::put);
-        return map;
-    }
-
-    public static List<StaticResource> getResources(String cpDirLocation) {
+    public static List<StaticResource> getClasspathResources(String cpDirLocation) {
         List<StaticResource> resourceList = new ArrayList<>();
         try {
             if (StringUtils.isBlank(cpDirLocation)) {

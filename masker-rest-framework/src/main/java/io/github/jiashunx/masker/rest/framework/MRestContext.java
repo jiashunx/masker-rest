@@ -67,6 +67,17 @@ public class MRestContext {
         for (Runnable filterTask: filterTaskList) {
             filterTask.run();
         }
+        // 静态资源处理
+        List<String> classpathResources = getClasspathResources();
+        if (logger.isInfoEnabled()) {
+            logger.info("Context[{}] reload classpath resources: {}", getContextPath(), classpathResources);
+        }
+        ((StaticResourceFilter) staticResourceFilter).reloadClasspathResource(classpathResources);
+        List<String> diskResources = getDiskResources();
+        if (logger.isInfoEnabled()) {
+            logger.info("Context[{}] reload disk resources: {}", getContextPath(), diskResources);
+        }
+        ((StaticResourceFilter) staticResourceFilter).reloadDiskResource(diskResources);
     }
 
 
@@ -368,9 +379,17 @@ public class MRestContext {
      */
     private final MRestFilter requestFilter = new MRestDispatchFilter();
     /**
+     * 配置的静态资源classpath扫描路径.
+     */
+    private final Set<String> classpathResources = new HashSet<>();
+    /**
+     * 配置的静态资源磁盘扫描路径.
+     */
+    private final Set<String> diskResources = new HashSet<>();
+    /**
      * 静态资源处理.
      */
-    private final MRestFilter staticResourceFilter = new StaticResourceFilter();
+    private final MRestFilter staticResourceFilter = new StaticResourceFilter(this);
     /**
      * 添加filter的任务(在服务启动时统一添加).
      */
@@ -457,6 +476,67 @@ public class MRestContext {
             }
         });
         return this;
+    }
+
+    public MRestContext addDefaultClasspathResource() {
+        return addClasspathResources(new String[] {
+                "META-INF/resources/"
+                , "resources/"
+                , "static/"
+                , "public/"
+        });
+    }
+
+    public MRestContext addClasspathResource(String path) {
+        return addClasspathResources(new String[] { path });
+    }
+
+    public synchronized MRestContext addClasspathResources(String[] pathArr) {
+        if (pathArr != null) {
+            for (String path: pathArr) {
+                classpathResources.add(formatClasspathResourcePath(path));
+            }
+        }
+        return this;
+    }
+
+    private String formatClasspathResourcePath(String path) {
+        String location = String.valueOf(path).trim();
+        if (!location.endsWith(Constants.URL_PATH_SEP)) {
+            location = location + Constants.URL_PATH_SEP;
+        }
+        while (location.startsWith(Constants.URL_PATH_SEP)) {
+            if (location.length() == 1) {
+                break;
+            }
+            location = location.substring(1);
+        }
+        return location;
+    }
+
+    public List<String> getClasspathResources() {
+        return new ArrayList<>(classpathResources);
+    }
+
+    public MRestContext addDiskResource(String path) {
+        return addDiskResources(new String[] { path });
+    }
+
+    public MRestContext addDiskResources(String[] pathArr) {
+        if (pathArr != null) {
+            for (String path: pathArr) {
+                diskResources.add(formatDiskResourcePath(path));
+            }
+        }
+        return this;
+    }
+
+    private String formatDiskResourcePath(String path) {
+        return path;
+    }
+
+    public List<String> getDiskResources() {
+        return new ArrayList<>(diskResources);
     }
 
 
