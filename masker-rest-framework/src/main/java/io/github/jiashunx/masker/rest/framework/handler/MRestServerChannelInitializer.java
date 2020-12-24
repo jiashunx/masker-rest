@@ -7,6 +7,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.HttpServerExpectContinueHandler;
+import io.netty.handler.stream.ChunkedWriteHandler;
 
 import java.util.Objects;
 
@@ -15,7 +16,7 @@ import java.util.Objects;
  */
 public class MRestServerChannelInitializer extends ChannelInitializer<SocketChannel> {
 
-    private MRestServer restServer;
+    private final MRestServer restServer;
 
     public MRestServerChannelInitializer(MRestServer restServer) {
         this.restServer = Objects.requireNonNull(restServer);
@@ -25,6 +26,7 @@ public class MRestServerChannelInitializer extends ChannelInitializer<SocketChan
     protected void initChannel(SocketChannel socketChannel) throws Exception {
         ChannelPipeline pipeline = socketChannel.pipeline();
         pipeline.addLast(new HttpServerCodec());
+        pipeline.addLast(new ChunkedWriteHandler());
         // 聚合Http请求或响应，否则会收到HttpMessage，HttpContent等对象
         // 使用此Handler后, 只会收到FullHttpRequest等对象
         pipeline.addLast(new HttpObjectAggregator(50*1024*1024));

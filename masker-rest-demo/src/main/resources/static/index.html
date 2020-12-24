@@ -24,6 +24,9 @@
         <br>
         <button type="button" id="btn-download-test0">下载</button>
     </div>
+    <div>
+        <button type="button" id="btn-websocket-test">WebSocket测试</button>
+    </div>
     <script type="text/javascript" src="./webjars/webjar-jquery/3.5.1/dist/jquery.min.js"></script>
     <script>
         $("#btn-file-upload0").click(function () {
@@ -56,7 +59,26 @@
         $("#btn-download-test0").click(function () {
             var _win = window.open("about:blank");
             _win.location.href = "./filedownload/test0";
-        })
+        });
+        if (window.WebSocket) {
+            let _socket = new WebSocket("ws://localhost:21700/demo000");
+            _socket.onmessage = function (ev) {
+                console.log("receive from server: ", ev.data);
+            };
+            _socket.onopen = function (ev) {
+                console.log("connected to server");
+            };
+            _socket.onclose = function (ev) {
+                console.log("disconnected from server");
+            };
+            $("#btn-websocket-test").click(function () {
+                if (_socket.readyState === WebSocket.OPEN) {
+                    _socket.send("hahahhahahhhhhh");
+                } else {
+                    alert("WebSocket Connection is not ready.");
+                }
+            });
+        }
     </script>
 </body>
 </html>

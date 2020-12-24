@@ -21,6 +21,7 @@ public class Constants {
     public static final String HTTP_HEADER_LOCATION = "Location";
     public static final String HTTP_HEADER_COOKIE = "Cookie";
     public static final String HTTP_HEADER_SET_COOKIE = "Set-Cookie";
+    public static final String HTTP_HEADER_UPGRADE = "Upgrade";
     public static final String HTTP_HEADER_SERVER_FRAMEWORK_NAME = "Server-Framework-Name";
     public static final String HTTP_HEADER_SERVER_FRAMEWORK_VERSION = "Server-Framework-Version";
 
@@ -30,5 +31,6 @@ public class Constants {
     public static final String CONTENT_TYPE_TEXT_HTML = "text/html";
     public static final String CONTENT_TYPE_APPLICATION_OCTETSTREAM = "application/octet-stream";
     public static final String CONNECTION_KEEP_ALIVE = "keep-alive";
+    public static final String UPGRADE_WEBSOCKET = "websocket";
 
 }
