@@ -18,6 +18,7 @@ import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
@@ -90,7 +91,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
         @Override
         public void execute(ChannelHandlerContext ctx, FullHttpRequest object) throws Exception {
-            MRestRequest restRequest = parseHttpRequest((FullHttpRequest) object);
+            MRestRequest restRequest = parseHttpRequest(ctx, object);
 
             MRestContext restContext = restRequest.getRestContext();
             MRestResponse restResponse = new MRestResponse(ctx, restContext);
@@ -135,9 +136,17 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             }
         }
 
-        private MRestRequest parseHttpRequest(FullHttpRequest httpRequest) {
+        private MRestRequest parseHttpRequest(ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
             MRestRequest restRequest = new MRestRequest();
             restRequest.setHttpRequest(httpRequest);
+            InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().localAddress();
+            restRequest.setRemoteAddress(remoteAddress.getAddress().getHostAddress());
+            restRequest.setRemotePort(remoteAddress.getPort());
+            InetSocketAddress clientAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+            restRequest.setClientAddress(clientAddress.getAddress().getHostAddress());
+            restRequest.setClientPort(clientAddress.getPort());
+            restRequest.setProtocolName(httpRequest.protocolVersion().protocolName());
+            restRequest.setProtocolVersion(httpRequest.protocolVersion().text());
             QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.uri(), StandardCharsets.UTF_8, true);
             String path = queryStringDecoder.path();
             if (path.length() > 1 && path.endsWith("/")) {

@@ -20,6 +20,14 @@ public class MRestRequest {
     private HttpRequest httpRequest;
 
     private Map<String, String> attributes = new HashMap<>();
+
+    private String protocolName;
+    private String protocolVersion;
+    private String clientAddress;
+    private int clientPort;
+    private String remoteAddress;
+    private int remotePort;
+
     private HttpMethod method;
     private String contextPath;
     /**
@@ -110,6 +118,62 @@ public class MRestRequest {
 
     public String getAttribute(String key) {
         return attributes.get(key);
+    }
+
+    public String getProtocolName() {
+        return protocolName;
+    }
+
+    public String getProtocolNameLowerCase() {
+        return getProtocolName().toLowerCase();
+    }
+
+    public void setProtocolName(String protocolName) {
+        this.protocolName = protocolName;
+    }
+
+    public String getProtocolVersion() {
+        return protocolVersion;
+    }
+
+    public String getProtocolVersionLowerCase() {
+        return getProtocolVersion().toLowerCase();
+    }
+
+    public void setProtocolVersion(String protocolVersion) {
+        this.protocolVersion = protocolVersion;
+    }
+
+    public String getClientAddress() {
+        return clientAddress;
+    }
+
+    public void setClientAddress(String clientAddress) {
+        this.clientAddress = clientAddress;
+    }
+
+    public int getClientPort() {
+        return clientPort;
+    }
+
+    public void setClientPort(int clientPort) {
+        this.clientPort = clientPort;
+    }
+
+    public String getRemoteAddress() {
+        return remoteAddress;
+    }
+
+    public void setRemoteAddress(String remoteAddress) {
+        this.remoteAddress = remoteAddress;
+    }
+
+    public int getRemotePort() {
+        return remotePort;
+    }
+
+    public void setRemotePort(int remotePort) {
+        this.remotePort = remotePort;
     }
 
     public HttpMethod getMethod() {
