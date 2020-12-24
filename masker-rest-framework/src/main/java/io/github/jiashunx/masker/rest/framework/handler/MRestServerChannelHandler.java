@@ -5,6 +5,7 @@ import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.model.ExceptionCallbackVo;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
+import io.github.jiashunx.masker.rest.framework.util.MResponseHelper;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.SharedObjects;
 import io.netty.channel.ChannelHandlerContext;
@@ -38,7 +39,9 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
     protected void channelRead0(ChannelHandlerContext ctx, Object object) throws Exception {
         if (object instanceof FullHttpRequest) {
             httpRequestHandler.execute(ctx, (FullHttpRequest) object);
+            return;
         }
+        MResponseHelper.write(ctx, HttpResponseStatus.SERVICE_UNAVAILABLE);
     }
 
     @Override
@@ -214,7 +217,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             Consumer<ExceptionCallbackVo> errHandler = request.getRestContext().getDefaultErrorHandler();
             if (errHandler == null) {
                 errHandler = vo -> {
-                    MRestResponse.write(vo.getChannelHandlerContext(), HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                    MResponseHelper.write(vo.getChannelHandlerContext(), HttpResponseStatus.INTERNAL_SERVER_ERROR);
                 };
             }
             ExceptionCallbackVo callbackVo = new ExceptionCallbackVo();
