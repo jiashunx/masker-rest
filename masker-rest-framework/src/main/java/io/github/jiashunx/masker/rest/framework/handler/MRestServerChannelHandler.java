@@ -8,6 +8,7 @@ import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
 import io.github.jiashunx.masker.rest.framework.util.MResponseHelper;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.SharedObjects;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
@@ -15,15 +16,14 @@ import io.netty.handler.codec.http.multipart.Attribute;
 import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
-import io.netty.handler.codec.http.websocketx.WebSocketFrame;
-import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
-import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
+import io.netty.handler.codec.http.websocketx.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -72,6 +72,14 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
     }
 
     @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        Channel channel = ctx.channel();
+        System.out.println("channel inactive: channal-id: " + channel.id());
+        webSocketServerHandshakerMap.remove(channel);
+        super.channelInactive(ctx);
+    }
+
+    @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         super.userEventTriggered(ctx, evt);
     }
@@ -82,11 +90,33 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
     /************************************************** WebSocket *************************************************/
 
     private void handleWebSocketRequest(ChannelHandlerContext ctx, WebSocketFrame object) {
-
+        Channel channel = ctx.channel();
+        System.out.println("channel read: channal-id: " + channel.id());
+        MWebsocketRequest websocketRequest = webSocketServerHandshakerMap.get(channel);
+        if (websocketRequest == null) {
+            return;
+        }
+        if (object instanceof CloseWebSocketFrame) {
+            websocketRequest.getHandshaker().close(channel, (CloseWebSocketFrame) object.retain());
+            return;
+        }
+        if (object instanceof PingWebSocketFrame) {
+            ctx.channel().writeAndFlush(new PongWebSocketFrame(object.content().retain()));
+            return;
+        }
+        if (object instanceof TextWebSocketFrame) {
+            ctx.channel().writeAndFlush(new TextWebSocketFrame(new Date().toString() + " " + channel.id() + ": " + object));
+            return;
+        }
+        if (object instanceof BinaryWebSocketFrame) {
+            return;
+        }
+        throw new UnsupportedOperationException(String.format("WebSocketFrame Class: %s not supported", object.getClass().getName()));
     }
 
     /************************************************** WebSocket *************************************************/
 
+    private final Map<Channel, MWebsocketRequest> webSocketServerHandshakerMap = new ConcurrentHashMap<>();
 
     /************************************************** HTTP  ****************************************************/
 
@@ -111,9 +141,21 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             if (handshaker == null) {
                 WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
             } else {
-                handshaker.handshake(ctx.channel(), object);
+                Channel channel = ctx.channel();
+                handshaker.handshake(channel, object);
+                MWebsocketRequest websocketRequest = new MWebsocketRequest();
+                websocketRequest.setProtocolName(restRequest.getProtocolName());
+                websocketRequest.setProtocolVersion(restRequest.getProtocolVersion());
+                websocketRequest.setClientAddress(restRequest.getClientAddress());
+                websocketRequest.setClientPort(restRequest.getClientPort());
+                websocketRequest.setRemoteAddress(restRequest.getRemoteAddress());
+                websocketRequest.setRemotePort(restRequest.getRemotePort());
+                websocketRequest.setHandshaker(handshaker);
+                websocketRequest.setContextPath("/demo000");
+                websocketRequest.setWebsocketContext(null);
+                webSocketServerHandshakerMap.put(channel, websocketRequest);
+                System.out.println("channel active: channal-id: " + channel.id());
             }
-            // TODO 根据channel建立对应模型, 包含客户端属性, webSocketURL等信息
             return;
         }
 
