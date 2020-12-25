@@ -103,7 +103,7 @@ public class MRestServer {
     public synchronized MRestContext context(String contextPath) {
         MRestContext context = getContext(contextPath);
         if (context == null) {
-            String _ctxPath = MRestContext.formatContextPath(contextPath);
+            String _ctxPath = MRestUtils.formatContextPath(contextPath);
             context = new MRestContext(this, _ctxPath);
             contextMap.put(_ctxPath, context);
         }
@@ -111,7 +111,7 @@ public class MRestServer {
     }
 
     public MRestContext getContext(String contextPath) {
-        return contextMap.get(MRestContext.formatContextPath(contextPath));
+        return contextMap.get(MRestUtils.formatContextPath(contextPath));
     }
 
     public List<String> getContextList() {
