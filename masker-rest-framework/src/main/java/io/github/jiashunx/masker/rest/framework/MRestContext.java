@@ -31,24 +31,7 @@ public class MRestContext {
 
     public MRestContext(MRestServer restServer, String contextPath) {
         this.restServer = Objects.requireNonNull(restServer);
-        this.contextPath = formatContextPath(contextPath);
-    }
-
-    public static String formatContextPath(String contextPath) {
-        if (StringUtils.isBlank(contextPath)) {
-            throw new IllegalArgumentException("contextPath can't be empty");
-        }
-        String _ctxPath = contextPath.trim();
-        while (_ctxPath.endsWith(Constants.URL_PATH_SEP)) {
-            if (_ctxPath.length() == 1) {
-                break;
-            }
-            _ctxPath = _ctxPath.substring(0, _ctxPath.length() - 1);
-        }
-        if (!_ctxPath.startsWith(Constants.URL_PATH_SEP)) {
-            _ctxPath = Constants.URL_PATH_SEP;
-        }
-        return _ctxPath;
+        this.contextPath = MRestUtils.formatContextPath(contextPath);
     }
 
     public MRestServer getRestServer() {

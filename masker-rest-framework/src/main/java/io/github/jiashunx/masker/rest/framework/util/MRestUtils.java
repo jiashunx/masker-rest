@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.framework.util;
 
+import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerConfig;
 import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import org.slf4j.Logger;
@@ -84,6 +85,23 @@ public class MRestUtils {
             }
         }
         return serverDefaultConfig;
+    }
+
+    public static String formatContextPath(String contextPath) {
+        if (StringUtils.isBlank(contextPath)) {
+            throw new IllegalArgumentException("contextPath can't be empty");
+        }
+        String _ctxPath = contextPath.trim();
+        while (_ctxPath.endsWith(Constants.URL_PATH_SEP)) {
+            if (_ctxPath.length() == 1) {
+                break;
+            }
+            _ctxPath = _ctxPath.substring(0, _ctxPath.length() - 1);
+        }
+        if (!_ctxPath.startsWith(Constants.URL_PATH_SEP)) {
+            _ctxPath = Constants.URL_PATH_SEP;
+        }
+        return _ctxPath;
     }
 
 }
