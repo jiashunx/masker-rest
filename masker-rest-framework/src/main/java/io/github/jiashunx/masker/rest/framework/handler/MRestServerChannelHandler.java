@@ -79,15 +79,6 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        String channelId = ctx.channel().toString();
-        MWebsocketRequest websocketRequest = webSocketServerHandshakerMap.get(channelId);
-        if (websocketRequest != null) {
-            webSocketServerHandshakerMap.remove(channelId);
-            Consumer<ChannelHandlerContext> inactiveCallback = websocketRequest.getWebsocketContext().getInactiveCallback();
-            if (inactiveCallback != null) {
-                inactiveCallback.accept(ctx);
-            }
-        }
         super.channelInactive(ctx);
     }
 
@@ -102,13 +93,19 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
     /************************************************** WebSocket *************************************************/
 
     private void handleWebSocketRequest(ChannelHandlerContext ctx, WebSocketFrame object) {
-        Channel channel = ctx.channel();
-        MWebsocketRequest websocketRequest = webSocketServerHandshakerMap.get(channel.id().toString());
+        String channelId = ctx.channel().id().toString();
+        MWebsocketRequest websocketRequest = webSocketServerHandshakerMap.get(channelId);
         if (websocketRequest == null) {
             return;
         }
         if (object instanceof CloseWebSocketFrame) {
-            websocketRequest.getHandshaker().close(channel, (CloseWebSocketFrame) object.retain());
+            webSocketServerHandshakerMap.remove(channelId);
+            Consumer<ChannelHandlerContext> inactiveCallback = websocketRequest.getWebsocketContext().getInactiveCallback();
+            if (inactiveCallback != null) {
+                inactiveCallback.accept(ctx);
+            }
+            websocketRequest.getHandshaker().close(ctx.channel(), (CloseWebSocketFrame) object.retain());
+//            ctx.channel().close();
             return;
         }
         if (object instanceof PingWebSocketFrame) {
@@ -145,6 +142,22 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
     /************************************************** WebSocket *************************************************/
 
     private final Map<String, MWebsocketRequest> webSocketServerHandshakerMap = new ConcurrentHashMap<>();
+    private final Map<String, WebSocketServerHandshakerFactory> handshakerFactoryMap = new HashMap<>();
+
+    public WebSocketServerHandshakerFactory getWebSocketServerHandshakerFactory(String webSocketURL) {
+        WebSocketServerHandshakerFactory handshakerFactory = handshakerFactoryMap.get(webSocketURL);
+        if (handshakerFactory == null) {
+            synchronized (this) {
+                handshakerFactory = handshakerFactoryMap.get(webSocketURL);
+                if (handshakerFactory == null) {
+                    final WebSocketServerHandshakerFactory $handshakerFactory = new WebSocketServerHandshakerFactory(webSocketURL, null, false);
+                    handshakerFactoryMap.put(webSocketURL, $handshakerFactory);
+                    handshakerFactory = $handshakerFactory;
+                }
+            }
+        }
+        return handshakerFactory;
+    }
 
     /************************************************** HTTP  ****************************************************/
 
@@ -162,26 +175,28 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
         // 处理websocket连接请求.
         if (Constants.UPGRADE_WEBSOCKET.equals(restRequest.getHeader(Constants.HTTP_HEADER_UPGRADE))) {
+            Channel channel = ctx.channel();
             String contextPath = MRestUtils.formatContextPath(restRequest.getOriginUrl());
             MWebsocketContext websocketContext = restRequest.getRestContext().getRestServer().getWebsocketContext(contextPath);
             if (websocketContext == null) {
-                WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
+                WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(channel);
                 return;
             }
             // 判断url是否在已注册的MWebsocketContext列表在
             String webSocketURL = String.format("%s://%s:%d%s", restRequest.getProtocolNameLowerCase()
                     , restRequest.getRemoteAddress(), restRequest.getRemotePort(), restRequest.getOriginUrl());
-            WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(webSocketURL, null, false);
+            WebSocketServerHandshakerFactory wsFactory = getWebSocketServerHandshakerFactory(webSocketURL);
             WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(object);
             if (handshaker == null) {
-                WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
+                WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(channel);
             } else {
-                Channel channel = ctx.channel();
+                String channelId = channel.id().toString();
                 handshaker.handshake(channel, object);
                 MWebsocketRequest websocketRequest = new MWebsocketRequest(restRequest);
                 websocketRequest.setContextPath(contextPath);
                 websocketRequest.setWebsocketContext(websocketContext);
-                webSocketServerHandshakerMap.put(channel.id().toString(), websocketRequest);
+                websocketRequest.setHandshaker(handshaker);
+                webSocketServerHandshakerMap.put(channelId, websocketRequest);
                 BiConsumer<ChannelHandlerContext, MWebsocketRequest> activeCallback = websocketRequest.getWebsocketContext().getActiveCallback();
                 if (activeCallback != null) {
                     activeCallback.accept(ctx, websocketRequest);
