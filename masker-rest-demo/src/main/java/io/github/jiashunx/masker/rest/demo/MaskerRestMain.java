@@ -11,10 +11,12 @@ import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.model.MRestFileUpload;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
 import io.github.jiashunx.masker.rest.framework.util.*;
+import io.netty.channel.ChannelId;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.NettyRuntime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -192,6 +194,15 @@ public class MaskerRestMain {
                 })
 
                 .getRestServer()
+
+                .websocketContext("/demo000")
+                .bindTextFrameHandler((frame, request, response) -> {
+                    ChannelId channelId = response.getChannelHandlerContext().channel().id();
+                    logger.info("receive from client: {}, text: {}", channelId, frame.text());
+                    response.writeAndFlush(new TextWebSocketFrame("hello."));
+                })
+                .getRestServer()
+
                 .start();
     }
 

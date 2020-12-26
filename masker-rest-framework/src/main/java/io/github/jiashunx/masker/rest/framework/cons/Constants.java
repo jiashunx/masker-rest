@@ -8,6 +8,7 @@ public class Constants {
 
     public static final String ROOT_PATH = "/";
     public static final String DEFAULT_CONTEXT_PATH = "/";
+    public static final String DEFAULT_WEBSOCKET_CONTEXT_PATH = "/websocket";
     public static final String URL_PATH_SEP = "/";
     public static final int DEFAULT_FILTER_ORDER = 0;
     public static final String DEFAULT_FILTER_URLPATTERN = "/*";

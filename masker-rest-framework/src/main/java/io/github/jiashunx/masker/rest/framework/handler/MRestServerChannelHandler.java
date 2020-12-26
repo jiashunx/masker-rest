@@ -74,7 +74,6 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         Channel channel = ctx.channel();
-        System.out.println("channel inactive: channal-id: " + channel.id());
         webSocketServerHandshakerMap.remove(channel);
         super.channelInactive(ctx);
     }
@@ -91,7 +90,6 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
     private void handleWebSocketRequest(ChannelHandlerContext ctx, WebSocketFrame object) {
         Channel channel = ctx.channel();
-        System.out.println("channel read: channal-id: " + channel.id());
         MWebsocketRequest websocketRequest = webSocketServerHandshakerMap.get(channel);
         if (websocketRequest == null) {
             return;
@@ -104,14 +102,31 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             ctx.channel().writeAndFlush(new PongWebSocketFrame(object.content().retain()));
             return;
         }
+        MWebsocketContext websocketContext = websocketRequest.getWebsocketContext();
+        MWebsocketResponse websocketResponse = new MWebsocketResponse(ctx, websocketContext);
         if (object instanceof TextWebSocketFrame) {
-            ctx.channel().writeAndFlush(new TextWebSocketFrame(new Date().toString() + " " + channel.id() + ": " + object));
+            MWebsocketHandler<TextWebSocketFrame> websocketHandler = websocketContext.getTextFrameHandler();
+            if (websocketHandler == null) {
+                throw new UnsupportedOperationException(String.format("WebsocketContext[%s] not assign the TextWebSocketFrame handler", websocketContext.getContextPath()));
+            }
+            websocketHandler.execute((TextWebSocketFrame) object, websocketRequest, websocketResponse);
             return;
         }
         if (object instanceof BinaryWebSocketFrame) {
+            MWebsocketHandler<BinaryWebSocketFrame> websocketHandler = websocketContext.getBinaryFrameHandler();
+            if (websocketHandler == null) {
+                throw new UnsupportedOperationException(String.format("WebsocketContext[%s] not assign the BinaryWebSocketFrame handler", websocketContext.getContextPath()));
+            }
+            websocketHandler.execute((BinaryWebSocketFrame) object, websocketRequest, websocketResponse);
             return;
         }
-        throw new UnsupportedOperationException(String.format("WebSocketFrame Class: %s not supported", object.getClass().getName()));
+        if (object instanceof ContinuationWebSocketFrame) {
+            MWebsocketHandler<ContinuationWebSocketFrame> websocketHandler = websocketContext.getContinuationFrameHandler();
+            if (websocketHandler == null) {
+                throw new UnsupportedOperationException(String.format("WebsocketContext[%s] not assign the ContinuationWebSocketFrame handler", websocketContext.getContextPath()));
+            }
+            websocketHandler.execute((ContinuationWebSocketFrame) object, websocketRequest, websocketResponse);
+        }
     }
 
     /************************************************** WebSocket *************************************************/
@@ -134,6 +149,13 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
         // 处理websocket连接请求.
         if (Constants.UPGRADE_WEBSOCKET.equals(restRequest.getHeader(Constants.HTTP_HEADER_UPGRADE))) {
+            String contextPath = MRestUtils.formatContextPath(restRequest.getOriginUrl());
+            MWebsocketContext websocketContext = restRequest.getRestContext().getRestServer().getWebsocketContext(contextPath);
+            if (websocketContext == null) {
+                WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
+                return;
+            }
+            // 判断url是否在已注册的MWebsocketContext列表在
             String webSocketURL = String.format("%s://%s:%d%s", restRequest.getProtocolNameLowerCase()
                     , restRequest.getRemoteAddress(), restRequest.getRemotePort(), restRequest.getOriginUrl());
             WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(webSocketURL, null, false);
@@ -151,10 +173,9 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
                 websocketRequest.setRemoteAddress(restRequest.getRemoteAddress());
                 websocketRequest.setRemotePort(restRequest.getRemotePort());
                 websocketRequest.setHandshaker(handshaker);
-                websocketRequest.setContextPath("/demo000");
-                websocketRequest.setWebsocketContext(null);
+                websocketRequest.setContextPath(contextPath);
+                websocketRequest.setWebsocketContext(websocketContext);
                 webSocketServerHandshakerMap.put(channel, websocketRequest);
-                System.out.println("channel active: channal-id: " + channel.id());
             }
             return;
         }
