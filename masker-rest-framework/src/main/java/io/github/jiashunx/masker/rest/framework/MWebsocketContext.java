@@ -2,6 +2,7 @@ package io.github.jiashunx.masker.rest.framework;
 
 import io.github.jiashunx.masker.rest.framework.handler.MWebsocketHandler;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.ContinuationWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -10,6 +11,8 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * @author jiashunx
@@ -36,6 +39,27 @@ public class MWebsocketContext {
         for (Runnable runnable: websocketHandlerInitTaskList) {
             runnable.run();
         }
+    }
+
+    private BiConsumer<ChannelHandlerContext, MWebsocketRequest> activeCallback;
+    private Consumer<ChannelHandlerContext> inactiveCallback;
+
+    public MWebsocketContext channelActiveCallback(BiConsumer<ChannelHandlerContext, MWebsocketRequest> activeCallback) {
+        this.activeCallback = Objects.requireNonNull(activeCallback);
+        return this;
+    }
+
+    public BiConsumer<ChannelHandlerContext, MWebsocketRequest> getActiveCallback() {
+        return activeCallback;
+    }
+
+    public MWebsocketContext channelInactiveCallback(Consumer<ChannelHandlerContext> inactiveCallback) {
+        this.inactiveCallback = Objects.requireNonNull(inactiveCallback);
+        return this;
+    }
+
+    public Consumer<ChannelHandlerContext> getInactiveCallback() {
+        return inactiveCallback;
     }
 
     private final List<Runnable> websocketHandlerInitTaskList = new ArrayList<>();

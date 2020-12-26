@@ -24,6 +24,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -72,9 +73,21 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
     }
 
     @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        super.channelActive(ctx);
+    }
+
+    @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        Channel channel = ctx.channel();
-        webSocketServerHandshakerMap.remove(channel);
+        String channelId = ctx.channel().toString();
+        MWebsocketRequest websocketRequest = webSocketServerHandshakerMap.get(channelId);
+        if (websocketRequest != null) {
+            webSocketServerHandshakerMap.remove(channelId);
+            Consumer<ChannelHandlerContext> inactiveCallback = websocketRequest.getWebsocketContext().getInactiveCallback();
+            if (inactiveCallback != null) {
+                inactiveCallback.accept(ctx);
+            }
+        }
         super.channelInactive(ctx);
     }
 
@@ -90,7 +103,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
     private void handleWebSocketRequest(ChannelHandlerContext ctx, WebSocketFrame object) {
         Channel channel = ctx.channel();
-        MWebsocketRequest websocketRequest = webSocketServerHandshakerMap.get(channel);
+        MWebsocketRequest websocketRequest = webSocketServerHandshakerMap.get(channel.id().toString());
         if (websocketRequest == null) {
             return;
         }
@@ -131,7 +144,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
     /************************************************** WebSocket *************************************************/
 
-    private final Map<Channel, MWebsocketRequest> webSocketServerHandshakerMap = new ConcurrentHashMap<>();
+    private final Map<String, MWebsocketRequest> webSocketServerHandshakerMap = new ConcurrentHashMap<>();
 
     /************************************************** HTTP  ****************************************************/
 
@@ -175,7 +188,11 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
                 websocketRequest.setHandshaker(handshaker);
                 websocketRequest.setContextPath(contextPath);
                 websocketRequest.setWebsocketContext(websocketContext);
-                webSocketServerHandshakerMap.put(channel, websocketRequest);
+                webSocketServerHandshakerMap.put(channel.id().toString(), websocketRequest);
+                BiConsumer<ChannelHandlerContext, MWebsocketRequest> activeCallback = websocketRequest.getWebsocketContext().getActiveCallback();
+                if (activeCallback != null) {
+                    activeCallback.accept(ctx, websocketRequest);
+                }
             }
             return;
         }

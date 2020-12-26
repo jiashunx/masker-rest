@@ -2,6 +2,9 @@ package io.github.jiashunx.masker.rest.framework;
 
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author jiashunx
  */
@@ -16,6 +19,7 @@ public class MWebsocketRequest {
     private int remotePort;
     private String contextPath;
     private WebSocketServerHandshaker handshaker;
+    private Map<String, Object> attributes = new HashMap<>();
 
     public MWebsocketContext getWebsocketContext() {
         return websocketContext;
@@ -96,4 +100,17 @@ public class MWebsocketRequest {
     public void setHandshaker(WebSocketServerHandshaker handshaker) {
         this.handshaker = handshaker;
     }
+
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttribute(String key, Object value) {
+        attributes.put(key, value);
+    }
+
+    public Object getAttribute(String key) {
+        return attributes.get(key);
+    }
+
 }
