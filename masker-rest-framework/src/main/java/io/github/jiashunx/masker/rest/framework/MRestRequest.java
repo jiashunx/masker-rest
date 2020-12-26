@@ -53,6 +53,12 @@ public class MRestRequest {
         this.restContext = restRequest.restContext;
         this.httpRequest = restRequest.httpRequest;
         this.attributes = restRequest.attributes;
+        this.protocolName = restRequest.protocolName;
+        this.protocolVersion = restRequest.protocolVersion;
+        this.clientAddress = restRequest.clientAddress;
+        this.clientPort = restRequest.clientPort;
+        this.remoteAddress = restRequest.remoteAddress;
+        this.remotePort = restRequest.remotePort;
         this.method = restRequest.method;
         this.contextPath = restRequest.contextPath;
         this.originUrl = restRequest.originUrl;

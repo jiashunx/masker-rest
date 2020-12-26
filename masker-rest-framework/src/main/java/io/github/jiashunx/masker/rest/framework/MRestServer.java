@@ -159,7 +159,7 @@ public class MRestServer {
     public synchronized void start() throws MRestServerInitializeException {
         checkServerState();
         if (logger.isInfoEnabled()) {
-            logger.info("Server[{}] start, ListenPort: {}, Context: {}", serverName, listenPort, getContextList());
+            logger.info("Server[{}] start, ListenPort: {}, Context: {}, WebsocketContext: {}", serverName, listenPort, getContextList(), getWebsocketContextList());
         }
         try {
             contextMap.forEach((key, restContext) -> {

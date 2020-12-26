@@ -178,14 +178,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             } else {
                 Channel channel = ctx.channel();
                 handshaker.handshake(channel, object);
-                MWebsocketRequest websocketRequest = new MWebsocketRequest();
-                websocketRequest.setProtocolName(restRequest.getProtocolName());
-                websocketRequest.setProtocolVersion(restRequest.getProtocolVersion());
-                websocketRequest.setClientAddress(restRequest.getClientAddress());
-                websocketRequest.setClientPort(restRequest.getClientPort());
-                websocketRequest.setRemoteAddress(restRequest.getRemoteAddress());
-                websocketRequest.setRemotePort(restRequest.getRemotePort());
-                websocketRequest.setHandshaker(handshaker);
+                MWebsocketRequest websocketRequest = new MWebsocketRequest(restRequest);
                 websocketRequest.setContextPath(contextPath);
                 websocketRequest.setWebsocketContext(websocketContext);
                 webSocketServerHandshakerMap.put(channel.id().toString(), websocketRequest);
