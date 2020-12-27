@@ -369,3 +369,92 @@ restServer
 .getRestServer()
 .start();
 ```
+
+- 11、基于websocket实现聊天室demo
+
+   - 前端实现
+
+      - html
+      
+      ```text
+      <div>
+          <label>用户A</label>
+          <input id="usernameA" value="用户A" style="width: 100px;" />
+          <textarea id="textareaA" style="width: 200px; height: 200px;"></textarea>
+          <input id="inputA" style="width: 100px;">
+          <button id="submitA" type="button">用户A提交</button>
+      </div>
+      <div>
+          <label>用户B</label>
+          <input id="usernameB" value="用户B" style="width: 100px;" />
+          <textarea id="textareaB" style="width: 200px; height: 200px;"></textarea>
+          <input id="inputB" style="width: 100px;">
+          <button id="submitB" type="button">用户B提交</button>
+      </div>
+      ```
+
+      - javascript
+
+      ```text
+      var WebsocketChatRoom = function (username, textarea, input, button) {
+          this.$username = $("#" + username);
+          this.$textarea = $("#" + textarea);
+          this.$input = $("#" + input);
+          this.$button = $("#" + button);
+          if (!window.WebSocket) {
+              throw new Error("browser do not support websocket");
+          }
+          this.websocktURL = "ws://" + window.location.host + "/chatroom";
+          this.$websocket = new window.WebSocket(this.websocktURL);
+      }
+      WebsocketChatRoom.prototype = {
+          bindEvent: function () {
+              let _this = this;
+              _this.$websocket.onopen = function (ev) {
+                  console.log(_this.$username.val(), " connectted to websocket server, url: ", _this.websocktURL);
+              };
+              _this.$websocket.onclose = function (ev) {
+                  console.log(this.$username.val(), " disconnected from websocekt server, url: ", _this.websocktURL);
+              };
+              _this.$websocket.onmessage = function (ev) {
+                  let msg = JSON.parse(ev.data);
+                  _this.$textarea.val(_this.$textarea.val() + "\n" + msg.username + ": " + msg.text);
+              };
+              _this.$button.click(function () {
+                  let text = JSON.stringify({
+                      username: _this.$username.val(),
+                      text: _this.$input.val()
+                  });
+                  _this.$websocket.send(text);
+              });
+          },
+      };
+      new WebsocketChatRoom("usernameA", "textareaA", "inputA", "submitA").bindEvent();
+      new WebsocketChatRoom("usernameB", "textareaB", "inputB", "submitB").bindEvent();
+      ```
+
+      - java
+      
+      ```text
+      restServer
+      .websocketContext("/chatroom")
+      .bindTextFrameHandler((frame, request, response) -> {
+          String channelId = response.getChannelId();
+          String text = frame.text();
+          logger.info("WebsocketContext[{}] receive from client: {}, text: {}", request.getContextPath(), channelId, text);
+          CHATROOM_CHANNEL_MAP.forEach((key, value) -> {
+              value.writeAndFlush(new TextWebSocketFrame(text));
+          });
+      })
+      .channelActiveCallback((ChannelHandlerContext ctx, MWebsocketRequest request) -> {
+          String channelId = ctx.channel().id().toString();
+          logger.info("WebsocketContext[{}] client active: {}", request.getContextPath(), channelId);
+          CHATROOM_CHANNEL_MAP.put(channelId, ctx.channel());
+      })
+      .channelInactiveCallback((MWebsocketRequest request, MWebsocketResponse response) -> {
+          String channelId = response.getChannelId();
+          logger.info("WebsocketContext[{}] client inactive: {}", request.getContextPath(), channelId);
+          CHATROOM_CHANNEL_MAP.remove(channelId);
+      })
+      .getRestServer()
+      ```
