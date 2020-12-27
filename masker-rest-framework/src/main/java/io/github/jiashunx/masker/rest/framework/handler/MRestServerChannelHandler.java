@@ -178,13 +178,18 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             Channel channel = ctx.channel();
             String contextPath = MRestUtils.formatContextPath(restRequest.getOriginUrl());
             MWebsocketContext websocketContext = restRequest.getRestContext().getRestServer().getWebsocketContext(contextPath);
+            // 对于未注册WebsocketContext的websocket请求, 直接响应406
             if (websocketContext == null) {
-                WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(channel);
+                HttpResponse res = new DefaultFullHttpResponse(
+                        HttpVersion.HTTP_1_1,
+                        HttpResponseStatus.NOT_ACCEPTABLE, channel.alloc().buffer(0));
+                res.headers().set(HttpHeaderNames.SEC_WEBSOCKET_VERSION, WebSocketVersion.V13.toHttpHeaderValue());
+                HttpUtil.setContentLength(res, 0);
+                channel.writeAndFlush(res, channel.newPromise());
                 return;
             }
-            // 判断url是否在已注册的MWebsocketContext列表在
             String webSocketURL = String.format("%s://%s:%d%s", restRequest.getProtocolNameLowerCase()
-                    , restRequest.getRemoteAddress(), restRequest.getRemotePort(), restRequest.getOriginUrl());
+                    , restRequest.getRemoteAddress(), restRequest.getRemotePort(), contextPath);
             WebSocketServerHandshakerFactory wsFactory = getWebSocketServerHandshakerFactory(webSocketURL);
             WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(object);
             if (handshaker == null) {
