@@ -1,7 +1,18 @@
 
 ### masker-rest
 
-- 项目简介：基于Netty实现Http Server，极简API发布Rest服务
+- 项目简介：基于Netty实现Http Server，极简API发布Rest服务及Websocket服务
+
+- 主要功能：
+   - Http服务器
+      - rest请求处理注册与分发（同一端口支持发布多个context-path服务）
+      - filter注册与处理
+      - 静态资源文件访问（classpath中静态资源文件及磁盘文件）
+      - 文件上传、下载、压缩解压等
+      - 简易的jwt实现
+   - Websocket服务器
+      - 复用http服务器端口发布websocket服务（可发布多个）
+      - websocket请求处理回调（建立连接、销毁连接）
 
 - 工程介绍：
 
@@ -21,7 +32,7 @@
 
    - [UserGuide](./docs/UserGuide.md)
 
-- 版本清单（最新版本：<b>1.5.0</b>）：
+- 版本清单（最新版本：<b>1.6.0</b>）：
 
    - version 1.0.0 (released)
       - feature：支持发布rest接口
@@ -90,9 +101,8 @@
       - feature: 支持自定义静态资源classpath扫描路径或磁盘文件扫描路径
       - feature: 增加rest server默认配置文件读取
       - refactor: 补充样例代码
+   - version 1.6.0 (release)
+      - feature: 支持发布WebSocket服务及注册相应回调
+      - feature: 基于自定义WebSocket服务，实现简易聊天室>
    - TODO
       - 移除spring-core依赖（参考spring-core实现jar包资源扫描）
-      - 支持WebSocket服务端处理
-      - 支持WebSocket前端处理
-      - 添加WebSocket简易demo
-      - 基于WebSocket服务，实现简易聊天室。
