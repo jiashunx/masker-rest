@@ -329,3 +329,43 @@ restServer
 .getRestServer()
 .start();
 ```
+
+- 10、启动websocket监听处理
+
+```text
+if (window.WebSocket) {
+    let _socket = new WebSocket("ws://localhost:21700/demo000");
+    _socket.onmessage = function (ev) {
+        alert("receive from server: " + ev.data);
+    };
+    _socket.onopen = function (ev) {
+        console.log("connected to server");
+    };
+    _socket.onclose = function (ev) {
+        console.log("disconnected from server");
+    };
+    $("#btn-websocket-test").click(function () {
+        if (_socket.readyState === WebSocket.OPEN) {
+            _socket.send("hahahhahahhhhhh");
+        } else {
+            alert("WebSocket Connection is not ready.");
+        }
+    });
+}
+
+restServer
+.websocketContext("/demo000")
+.bindTextFrameHandler((frame, request, response) -> {
+    ChannelId channelId = response.getChannelHandlerContext().channel().id();
+    logger.info("receive from client: {}, text: {}", channelId, frame.text());
+    response.writeAndFlush(new TextWebSocketFrame("hello."));
+})
+.channelActiveCallback((ChannelHandlerContext ctx, MWebsocketRequest request) -> {
+    logger.info("client active: {}", ctx.channel().id().toString());
+})
+.channelInactiveCallback((ChannelHandlerContext ctx) -> {
+    logger.info("client inactive: {}", ctx.channel().id().toString());
+})
+.getRestServer()
+.start();
+```

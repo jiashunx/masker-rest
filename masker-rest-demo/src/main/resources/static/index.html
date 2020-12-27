@@ -63,7 +63,7 @@
         if (window.WebSocket) {
             let _socket = new WebSocket("ws://localhost:21700/demo000");
             _socket.onmessage = function (ev) {
-                console.log("receive from server: ", ev.data);
+                alert("receive from server: " + ev.data);
             };
             _socket.onopen = function (ev) {
                 console.log("connected to server");

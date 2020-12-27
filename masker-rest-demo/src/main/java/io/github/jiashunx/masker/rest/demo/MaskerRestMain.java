@@ -1,9 +1,6 @@
 package io.github.jiashunx.masker.rest.demo;
 
-import io.github.jiashunx.masker.rest.framework.MRestFileUploadRequest;
-import io.github.jiashunx.masker.rest.framework.MRestRequest;
-import io.github.jiashunx.masker.rest.framework.MRestResponse;
-import io.github.jiashunx.masker.rest.framework.MRestServer;
+import io.github.jiashunx.masker.rest.framework.*;
 import io.github.jiashunx.masker.rest.framework.exception.MRestJWTException;
 import io.github.jiashunx.masker.rest.framework.filter.Filter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
@@ -11,6 +8,7 @@ import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.model.MRestFileUpload;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
 import io.github.jiashunx.masker.rest.framework.util.*;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelId;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -200,6 +198,12 @@ public class MaskerRestMain {
                     ChannelId channelId = response.getChannelHandlerContext().channel().id();
                     logger.info("receive from client: {}, text: {}", channelId, frame.text());
                     response.writeAndFlush(new TextWebSocketFrame("hello."));
+                })
+                .channelActiveCallback((ChannelHandlerContext ctx, MWebsocketRequest request) -> {
+                    logger.info("client active: {}", ctx.channel().id().toString());
+                })
+                .channelInactiveCallback((ChannelHandlerContext ctx) -> {
+                    logger.info("client inactive: {}", ctx.channel().id().toString());
                 })
                 .getRestServer()
 
