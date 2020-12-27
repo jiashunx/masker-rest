@@ -27,6 +27,20 @@
     <div>
         <button type="button" id="btn-websocket-test">WebSocket测试</button>
     </div>
+    <div>
+        <label>用户A</label>
+        <input id="usernameA" value="用户A" style="width: 100px;" />
+        <textarea id="textareaA" style="width: 200px; height: 200px;"></textarea>
+        <input id="inputA" style="width: 100px;">
+        <button id="submitA" type="button">用户A提交</button>
+    </div>
+    <div>
+        <label>用户B</label>
+        <input id="usernameB" value="用户B" style="width: 100px;" />
+        <textarea id="textareaB" style="width: 200px; height: 200px;"></textarea>
+        <input id="inputB" style="width: 100px;">
+        <button id="submitB" type="button">用户B提交</button>
+    </div>
     <script type="text/javascript" src="./webjars/webjar-jquery/3.5.1/dist/jquery.min.js"></script>
     <script>
         $("#btn-file-upload0").click(function () {
@@ -79,6 +93,41 @@
                 }
             });
         }
+        var WebsocketChatRoom = function (username, textarea, input, button) {
+            this.$username = $("#" + username);
+            this.$textarea = $("#" + textarea);
+            this.$input = $("#" + input);
+            this.$button = $("#" + button);
+            if (!window.WebSocket) {
+                throw new Error("browser do not support websocket");
+            }
+            this.websocktURL = "ws://" + window.location.host + "/chatroom";
+            this.$websocket = new window.WebSocket(this.websocktURL);
+        }
+        WebsocketChatRoom.prototype = {
+            bindEvent: function () {
+                let _this = this;
+                _this.$websocket.onopen = function (ev) {
+                    console.log(_this.$username.val(), " connectted to websocket server, url: ", _this.websocktURL);
+                };
+                _this.$websocket.onclose = function (ev) {
+                    console.log(this.$username.val(), " disconnected from websocekt server, url: ", _this.websocktURL);
+                };
+                _this.$websocket.onmessage = function (ev) {
+                    let msg = JSON.parse(ev.data);
+                    _this.$textarea.val(_this.$textarea.val() + "\n" + msg.username + ": " + msg.text);
+                };
+                _this.$button.click(function () {
+                    let text = JSON.stringify({
+                        username: _this.$username.val(),
+                        text: _this.$input.val()
+                    });
+                    _this.$websocket.send(text);
+                });
+            },
+        };
+        new WebsocketChatRoom("usernameA", "textareaA", "inputA", "submitA").bindEvent();
+        new WebsocketChatRoom("usernameB", "textareaB", "inputB", "submitB").bindEvent();
     </script>
 </body>
 </html>

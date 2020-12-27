@@ -8,6 +8,7 @@ import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.model.MRestFileUpload;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
 import io.github.jiashunx.masker.rest.framework.util.*;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -22,6 +23,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author jiashunx
@@ -206,8 +209,31 @@ public class MaskerRestMain {
                 })
                 .getRestServer()
 
+                .websocketContext("/chatroom")
+                .bindTextFrameHandler((frame, request, response) -> {
+                    String channelId = response.getChannelId();
+                    String text = frame.text();
+                    logger.info("WebsocketContext[{}] receive from client: {}, text: {}", request.getContextPath(), channelId, text);
+                    CHATROOM_CHANNEL_MAP.forEach((key, value) -> {
+                        value.writeAndFlush(new TextWebSocketFrame(text));
+                    });
+                })
+                .channelActiveCallback((ChannelHandlerContext ctx, MWebsocketRequest request) -> {
+                    String channelId = ctx.channel().id().toString();
+                    logger.info("WebsocketContext[{}] client active: {}", request.getContextPath(), channelId);
+                    CHATROOM_CHANNEL_MAP.put(channelId, ctx.channel());
+                })
+                .channelInactiveCallback((MWebsocketRequest request, MWebsocketResponse response) -> {
+                    String channelId = response.getChannelId();
+                    logger.info("WebsocketContext[{}] client inactive: {}", request.getContextPath(), channelId);
+                    CHATROOM_CHANNEL_MAP.remove(channelId);
+                })
+                .getRestServer()
+
                 .start();
     }
+
+    private static final Map<String, Channel> CHATROOM_CHANNEL_MAP = new ConcurrentHashMap<>();
 
     @Filter(order = 123)
     private static class Filter0 implements MRestFilter {
