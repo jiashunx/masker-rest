@@ -42,7 +42,7 @@ public class MWebsocketContext {
     }
 
     private BiConsumer<ChannelHandlerContext, MWebsocketRequest> activeCallback;
-    private Consumer<ChannelHandlerContext> inactiveCallback;
+    private BiConsumer<MWebsocketRequest, MWebsocketResponse> inactiveCallback;
 
     public MWebsocketContext channelActiveCallback(BiConsumer<ChannelHandlerContext, MWebsocketRequest> activeCallback) {
         this.activeCallback = Objects.requireNonNull(activeCallback);
@@ -53,12 +53,12 @@ public class MWebsocketContext {
         return activeCallback;
     }
 
-    public MWebsocketContext channelInactiveCallback(Consumer<ChannelHandlerContext> inactiveCallback) {
+    public MWebsocketContext channelInactiveCallback(BiConsumer<MWebsocketRequest, MWebsocketResponse> inactiveCallback) {
         this.inactiveCallback = Objects.requireNonNull(inactiveCallback);
         return this;
     }
 
-    public Consumer<ChannelHandlerContext> getInactiveCallback() {
+    public BiConsumer<MWebsocketRequest, MWebsocketResponse> getInactiveCallback() {
         return inactiveCallback;
     }
 

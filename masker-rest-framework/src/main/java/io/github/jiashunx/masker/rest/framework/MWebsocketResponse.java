@@ -24,6 +24,10 @@ public class MWebsocketResponse implements ChannelOutboundInvoker {
         return channelHandlerContext;
     }
 
+    public String getChannelId() {
+        return getChannelHandlerContext().channel().id().toString();
+    }
+
     public MWebsocketContext getWebsocketContext() {
         return websocketContext;
     }

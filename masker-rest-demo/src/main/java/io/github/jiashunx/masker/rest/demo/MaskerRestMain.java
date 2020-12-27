@@ -9,7 +9,6 @@ import io.github.jiashunx.masker.rest.framework.model.MRestFileUpload;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
 import io.github.jiashunx.masker.rest.framework.util.*;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelId;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.cookie.Cookie;
@@ -195,15 +194,15 @@ public class MaskerRestMain {
 
                 .websocketContext("/demo000")
                 .bindTextFrameHandler((frame, request, response) -> {
-                    ChannelId channelId = response.getChannelHandlerContext().channel().id();
+                    String channelId = response.getChannelId();
                     logger.info("receive from client: {}, text: {}", channelId, frame.text());
                     response.writeAndFlush(new TextWebSocketFrame("hello."));
                 })
                 .channelActiveCallback((ChannelHandlerContext ctx, MWebsocketRequest request) -> {
                     logger.info("client active: {}", ctx.channel().id().toString());
                 })
-                .channelInactiveCallback((ChannelHandlerContext ctx) -> {
-                    logger.info("client inactive: {}", ctx.channel().id().toString());
+                .channelInactiveCallback((request, response) -> {
+                    logger.info("client inactive: {}", response.getChannelId());
                 })
                 .getRestServer()
 

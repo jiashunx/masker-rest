@@ -98,22 +98,22 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         if (websocketRequest == null) {
             return;
         }
-        if (object instanceof CloseWebSocketFrame) {
-            webSocketServerHandshakerMap.remove(channelId);
-            Consumer<ChannelHandlerContext> inactiveCallback = websocketRequest.getWebsocketContext().getInactiveCallback();
-            if (inactiveCallback != null) {
-                inactiveCallback.accept(ctx);
-            }
-            websocketRequest.getHandshaker().close(ctx.channel(), (CloseWebSocketFrame) object.retain());
-//            ctx.channel().close();
-            return;
-        }
         if (object instanceof PingWebSocketFrame) {
             ctx.channel().writeAndFlush(new PongWebSocketFrame(object.content().retain()));
             return;
         }
         MWebsocketContext websocketContext = websocketRequest.getWebsocketContext();
         MWebsocketResponse websocketResponse = new MWebsocketResponse(ctx, websocketContext);
+        if (object instanceof CloseWebSocketFrame) {
+            webSocketServerHandshakerMap.remove(channelId);
+            BiConsumer<MWebsocketRequest, MWebsocketResponse> inactiveCallback = websocketRequest.getWebsocketContext().getInactiveCallback();
+            if (inactiveCallback != null) {
+                inactiveCallback.accept(websocketRequest, websocketResponse);
+            }
+            websocketRequest.getHandshaker().close(ctx.channel(), (CloseWebSocketFrame) object.retain());
+//            ctx.channel().close();
+            return;
+        }
         if (object instanceof TextWebSocketFrame) {
             MWebsocketHandler<TextWebSocketFrame> websocketHandler = websocketContext.getTextFrameHandler();
             if (websocketHandler == null) {
