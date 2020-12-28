@@ -1,6 +1,7 @@
 package io.github.jiashunx.masker.rest.framework.util;
 
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
+import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerConfig;
 import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import org.slf4j.Logger;
@@ -8,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Properties;
+import java.util.function.Consumer;
 
 /**
  * 工具类
@@ -102,6 +104,14 @@ public class MRestUtils {
             _ctxPath = Constants.URL_PATH_SEP;
         }
         return _ctxPath;
+    }
+
+    public static void tryCatch(VoidFunc voidFunc, Consumer<Throwable> consumer) {
+        try {
+            voidFunc.doSomething();
+        } catch (Throwable throwable) {
+            consumer.accept(throwable);
+        }
     }
 
 }

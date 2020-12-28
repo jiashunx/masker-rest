@@ -106,10 +106,16 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         MWebsocketResponse websocketResponse = new MWebsocketResponse(ctx, websocketContext);
         if (object instanceof CloseWebSocketFrame) {
             webSocketServerHandshakerMap.remove(channelId);
-            BiConsumer<MWebsocketRequest, MWebsocketResponse> inactiveCallback = websocketRequest.getWebsocketContext().getInactiveCallback();
-            if (inactiveCallback != null) {
-                inactiveCallback.accept(websocketRequest, websocketResponse);
-            }
+            MRestUtils.tryCatch(() -> {
+                BiConsumer<MWebsocketRequest, MWebsocketResponse> inactiveCallback = websocketRequest.getWebsocketContext().getInactiveCallback();
+                if (inactiveCallback != null) {
+                    inactiveCallback.accept(websocketRequest, websocketResponse);
+                }
+            }, throwable -> {
+                if (logger.isErrorEnabled()) {
+                    logger.error("inactive callback execute failed.", throwable);
+                }
+            });
             websocketRequest.getHandshaker().close(ctx.channel(), (CloseWebSocketFrame) object.retain());
 //            ctx.channel().close();
             return;
@@ -202,10 +208,16 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
                 websocketRequest.setWebsocketContext(websocketContext);
                 websocketRequest.setHandshaker(handshaker);
                 webSocketServerHandshakerMap.put(channelId, websocketRequest);
-                BiConsumer<ChannelHandlerContext, MWebsocketRequest> activeCallback = websocketRequest.getWebsocketContext().getActiveCallback();
-                if (activeCallback != null) {
-                    activeCallback.accept(ctx, websocketRequest);
-                }
+                MRestUtils.tryCatch(() -> {
+                    BiConsumer<ChannelHandlerContext, MWebsocketRequest> activeCallback = websocketRequest.getWebsocketContext().getActiveCallback();
+                    if (activeCallback != null) {
+                        activeCallback.accept(ctx, websocketRequest);
+                    }
+                }, throwable -> {
+                    if (logger.isErrorEnabled()) {
+                        logger.error("active callback execute failed.", throwable);
+                    }
+                });
             }
             return;
         }
