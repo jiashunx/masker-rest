@@ -52,12 +52,12 @@ public class MRestContext {
             filterTask.run();
         }
         // 静态资源处理
-        List<String> classpathResources = getClasspathResources();
+        Map<String, List<String>> classpathResources = getClasspathResources();
         if (logger.isInfoEnabled()) {
             logger.info("Context[{}] reload classpath resources: {}", getContextPath(), classpathResources);
         }
         ((StaticResourceFilter) staticResourceFilter).reloadClasspathResource(classpathResources);
-        List<String> diskResources = getDiskResources();
+        Map<String, List<String>> diskResources = getDiskResources();
         if (logger.isInfoEnabled()) {
             logger.info("Context[{}] reload disk resources: {}", getContextPath(), diskResources);
         }
@@ -365,11 +365,11 @@ public class MRestContext {
     /**
      * 配置的静态资源classpath扫描路径.
      */
-    private final Set<String> classpathResources = new HashSet<>();
+    private final Map<String, Set<String>> classpathResources = new HashMap<>();
     /**
      * 配置的静态资源磁盘扫描路径.
      */
-    private final Set<String> diskResources = new HashSet<>();
+    private final Map<String, Set<String>> diskResources = new HashMap<>();
     /**
      * 静态资源处理.
      */
@@ -463,18 +463,31 @@ public class MRestContext {
     }
 
     public MRestContext addDefaultClasspathResource() {
-        return addClasspathResources(
+        return addDefaultClasspathResource(Constants.ROOT_PATH);
+    }
+
+    public MRestContext addDefaultClasspathResource(String prefixUrl) {
+        return addClasspathResources(prefixUrl,
                 MRestUtils.getDefaultServerConfig().getClasspathResources().toArray(new String[0]));
     }
 
     public MRestContext addClasspathResource(String path) {
-        return addClasspathResources(new String[] { path });
+        return addClasspathResource(Constants.ROOT_PATH, path);
     }
 
-    public synchronized MRestContext addClasspathResources(String[] pathArr) {
+    public MRestContext addClasspathResource(String prefixUrl, String path) {
+        return addClasspathResources(prefixUrl, new String[] { path });
+    }
+
+    public MRestContext addClasspathResources(String[] pathArr) {
+        return addClasspathResources(Constants.ROOT_PATH, pathArr);
+    }
+
+    public synchronized MRestContext addClasspathResources(String prefixUrl, String[] pathArr) {
         if (pathArr != null) {
+            String _prefixUrl = formatPrefixUrl(prefixUrl);
             for (String path: pathArr) {
-                classpathResources.add(formatClasspathResourcePath(path));
+                classpathResources.computeIfAbsent(_prefixUrl, k -> new HashSet<>()).add(formatClasspathResourcePath(path));
             }
         }
         return this;
@@ -485,27 +498,41 @@ public class MRestContext {
         if (!location.endsWith(Constants.URL_PATH_SEP)) {
             location = location + Constants.URL_PATH_SEP;
         }
-        while (location.startsWith(Constants.URL_PATH_SEP)) {
-            if (location.length() == 1) {
-                break;
-            }
+        while (location.startsWith(Constants.URL_PATH_SEP) && location.length() > 1) {
             location = location.substring(1);
         }
         return location;
     }
 
-    public List<String> getClasspathResources() {
-        return new ArrayList<>(classpathResources);
+    public synchronized Map<String, List<String>> getClasspathResources() {
+        Map<String, List<String>> map = new HashMap<>();
+        classpathResources.forEach((key, value) -> {
+            List<String> list = new ArrayList<>();
+            if (value != null) {
+                list.addAll(value);
+            }
+            map.put(key, list);
+        });
+        return map;
     }
 
     public MRestContext addDiskResource(String path) {
-        return addDiskResources(new String[] { path });
+        return addDiskResource(Constants.ROOT_PATH, path);
+    }
+
+    public MRestContext addDiskResource(String prefixUrl, String path) {
+        return addDiskResources(prefixUrl, new String[] { path });
     }
 
     public MRestContext addDiskResources(String[] pathArr) {
+        return addDiskResources(Constants.ROOT_PATH, pathArr);
+    }
+
+    public synchronized MRestContext addDiskResources(String prefixUrl, String[] pathArr) {
         if (pathArr != null) {
+            String _prefixUrl = formatPrefixUrl(prefixUrl);
             for (String path: pathArr) {
-                diskResources.add(formatDiskResourcePath(path));
+                diskResources.computeIfAbsent(_prefixUrl, k -> new HashSet<>()).add(formatDiskResourcePath(path));
             }
         }
         return this;
@@ -515,8 +542,27 @@ public class MRestContext {
         return path;
     }
 
-    public List<String> getDiskResources() {
-        return new ArrayList<>(diskResources);
+    public synchronized Map<String, List<String>> getDiskResources() {
+        Map<String, List<String>> map = new HashMap<>();
+        diskResources.forEach((key, value) -> {
+            List<String> list = new ArrayList<>();
+            if (value != null) {
+                list.addAll(value);
+            }
+            map.put(key, list);
+        });
+        return map;
+    }
+
+    private String formatPrefixUrl(String prefixUrl) {
+        String _prefixUrl = String.valueOf(prefixUrl).replace("\\", "/");
+        while (_prefixUrl.endsWith("/") && _prefixUrl.length() > 1) {
+            _prefixUrl = _prefixUrl.substring(0, _prefixUrl.length() - 1);
+        }
+        if (!_prefixUrl.startsWith("/")) {
+            _prefixUrl = "/" + _prefixUrl;
+        }
+        return _prefixUrl;
     }
 
 

@@ -8,17 +8,12 @@ import io.github.jiashunx.masker.rest.framework.model.StaticResource;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.github.jiashunx.masker.rest.framework.util.StaticResourceHolder;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author jiashunx
  */
 public class StaticResourceFilter implements MRestFilter {
-
-    private Map<String, StaticResource> staticResourceMap = new HashMap<>();
 
     private final MRestContext restContext;
     private final StaticResourceHolder staticResourceHolder;
@@ -28,12 +23,12 @@ public class StaticResourceFilter implements MRestFilter {
         this.staticResourceHolder = new StaticResourceHolder(this.restContext);
     }
 
-    public void reloadClasspathResource(List<String> pathList) {
-        this.staticResourceHolder.reloadClasspathResourceMap(pathList);
+    public void reloadClasspathResource(Map<String, List<String>> pathMap) {
+        this.staticResourceHolder.reloadClasspathResourceMap(pathMap);
     }
 
-    public void reloadDiskResource(List<String> pathList) {
-        this.staticResourceHolder.reloadDiskResourceMap(pathList);
+    public void reloadDiskResource(Map<String, List<String>> pathMap) {
+        this.staticResourceHolder.reloadDiskResourceMap(pathMap);
     }
 
     @Override

@@ -29,7 +29,7 @@ public final class StaticResourceHolder {
 
     public StaticResourceHolder(MRestContext restContext) {
         this.restContext = Objects.requireNonNull(restContext);
-        reloadClasspathResourceMap(Collections.emptyList());
+        reloadClasspathResourceMap(Collections.emptyMap());
     }
 
     public Map<String, StaticResource> getResourceMap() {
@@ -52,14 +52,16 @@ public final class StaticResourceHolder {
         this.resourceMap = resourceMap;
     }
 
-    public synchronized void reloadDiskResourceMap(List<String> pathList) {
+    public synchronized void reloadDiskResourceMap(Map<String, List<String>> pathMap) {
         // 从上到下优先级依次从高到低.
         List<StaticResource> $resourceList = new ArrayList<>();
-        if (pathList != null && !pathList.isEmpty()) {
-            pathList.forEach(diskDirPath -> {
-                $resourceList.addAll(getDiskResources(diskDirPath));
-            });
-        }
+        pathMap.forEach((prefixUrl, pathList) -> {
+            if (pathList != null && !pathList.isEmpty()) {
+                pathList.forEach(diskDirPath -> {
+                    $resourceList.addAll(getDiskResources(prefixUrl, diskDirPath));
+                });
+            }
+        });
         Map<String, StaticResource> $resourceMap = resourceListToMap($resourceList);
         if (logger.isInfoEnabled()) {
             $resourceMap.forEach((key, resource) -> {
@@ -70,14 +72,16 @@ public final class StaticResourceHolder {
         mergeResourceMap();
     }
 
-    public synchronized void reloadClasspathResourceMap(List<String> pathList) {
+    public synchronized void reloadClasspathResourceMap(Map<String, List<String>> pathMap) {
         // 从上到下优先级依次从高到低.
         List<StaticResource> $resourceList = new ArrayList<>();
-        if (pathList != null && !pathList.isEmpty()) {
-            pathList.forEach(cpDirLocation -> {
-                $resourceList.addAll(getClasspathResources(cpDirLocation));
-            });
-        }
+        pathMap.forEach((prefixUrl, pathList) -> {
+            if (pathList != null && !pathList.isEmpty()) {
+                pathList.forEach(cpDirLocation -> {
+                    $resourceList.addAll(getClasspathResources(prefixUrl, cpDirLocation));
+                });
+            }
+        });
         Map<String, StaticResource> $resourceMap = resourceListToMap($resourceList);
         if (logger.isInfoEnabled()) {
             $resourceMap.forEach((key, resource) -> {
@@ -100,6 +104,15 @@ public final class StaticResourceHolder {
         return $resourceMap;
     }
 
+    public static List<StaticResource> getDiskResources(String prefixUrl, String dirPath) {
+        List<StaticResource> resourceList = getDiskResources(dirPath);
+        String _prefixUrl = getPrefixUrl(prefixUrl);
+        resourceList.forEach(resource -> {
+            resource.setUrl(_prefixUrl + resource.getUrl());
+        });
+        return resourceList;
+    }
+
     public static List<StaticResource> getDiskResources(String dirPath) {
         List<StaticResource> resourceList = new ArrayList<>();
         try {
@@ -115,6 +128,15 @@ public final class StaticResourceHolder {
                 logger.error("get resources from disk directory location: [{}] failed.", dirPath, throwable);
             }
         }
+        return resourceList;
+    }
+
+    public static List<StaticResource> getClasspathResources(String prefixUrl, String cpDirLocation) {
+        List<StaticResource> resourceList = getClasspathResources(cpDirLocation);
+        String _prefixUrl = getPrefixUrl(prefixUrl);
+        resourceList.forEach(resource -> {
+            resource.setUrl(_prefixUrl + resource.getUrl());
+        });
         return resourceList;
     }
 
@@ -165,6 +187,20 @@ public final class StaticResourceHolder {
             }
         }
         return resourceList;
+    }
+
+    private static String getPrefixUrl(String prefixUrl) {
+        String _prefixUrl = String.valueOf(prefixUrl).replace("\\", "/");
+        while (_prefixUrl.endsWith("/") && _prefixUrl.length() > 1) {
+            _prefixUrl = _prefixUrl.substring(0, _prefixUrl.length() - 1);
+        }
+        if (!_prefixUrl.startsWith("/")) {
+            _prefixUrl = "/" + _prefixUrl;
+        }
+        if (Constants.ROOT_PATH.equals(_prefixUrl)) {
+            _prefixUrl = StringUtils.EMPTY;
+        }
+        return _prefixUrl;
     }
 
 }

@@ -45,7 +45,7 @@ public class MaskerRestMain {
                 .bossThreadNum(1)
                 .context("/demo")
 
-                .addDefaultClasspathResource()
+                .addDefaultClasspathResource("/")
                 .addDiskResource("C:\\Workspace\\GitHub\\jiashunx\\masker-rest\\masker-rest-framework\\src\\main\\resources")
 
                 // get请求样例

@@ -22,7 +22,7 @@ public class StaticResource {
     /**
      * 静态资源路径.
      */
-    private final String url;
+    private String url;
     /**
      * bytes of content.
      */
@@ -55,6 +55,10 @@ public class StaticResource {
 
     public String getUrl() {
         return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public byte[] getContents() {
