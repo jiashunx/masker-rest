@@ -11,6 +11,7 @@ import io.netty.handler.codec.http.*;
 
 import java.io.File;
 import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,11 @@ import java.util.function.Consumer;
  * @author jiashunx
  */
 public class MResponseHelper {
+
+    private static String statusPageTemplate = null;
+    static {
+        statusPageTemplate = IOUtils.loadContentFromClasspath("masker-rest/template/status.html", MResponseHelper.class.getClassLoader());
+    }
 
     public static void redirect(ChannelHandlerContext ctx, String targetURL) {
         write(ctx, HttpResponseStatus.TEMPORARY_REDIRECT, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_LOCATION, targetURL));
@@ -71,6 +77,34 @@ public class MResponseHelper {
 
     public static void write(ChannelHandlerContext ctx, byte[] bytes, MRestHeaders headers) {
         write(ctx, HttpResponseStatus.OK, bytes, headers);
+    }
+
+    public static void writeStatusPageAsHtml(ChannelHandlerContext ctx, HttpResponseStatus status) {
+        write(ctx, status, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_TEXT_HTML));
+    }
+
+    public static void writeStatusPage(ChannelHandlerContext ctx, HttpResponseStatus status) {
+        writeStatusPage(ctx, status, new HashMap<>());
+    }
+
+    public static void writeStatusPage(ChannelHandlerContext ctx, HttpResponseStatus status, Map<String, Object> headers) {
+        writeStatusPage(ctx, status, new MRestHeaders(headers));
+    }
+
+    public static void writeStatusPage(ChannelHandlerContext ctx, HttpResponseStatus status, MRestHeaders headers) {
+        write(ctx, status, getStatusPageBytes(status), headers);
+    }
+
+    public static String getStatusPageContent(HttpResponseStatus status) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("code", status.code());
+        params.put("reason", status.reasonPhrase());
+        params.put("mrf.version", MRestUtils.getFrameworkVersion());
+        return MRestUtils.format(statusPageTemplate, params);
+    }
+
+    public static byte[] getStatusPageBytes(HttpResponseStatus status) {
+        return getStatusPageContent(status).getBytes(StandardCharsets.UTF_8);
     }
 
     public static void write(ChannelHandlerContext ctx, HttpResponseStatus status, Object object) {

@@ -7,6 +7,7 @@ import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.model.MRestHeaders;
 import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import io.github.jiashunx.masker.rest.framework.util.MResponseHelper;
+import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.cookie.Cookie;
@@ -143,6 +144,22 @@ public class MRestResponse {
             throw new MRestServerException("write method has already been invoked.");
         }
         flushTask = new FlushTask(status, bytes, headers);
+    }
+
+    public void writeStatusPageAsHtml(HttpResponseStatus status) {
+        writeStatusPage(status, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_TEXT_HTML));
+    }
+
+    public void writeStatusPage(HttpResponseStatus status) {
+        writeStatusPage(status, new HashMap<>());
+    }
+
+    public void writeStatusPage(HttpResponseStatus status, Map<String, Object> headers) {
+        writeStatusPage(status, new MRestHeaders(headers));
+    }
+
+    public void writeStatusPage(HttpResponseStatus status, MRestHeaders headers) {
+        write(status, MResponseHelper.getStatusPageBytes(status), headers);
     }
 
     public void write(HttpResponseStatus status, Object object) {
