@@ -355,7 +355,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         Consumer<ExceptionCallbackVo> errHandler = request.getRestContext().getDefaultErrorHandler();
         if (errHandler == null) {
             errHandler = vo -> {
-                MResponseHelper.write(vo.getChannelHandlerContext(), HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                MResponseHelper.writeStatusPage(vo.getChannelHandlerContext(), HttpResponseStatus.INTERNAL_SERVER_ERROR);
             };
         }
         ExceptionCallbackVo callbackVo = new ExceptionCallbackVo();

@@ -44,7 +44,7 @@ public class MRestDispatchFilter implements MRestFilter {
             restResponse.write(DEFAULT_PAGE_BYTES, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_TEXT_HTML));
             return;
         }
-        restResponse.write(HttpResponseStatus.NOT_FOUND);
+        restResponse.writeStatusPage(HttpResponseStatus.NOT_FOUND);
     }
 
     private void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandler restHandler) {
