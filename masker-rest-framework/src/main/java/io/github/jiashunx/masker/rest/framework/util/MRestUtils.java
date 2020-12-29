@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
 
@@ -112,6 +114,24 @@ public class MRestUtils {
         } catch (Throwable throwable) {
             consumer.accept(throwable);
         }
+    }
+
+    public static String format(String template, String key, Object value) {
+        Map<String, Object> params = new HashMap<>();
+        params.put(key, value);
+        return format(template, params);
+    }
+
+    public static String format(String template, Map<String, Object> params) {
+        String content = String.valueOf(template);
+        if (params != null && !params.isEmpty()) {
+            for (Map.Entry<String, Object> entry: params.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                content = content.replace("#{" + key + "}", String.valueOf(entry.getValue()));
+            }
+        }
+        return content;
     }
 
 }

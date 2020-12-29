@@ -10,6 +10,7 @@ import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
 import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import io.github.jiashunx.masker.rest.framework.util.IOUtils;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
+import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
@@ -22,7 +23,11 @@ import java.util.function.*;
  */
 public class MRestDispatchFilter implements MRestFilter {
 
-    private static final byte[] DEFAULT_PAGE_BYTES = IOUtils.loadBytesFromClasspath("masker-rest/template/index.html", MRestDispatchFilter.class.getClassLoader());
+    private static byte[] DEFAULT_PAGE_BYTES = null;
+    static {
+        String template = IOUtils.loadContentFromClasspath("masker-rest/template/index.html", MRestDispatchFilter.class.getClassLoader());
+        DEFAULT_PAGE_BYTES = MRestUtils.format(template, "mrf.version", MRestUtils.getFrameworkVersion()).getBytes(StandardCharsets.UTF_8);
+    }
 
     @Override
     public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {
