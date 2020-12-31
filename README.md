@@ -110,4 +110,4 @@
       - refactor: 优化默认index.html输出页面
       - refactor: rest server支持设置http content的最大值
    - TODO
-      - 移除spring-core依赖（参考spring-core实现jar包资源扫描）
+      - 实现websocket Java客户端（支持重连）及前端API（支持重连）
