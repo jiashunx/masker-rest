@@ -35,6 +35,7 @@ public class MRestServer {
     private int bossThreadNum = 0;
     private int workerThreadNum = 0;
     private boolean connectionKeepAlive;
+    private int httpContentMaxLength = Constants.HTTP_CONTENT_MAX_LENGTH;
     private final Map<String, MRestContext> contextMap = new ConcurrentHashMap<>();
     private final Map<String, MWebsocketContext> websocketContextMap = new ConcurrentHashMap<>();
 
@@ -87,6 +88,18 @@ public class MRestServer {
         }
         this.workerThreadNum = workerThreadNum;
         return this;
+    }
+
+    public MRestServer httpContentMaxLength(int httpContentMaxLength) {
+        if (httpContentMaxLength < 0) {
+            throw new IllegalArgumentException("httpContentMaxLength -> " + httpContentMaxLength);
+        }
+        this.httpContentMaxLength = httpContentMaxLength;
+        return this;
+    }
+
+    public int getHttpContentMaxLength() {
+        return this.httpContentMaxLength;
     }
 
     public MRestServer connectionKeepAlive(boolean connectionKeepAlive) {

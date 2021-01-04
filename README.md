@@ -32,7 +32,7 @@
 
    - [UserGuide](./docs/UserGuide.md)
 
-- 版本清单（最新版本：<b>1.6.0</b>）：
+- 版本清单（最新版本：<b>1.6.1</b>）：
 
    - version 1.0.0 (released)
       - feature：支持发布rest接口
@@ -84,25 +84,30 @@
       - feature: 添加FileUtils工具类，提供文件新增/删除、压缩/解压相关工具方法
       - refactor: 序列化依赖从fastjson调整为jackson
       - refactor: jwt处理取消抛出异常
-   - version 1.4.7 (release)
+   - version 1.4.7 (released)
       - feature: 下载文件支持回调（文件下载完成时执行）
       - bugfix: 修正同一url映射处理对象分别进行映射时报冲突的缺陷
-   - version 1.4.8 (release)
+   - version 1.4.8 (released)
       - feature: 对于未指定 "/" 或 "/index.html" 路径映射的服务，输出默认masker-rest主页面
       - refactor: 文件上传优化部分代码
       - refactor: 优化文件操作代码，增加运行时异常类：FileOperateException
-   - version 1.4.9 (release)
+   - version 1.4.9 (released)
       - refactor: 优化序列化相应代码
       - refactor: 补充IOUtils工具类中写文件方法
-   - verion 1.4.10 (release)
+   - verion 1.4.10 (released)
       - refactor: 优化补充IOUtils工具类中相应方法.
-   - version 1.5.0 (release)
+   - version 1.5.0 (released)
       - feature: 单个server支持发布多个context-path的服务
       - feature: 支持自定义静态资源classpath扫描路径或磁盘文件扫描路径
       - feature: 增加rest server默认配置文件读取
       - refactor: 补充样例代码
-   - version 1.6.0 (release)
+   - version 1.6.0 (released)
       - feature: 支持发布WebSocket服务及注册相应回调
-      - feature: 基于自定义WebSocket服务，实现简易聊天室>
+      - feature: 基于自定义WebSocket服务，实现简易聊天室
+   - version 1.6.1 (released)
+      - feature: 静态资源访问支持自定义前缀
+      - feature: 对于非正常http请求状态（如404、500等），返回状态码的同时输出特定页面
+      - refactor: 优化默认index.html输出页面
+      - refactor: rest server支持设置http content的最大值
    - TODO
-      - 移除spring-core依赖（参考spring-core实现jar包资源扫描）
+      - 实现websocket Java客户端（支持重连）及前端API（支持重连）
