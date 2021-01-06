@@ -32,7 +32,7 @@
 
    - [UserGuide](./docs/UserGuide.md)
 
-- 版本清单（最新版本：<b>1.6.1</b>）：
+- 版本清单（最新版本：<b>1.6.2</b>）：
 
    - version 1.0.0 (released)
       - feature：支持发布rest接口
@@ -109,5 +109,7 @@
       - feature: 对于非正常http请求状态（如404、500等），返回状态码的同时输出特定页面
       - refactor: 优化默认index.html输出页面
       - refactor: rest server支持设置http content的最大值
+   - version 1.6.2 (released)
+      - bugfix: 修正文件上传处理代码中的文件拷贝逻辑
    - TODO
       - 实现websocket Java客户端（支持重连）及前端API（支持重连）
