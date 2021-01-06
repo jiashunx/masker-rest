@@ -47,7 +47,7 @@ public class MRestFileUpload {
                 // 磁盘文件拷贝
                 String filePath = fileUpload.getFile().getAbsolutePath() + "_mr";
                 tmpFile = FileUtils.newFile(filePath);
-                IOUtils.write(fileUpload.getFile(), tmpFile);
+                IOUtils.copy(fileUpload.getFile(), tmpFile);
             }
             this.file = tmpFile;
         } catch (Throwable throwable) {
