@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.framework;
 
+import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.MWebsocketHandler;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.netty.channel.ChannelHandlerContext;
@@ -35,8 +36,8 @@ public class MWebsocketContext {
     }
 
     void init() {
-        for (Runnable runnable: websocketHandlerInitTaskList) {
-            runnable.run();
+        for (VoidFunc voidFunc: websocketHandlerInitTaskList) {
+            voidFunc.doSomething();
         }
     }
 
@@ -61,7 +62,7 @@ public class MWebsocketContext {
         return inactiveCallback;
     }
 
-    private final List<Runnable> websocketHandlerInitTaskList = new ArrayList<>();
+    private final List<VoidFunc> websocketHandlerInitTaskList = new ArrayList<>();
     private volatile MWebsocketHandler<WebSocketFrame> frameHandler;
     private volatile MWebsocketHandler<TextWebSocketFrame> textFrameHandler;
     private volatile MWebsocketHandler<BinaryWebSocketFrame> binaryFrameHandler;

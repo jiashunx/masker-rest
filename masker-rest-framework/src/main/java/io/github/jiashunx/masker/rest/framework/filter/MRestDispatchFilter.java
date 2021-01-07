@@ -5,6 +5,7 @@ import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestHandleException;
+import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
 import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
@@ -81,7 +82,7 @@ public class MRestDispatchFilter implements MRestFilter {
                     ((BiConsumer) handler).accept(restRequest, restResponse);
                     break;
                 case NoInput_NoRet:
-                    ((Runnable) handler).run();
+                    ((VoidFunc) handler).doSomething();
                     break;
                 default:
                     throw new RuntimeException();

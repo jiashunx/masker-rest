@@ -7,6 +7,7 @@ import io.github.jiashunx.masker.rest.framework.filter.MRestDispatchFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.filter.StaticResourceFilter;
+import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.model.ExceptionCallbackVo;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
@@ -45,12 +46,12 @@ public class MRestContext {
 
     void init() {
         // mapping处理
-        for (Runnable mappingTask: mappingTaskList) {
-            mappingTask.run();
+        for (VoidFunc mappingTask: mappingTaskList) {
+            mappingTask.doSomething();
         }
         // filter处理
-        for (Runnable filterTask: filterTaskList) {
-            filterTask.run();
+        for (VoidFunc filterTask: filterTaskList) {
+            filterTask.doSomething();
         }
         // 静态资源处理
         reloadResource();
@@ -90,7 +91,7 @@ public class MRestContext {
     /**
      * 添加url映射处理的任务(在服务启动时统一添加).
      */
-    private final List<Runnable> mappingTaskList = new ArrayList<>();
+    private final List<VoidFunc> mappingTaskList = new ArrayList<>();
 
     /**
      * 指定url是否是已指定映射处理.
@@ -142,15 +143,15 @@ public class MRestContext {
         return mapping(url, new MRestHandlerSupplier<>(url, handler, config, methods), methods);
     }
 
-    public MRestContext mapping(String url, Runnable handler, HttpMethod... methods) {
+    public MRestContext mapping(String url, VoidFunc handler, HttpMethod... methods) {
         return mapping(url, handler, MRestHeaderBuilder.Build(), methods);
     }
 
-    public MRestContext mapping(String url, Runnable handler, Map<String, Object> headers, HttpMethod... methods) {
+    public MRestContext mapping(String url, VoidFunc handler, Map<String, Object> headers, HttpMethod... methods) {
         return mapping(url, handler, MRestHandlerConfig.newInstance(headers), methods);
     }
 
-    public MRestContext mapping(String url, Runnable handler, MRestHandlerConfig config, HttpMethod... methods) {
+    public MRestContext mapping(String url, VoidFunc handler, MRestHandlerConfig config, HttpMethod... methods) {
         return mapping(url, new MRestHandlerConsumerVoid(url, handler, config, methods), methods);
     }
 
@@ -238,15 +239,15 @@ public class MRestContext {
         return mapping(url, handler, config, HttpMethod.GET);
     }
 
-    public MRestContext get(String url, Runnable handler) {
+    public MRestContext get(String url, VoidFunc handler) {
         return mapping(url, handler, HttpMethod.GET);
     }
 
-    public MRestContext get(String url, Runnable handler, Map<String, Object> headers) {
+    public MRestContext get(String url, VoidFunc handler, Map<String, Object> headers) {
         return mapping(url, handler, headers, HttpMethod.GET);
     }
 
-    public MRestContext get(String url, Runnable handler, MRestHandlerConfig config) {
+    public MRestContext get(String url, VoidFunc handler, MRestHandlerConfig config) {
         return mapping(url, handler, config, HttpMethod.GET);
     }
 
@@ -394,7 +395,7 @@ public class MRestContext {
     /**
      * 添加filter的任务(在服务启动时统一添加).
      */
-    private final List<Runnable> filterTaskList = new ArrayList<>();
+    private final List<VoidFunc> filterTaskList = new ArrayList<>();
 
     public MRestFilterChain getCommonStaticResourceFilterChain(String requestURL) {
         List<MRestFilter> filterList = new LinkedList<>();
