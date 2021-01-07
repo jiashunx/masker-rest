@@ -14,6 +14,7 @@ public class Constants {
     public static final int DEFAULT_FILTER_ORDER = 0;
     public static final String DEFAULT_FILTER_URLPATTERN = "/*";
     public static final String[] DEFAULT_FILTER_URLPATTERNS = new String[] { DEFAULT_FILTER_URLPATTERN };
+    public static final String DEFAULT_SERVLET_URLPATTERN = "/*";
 
     public static final String HTTP_HEADER_ACCEPT = "Accept";
     public static final String HTTP_HEADER_CONTENT_TYPE = "Content-Type";

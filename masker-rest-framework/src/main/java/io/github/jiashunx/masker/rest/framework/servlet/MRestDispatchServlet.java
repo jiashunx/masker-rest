@@ -5,8 +5,6 @@ import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestHandleException;
-import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
-import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
@@ -24,7 +22,7 @@ import java.util.function.*;
 /**
  * @author jiashunx
  */
-public class MRestDispatchServlet implements MRestFilter {
+public class MRestDispatchServlet implements MRestServlet {
 
     private static byte[] DEFAULT_PAGE_BYTES = null;
     static {
@@ -33,10 +31,10 @@ public class MRestDispatchServlet implements MRestFilter {
     }
 
     @Override
-    public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {
+    public void service(MRestRequest restRequest, MRestResponse restResponse) {
         // dispatch request handler
         String requestURL = restRequest.getUrl();
-        MRestContext restContext = filterChain.getRestContext();
+        MRestContext restContext = restRequest.getRestContext();
         MRestHandler restHandler = restContext.getUrlMappingHandler(requestURL, restRequest.getMethod());
         if (restHandler != null) {
             handleRequest(restRequest, restResponse, restHandler);

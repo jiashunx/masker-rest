@@ -2,6 +2,7 @@ package io.github.jiashunx.masker.rest.framework;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
+import io.github.jiashunx.masker.rest.framework.exception.MRestServerException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestDispatchServlet;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
@@ -11,6 +12,7 @@ import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.model.ExceptionCallbackVo;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
+import io.github.jiashunx.masker.rest.framework.servlet.MRestServlet;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
@@ -51,6 +53,10 @@ public class MRestContext {
         // mapping处理
         for (VoidFunc mappingTask: mappingTaskList) {
             mappingTask.doSomething();
+        }
+        // servlet处理
+        for (VoidFunc servletTask: servletTaskList) {
+            servletTask.doSomething();
         }
         // filter处理
         for (VoidFunc filterTask: filterTaskList) {
@@ -376,13 +382,17 @@ public class MRestContext {
 
 
     /**
+     * servlet映射处理.
+     */
+    private final Map<String, MRestServlet> servletMap = new HashMap<>();
+    /**
      * filter映射处理.
      */
     private final Map<String, List<MRestFilter>> filterMap = new HashMap<>();
     /**
      * 请求分发处理.
      */
-    private final MRestFilter requestFilter = new MRestDispatchServlet();
+    private final MRestServlet dispatchServlet = new MRestDispatchServlet();
     /**
      * 配置的静态资源classpath扫描路径.
      */
@@ -396,6 +406,10 @@ public class MRestContext {
      */
     private final MRestFilter staticResourceFilter = new StaticResourceFilter(this);
     /**
+     * 添加servlet的任务(在服务启动时统一添加).
+     */
+    private final List<VoidFunc> servletTaskList = new ArrayList<>();
+    /**
      * 添加filter的任务(在服务启动时统一添加).
      */
     private final List<VoidFunc> filterTaskList = new ArrayList<>();
@@ -403,8 +417,54 @@ public class MRestContext {
     public MRestFilterChain getCommonStaticResourceFilterChain(String requestURL) {
         List<MRestFilter> filterList = new LinkedList<>();
         filterList.add(staticResourceFilter);
-        filterList.add(requestFilter);
+        filterList.add((request, response, filterChain) -> {
+            dispatchServlet.service(request, response);
+        });
         return new MRestFilterChain(this, filterList.toArray(new MRestFilter[0]));
+    }
+
+    public List<MRestServlet> getServlet(String requestURL) {
+        Set<MRestServlet> servletSet = new HashSet<>();
+        servletMap.forEach((urlPattern, servlet) -> {
+            String pattern = "^" + urlPattern.replace("*", "\\S*") + "$";
+            if (requestURL.matches(pattern)) {
+                servletSet.add(servlet);
+            }
+        });
+        // 对servlet进行排序, 按照url长度从小到大进行顺序排序
+        LinkedList<MRestServlet> servletList = new LinkedList<>(servletSet);
+        servletList.sort(Comparator.comparingInt(servlet -> servlet.servletName().length()));
+        return servletList;
+    }
+
+    public synchronized MRestContext servlet(MRestServlet... servletArr) {
+        for (MRestServlet servlet: servletArr) {
+            servlet(servlet.urlPattern(), servlet);
+        }
+        return this;
+    }
+
+    public synchronized MRestContext servlet(MRestServlet servlet) {
+        return servlet(servlet.urlPattern(), servlet);
+    }
+
+    public synchronized MRestContext servlet(String urlPattern, MRestServlet servlet) {
+        getRestServer().checkServerState();
+        servletTaskList.add(() -> {
+            String $urlPattern = servlet.urlPattern();
+            if (StringUtils.isBlank($urlPattern)) {
+                $urlPattern = Constants.DEFAULT_SERVLET_URLPATTERN;
+            }
+            if (servletMap.containsKey($urlPattern)) {
+                throw new MRestServerException(String.format("%s mapping servlet conflict, urlPattern: %s", getContextDesc(), $urlPattern));
+            }
+            MRestServlet restServlet = Objects.requireNonNull(servlet);
+            servletMap.put($urlPattern, restServlet);
+            if (logger.isInfoEnabled()) {
+                logger.info("{} register servlet success, {} -> {}", getContextDesc(), $urlPattern, restServlet.servletName());
+            }
+        });
+        return this;
     }
 
     public MRestFilterChain getFilterChain(String requestURL) {
@@ -423,7 +483,21 @@ public class MRestContext {
             return order0 - order1;
         });
         filterList.addLast(staticResourceFilter);
-        filterList.addLast(requestFilter);
+        List<MRestServlet> servletList = getServlet(requestURL);
+        servletList.forEach(servlet -> {
+            // servlet包装为filter执行
+            filterList.addLast((request, response, filterChain) -> {
+                servlet.service(request, response);
+                // write方法未执行过, 按照filter链继续执行
+                if (!response.isWriteMethodInvoked()) {
+                    filterChain.doFilter(request, response);
+                }
+            });
+        });
+        // 最后才走到分发处理.
+        filterList.addLast((request, response, filterChain) -> {
+            dispatchServlet.service(request, response);
+        });
         return new MRestFilterChain(this, filterList.toArray(new MRestFilter[0]));
     }
 
