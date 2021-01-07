@@ -41,78 +41,83 @@
       - feature：支持设置响应头
    - version 1.1.0 (released)
       - feature：添加默认JWT服务端实现
-      - bugfix：设置响应体write操作仅可执行一次
+      - fixbug：设置响应体write操作仅可执行一次
    - version 1.1.1 (released)
-      - bugfix：修正启动多个rest server时url映射冲突的错误
+      - fixbug：修正启动多个rest server时url映射冲突的错误
    - version 1.2.0 (released)
       - feature：请求及响应支持对cookie的处理
       - feature：server支持自定义netty的boss及worker线程数
       - feature：server支持自定义连接的keep-alive属性
-      - refactor：url映射处理及filter映射处理的操作调整至server启动方式执行时执行
-      - refactor：统一netty监听线程的名称
-      - refactor：请求响应的header设置处理逻辑重构
-      - refactor：对http请求的响应统一添加server框架名称及版本信息
+      - optimizing：url映射处理及filter映射处理的操作调整至server启动方式执行时执行
+      - optimizing：统一netty监听线程的名称
+      - optimizing：请求响应的header设置处理逻辑重构
+      - optimizing：对http请求的响应统一添加server框架名称及版本信息
    - version 1.2.1 (released)
       - feature：server支持自定义context-path
    - version 1.3.0 (released)
       - feature: request添加context-path字段
-      - refactor：默认请求处理实现类重构
-      - refactor: filter的执行顺序调整, 按order从小到大顺序执行
-      - refactor: jwt token默认不添加"Bearer: "头
-      - refactor: redirect支持重定向至其他server url.
-      - bugfix: 响应头设置Content-Type报NullPonterException问题解决
+      - optimizing：默认请求处理实现类重构
+      - optimizing: filter的执行顺序调整, 按order从小到大顺序执行
+      - optimizing: jwt token默认不添加"Bearer: "头
+      - optimizing: redirect支持重定向至其他server url.
+      - fixbug: 响应头设置Content-Type报NullPonterException问题解决
    - version 1.4.0 (released)
       - feature: 支持静态资源处理
    - version 1.4.1 (released)
-      - refactor: jwt默认实现调整至独立的masker-rest-jwt工程
-      - refactor: 移除冗余maven依赖(commons-codec, commons-lang, commons-io)
+      - optimizing: jwt默认实现调整至独立的masker-rest-jwt工程
+      - optimizing: 移除冗余maven依赖(commons-codec, commons-lang, commons-io)
    - version 1.4.2 (released)
       - feature: 支持文件上传(单文件or多文件)
-      - refactor: 重构MRestHandlerType类, 更易理解.
-      - bugfix: 修正各类handler的分发处理逻辑
+      - optimizing: 重构MRestHandlerType类, 更易理解.
+      - fixbug: 修正各类handler的分发处理逻辑
    - version 1.4.3 (released)
       - feature: 支持文件下载
-      - refactor: 调整server接收的请求body最大size为50MB
+      - optimizing: 调整server接收的请求body最大size为50MB
    - version 1.4.4 (released)
-      - refactor: jwt默认实现合并至framework工程
-      - bugfix: 修正未指定context-path时对url的截取异常缺陷
+      - optimizing: jwt默认实现合并至framework工程
+      - fixbug: 修正未指定context-path时对url的截取异常缺陷
    - version 1.4.5 (released)
-      - refactor: 添加IOUtils工具类
-      - refactor: response补充write方法
+      - optimizing: 添加IOUtils工具类
+      - optimizing: response补充write方法
    - version 1.4.6 (released)
       - feature: 添加默认的请求异常处理
       - feature: 添加FileUtils工具类，提供文件新增/删除、压缩/解压相关工具方法
-      - refactor: 序列化依赖从fastjson调整为jackson
-      - refactor: jwt处理取消抛出异常
+      - optimizing: 序列化依赖从fastjson调整为jackson
+      - optimizing: jwt处理取消抛出异常
    - version 1.4.7 (released)
       - feature: 下载文件支持回调（文件下载完成时执行）
-      - bugfix: 修正同一url映射处理对象分别进行映射时报冲突的缺陷
+      - fixbug: 修正同一url映射处理对象分别进行映射时报冲突的缺陷
    - version 1.4.8 (released)
       - feature: 对于未指定 "/" 或 "/index.html" 路径映射的服务，输出默认masker-rest主页面
-      - refactor: 文件上传优化部分代码
-      - refactor: 优化文件操作代码，增加运行时异常类：FileOperateException
+      - optimizing: 文件上传优化部分代码
+      - optimizing: 优化文件操作代码，增加运行时异常类：FileOperateException
    - version 1.4.9 (released)
-      - refactor: 优化序列化相应代码
-      - refactor: 补充IOUtils工具类中写文件方法
+      - optimizing: 优化序列化相应代码
+      - optimizing: 补充IOUtils工具类中写文件方法
    - verion 1.4.10 (released)
-      - refactor: 优化补充IOUtils工具类中相应方法.
+      - optimizing: 优化补充IOUtils工具类中相应方法.
    - version 1.5.0 (released)
       - feature: 单个server支持发布多个context-path的服务
       - feature: 支持自定义静态资源classpath扫描路径或磁盘文件扫描路径
       - feature: 增加rest server默认配置文件读取
-      - refactor: 补充样例代码
+      - optimizing: 补充样例代码
    - version 1.6.0 (released)
       - feature: 支持发布WebSocket服务及注册相应回调
       - feature: 基于自定义WebSocket服务，实现简易聊天室
    - version 1.6.1 (released)
       - feature: 静态资源访问支持自定义前缀
       - feature: 对于非正常http请求状态（如404、500等），返回状态码的同时输出特定页面
-      - refactor: 优化默认index.html输出页面
-      - refactor: rest server支持设置http content的最大值
+      - optimizing: 优化默认index.html输出页面
+      - optimizing: rest server支持设置http content的最大值
    - version 1.6.2 (released)
-      - bugfix: 修正文件上传处理代码中的文件拷贝逻辑
+      - fixbug: 修正文件上传处理代码中的文件拷贝逻辑
    - version 1.6.3 (doing)
       - feature: 静态资源Content-Type根据文件名与Content-Type的映射表进行取值及返回
-      - bugfix: IOUtils中提供的数据流拷贝方法在执行完成执行数据流关闭操作（修正文件上传时无法删除临时文件的缺陷）
+      - feature: MRestContext支持指定自定义的序列化处理ObjectMapper对象
+      - feature: MRestContext支持设置devMode（定时更新静态资源）
+      - feature: rest server添加shutdown方法及部分属性getter方法
+      - optimizing: 默认响应的状态页面调整
+      - optimizing: 使用VoidFunc替换Runnable
+      - fixbug: IOUtils中提供的数据流拷贝方法在执行完成执行数据流关闭操作（修正文件上传时无法删除临时文件的缺陷）
    - TODO
       - 实现websocket Java客户端（支持重连）及前端API（支持重连）
