@@ -1,10 +1,12 @@
-package io.github.jiashunx.masker.rest.framework.filter;
+package io.github.jiashunx.masker.rest.framework.servlet;
 
 import io.github.jiashunx.masker.rest.framework.MRestContext;
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestHandleException;
+import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
+import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
@@ -22,11 +24,11 @@ import java.util.function.*;
 /**
  * @author jiashunx
  */
-public class MRestDispatchFilter implements MRestFilter {
+public class MRestDispatchServlet implements MRestFilter {
 
     private static byte[] DEFAULT_PAGE_BYTES = null;
     static {
-        String template = IOUtils.loadContentFromClasspath("masker-rest/template/index.html", MRestDispatchFilter.class.getClassLoader());
+        String template = IOUtils.loadContentFromClasspath("masker-rest/template/index.html", MRestDispatchServlet.class.getClassLoader());
         DEFAULT_PAGE_BYTES = MRestUtils.format(template, "mrf.version", MRestUtils.getFrameworkVersion()).getBytes(StandardCharsets.UTF_8);
     }
 

@@ -3,7 +3,7 @@ package io.github.jiashunx.masker.rest.framework;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
-import io.github.jiashunx.masker.rest.framework.filter.MRestDispatchFilter;
+import io.github.jiashunx.masker.rest.framework.servlet.MRestDispatchServlet;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.filter.StaticResourceFilter;
@@ -382,7 +382,7 @@ public class MRestContext {
     /**
      * 请求分发处理.
      */
-    private final MRestFilter requestFilter = new MRestDispatchFilter();
+    private final MRestFilter requestFilter = new MRestDispatchServlet();
     /**
      * 配置的静态资源classpath扫描路径.
      */
