@@ -35,6 +35,10 @@ public class MWebsocketContext {
         return contextPath;
     }
 
+    public String getWebSocketContextDesc() {
+        return String.format("%s WebSocketContext[%s]", getRestServer().getServerDesc(), getContextPath());
+    }
+
     void init() {
         for (VoidFunc voidFunc: websocketHandlerInitTaskList) {
             voidFunc.doSomething();
@@ -88,13 +92,13 @@ public class MWebsocketContext {
         getRestServer().checkServerState();
         websocketHandlerInitTaskList.add(() -> {
             if (getContinuationFrameHandler() != null) {
-                throw new IllegalArgumentException(String.format("WebsocketContext[%s] has already bind ContinuationWebSocketFrame handler.", getContextPath()));
+                throw new IllegalArgumentException(String.format("%s has already bind ContinuationWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             if (getTextFrameHandler() != null) {
-                throw new IllegalArgumentException(String.format("WebsocketContext[%s] has already bind TextWebSocketFrame handler.", getContextPath()));
+                throw new IllegalArgumentException(String.format("%s has already bind TextWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             if (getBinaryFrameHandler() != null) {
-                throw new IllegalArgumentException(String.format("WebsocketContext[%s] has already bind BinaryWebSocketFrame handler.", getContextPath()));
+                throw new IllegalArgumentException(String.format("%s has already bind BinaryWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             this.frameHandler = Objects.requireNonNull(websocketHandler);
         });
@@ -105,10 +109,10 @@ public class MWebsocketContext {
         getRestServer().checkServerState();
         websocketHandlerInitTaskList.add(() -> {
             if (getFrameHandler() != null) {
-                throw new IllegalArgumentException(String.format("WebsocketContext[%s] has already bind WebSocketFrame handler.", getContextPath()));
+                throw new IllegalArgumentException(String.format("%s has already bind WebSocketFrame handler.", getWebSocketContextDesc()));
             }
             if (getContinuationFrameHandler() != null) {
-                throw new IllegalArgumentException(String.format("WebsocketContext[%s] has already bind ContinuationWebSocketFrame handler.", getContextPath()));
+                throw new IllegalArgumentException(String.format("%s has already bind ContinuationWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             this.textFrameHandler = Objects.requireNonNull(websocketHandler);
         });
@@ -119,10 +123,10 @@ public class MWebsocketContext {
         getRestServer().checkServerState();
         websocketHandlerInitTaskList.add(() -> {
             if (getFrameHandler() != null) {
-                throw new IllegalArgumentException(String.format("WebsocketContext[%s] has already bind WebSocketFrame handler.", getContextPath()));
+                throw new IllegalArgumentException(String.format("%s has already bind WebSocketFrame handler.", getWebSocketContextDesc()));
             }
             if (getContinuationFrameHandler() != null) {
-                throw new IllegalArgumentException(String.format("WebsocketContext[%s] has already bind ContinuationWebSocketFrame handler.", getContextPath()));
+                throw new IllegalArgumentException(String.format("%s has already bind ContinuationWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             this.binaryFrameHandler = Objects.requireNonNull(websocketHandler);
         });
@@ -133,13 +137,13 @@ public class MWebsocketContext {
         getRestServer().checkServerState();
         websocketHandlerInitTaskList.add(() -> {
             if (getFrameHandler() != null) {
-                throw new IllegalArgumentException(String.format("WebsocketContext[%s] has already bind WebSocketFrame handler.", getContextPath()));
+                throw new IllegalArgumentException(String.format("%s has already bind WebSocketFrame handler.", getWebSocketContextDesc()));
             }
             if (getTextFrameHandler() != null) {
-                throw new IllegalArgumentException(String.format("WebsocketContext[%s] has already bind TextWebSocketFrame handler.", getContextPath()));
+                throw new IllegalArgumentException(String.format("%s has already bind TextWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             if (getBinaryFrameHandler() != null) {
-                throw new IllegalArgumentException(String.format("WebsocketContext[%s] has already bind BinaryWebSocketFrame handler.", getContextPath()));
+                throw new IllegalArgumentException(String.format("%s has already bind BinaryWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             this.continuationFrameHandler = Objects.requireNonNull(websocketHandler);
         });

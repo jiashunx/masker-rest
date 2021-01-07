@@ -5,6 +5,8 @@ import io.github.jiashunx.masker.rest.framework.util.FileUtils;
 import io.github.jiashunx.masker.rest.framework.util.IOUtils;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.netty.handler.codec.http.multipart.FileUpload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.UUID;
@@ -13,6 +15,8 @@ import java.util.UUID;
  * @author jiashunx
  */
 public class MRestFileUpload {
+
+    private static final Logger logger = LoggerFactory.getLogger(MRestFileUpload.class);
 
     /**
      * 上传文件的Content-Type.
@@ -42,16 +46,23 @@ public class MRestFileUpload {
                 // 创建临时文件.
                 String filePath = MRestUtils.getSystemTempDirPath() + "mr_" + UUID.randomUUID().toString();
                 tmpFile = FileUtils.newFile(filePath);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("store temp file from memory, target: {}", tmpFile);
+                }
                 IOUtils.write(fileUpload.get(), tmpFile);
             } else {
                 // 磁盘文件拷贝
-                String filePath = fileUpload.getFile().getAbsolutePath() + "_mr";
+                File sourceFile = fileUpload.getFile();
+                String filePath = sourceFile.getAbsolutePath() + "_mr";
                 tmpFile = FileUtils.newFile(filePath);
-                IOUtils.copy(fileUpload.getFile(), tmpFile);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("store temp file, source: {}, target: {}", sourceFile, tmpFile);
+                }
+                IOUtils.copy(sourceFile, tmpFile);
             }
             this.file = tmpFile;
         } catch (Throwable throwable) {
-            throw new MRestFileUploadException("crete fileupload object failed.", throwable);
+            throw new MRestFileUploadException("create fileupload object failed.", throwable);
         }
     }
 

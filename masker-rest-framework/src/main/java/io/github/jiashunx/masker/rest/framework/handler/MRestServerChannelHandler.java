@@ -123,7 +123,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         if (object instanceof TextWebSocketFrame) {
             MWebsocketHandler<TextWebSocketFrame> websocketHandler = websocketContext.getTextFrameHandler();
             if (websocketHandler == null) {
-                throw new UnsupportedOperationException(String.format("WebsocketContext[%s] not assign the TextWebSocketFrame handler", websocketContext.getContextPath()));
+                throw new UnsupportedOperationException(String.format("%s not assign the TextWebSocketFrame handler", websocketContext.getWebSocketContextDesc()));
             }
             websocketHandler.execute((TextWebSocketFrame) object, websocketRequest, websocketResponse);
             return;
@@ -131,7 +131,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         if (object instanceof BinaryWebSocketFrame) {
             MWebsocketHandler<BinaryWebSocketFrame> websocketHandler = websocketContext.getBinaryFrameHandler();
             if (websocketHandler == null) {
-                throw new UnsupportedOperationException(String.format("WebsocketContext[%s] not assign the BinaryWebSocketFrame handler", websocketContext.getContextPath()));
+                throw new UnsupportedOperationException(String.format("%s not assign the BinaryWebSocketFrame handler", websocketContext.getWebSocketContextDesc()));
             }
             websocketHandler.execute((BinaryWebSocketFrame) object, websocketRequest, websocketResponse);
             return;
@@ -139,7 +139,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         if (object instanceof ContinuationWebSocketFrame) {
             MWebsocketHandler<ContinuationWebSocketFrame> websocketHandler = websocketContext.getContinuationFrameHandler();
             if (websocketHandler == null) {
-                throw new UnsupportedOperationException(String.format("WebsocketContext[%s] not assign the ContinuationWebSocketFrame handler", websocketContext.getContextPath()));
+                throw new UnsupportedOperationException(String.format("%s not assign the ContinuationWebSocketFrame handler", websocketContext.getWebSocketContextDesc()));
             }
             websocketHandler.execute((ContinuationWebSocketFrame) object, websocketRequest, websocketResponse);
         }

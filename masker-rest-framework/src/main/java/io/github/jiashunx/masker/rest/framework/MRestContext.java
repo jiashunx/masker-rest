@@ -43,6 +43,9 @@ public class MRestContext {
         return contextPath;
     }
 
+    private String getContextDesc() {
+        return String.format("%s Context[%s]", getRestServer().getServerDesc(), getContextPath());
+    }
 
     void init() {
         // mapping处理
@@ -74,11 +77,11 @@ public class MRestContext {
     private void reloadResource() {
         Map<String, List<String>> classpathResources = getClasspathResources();
         if (logger.isInfoEnabled()) {
-            logger.info("Context[{}] reload classpath resources: {}", getContextPath(), classpathResources);
+            logger.info("{} reload classpath resources: {}", getContextDesc(), classpathResources);
         }
         Map<String, List<String>> diskResources = getDiskResources();
         if (logger.isInfoEnabled()) {
-            logger.info("Context[{}] reload disk resources: {}", getContextPath(), diskResources);
+            logger.info("{} reload disk resources: {}", getContextDesc(), diskResources);
         }
         ((StaticResourceFilter) staticResourceFilter).reloadResource(classpathResources, diskResources);
     }
@@ -118,16 +121,16 @@ public class MRestContext {
      */
     private void checkMappingUrl(String url, HttpMethod... methods) {
         if (StringUtils.isBlank(url)) {
-            throw new IllegalArgumentException(String.format("Context[%s] illegal mapping url: %s", getContextPath(), url));
+            throw new IllegalArgumentException(String.format("%s illegal mapping url: %s", getContextDesc(), url));
         }
         if (isMappingURL(url, methods)) {
-            throw new MRestServerInitializeException(String.format("Context[%s] url mapping conflict: %s", getContextPath(), url));
+            throw new MRestServerInitializeException(String.format("%s url mapping conflict: %s", getContextDesc(), url));
         }
     }
 
     private void checkMappingHandler(MRestHandler handler) {
         if (handler == null || handler.getHandler() == null) {
-            throw new NullPointerException(String.format("Context[%s] mapping handler cann't be null", getContextPath()));
+            throw new NullPointerException(String.format("%s mapping handler cann't be null", getContextDesc()));
         }
     }
 
@@ -213,7 +216,7 @@ public class MRestContext {
                 handlerMap.put(method, handler);
             }
             if (logger.isInfoEnabled()) {
-                logger.info("Context[{}] register url handler success, {}, {}", getContextPath(), methods, url);
+                logger.info("{} register url handler success, {}, {}", getContextDesc(), methods, url);
             }
         });
         return this;
@@ -468,12 +471,12 @@ public class MRestContext {
         filterTaskList.add(() -> {
             MRestFilter restFilter = Objects.requireNonNull(filter);
             if (urlPatterns.length == 0) {
-                throw new IllegalArgumentException(String.format("Context[%s] can't assign empty urlPatterns to filter: %s", getContextPath(), filter.filterName()));
+                throw new IllegalArgumentException(String.format("%s can't assign empty urlPatterns to filter: %s", getContextDesc(), filter.filterName()));
             }
             for (String urlPattern: urlPatterns) {
                 filterMap.computeIfAbsent(urlPattern, k -> new ArrayList<>()).add(restFilter);
                 if (logger.isInfoEnabled()) {
-                    logger.info("Context[{}] register filter success, {} -> {}", getContextPath(), urlPattern, filter.filterName());
+                    logger.info("{} register filter success, {} -> {}", getContextDesc(), urlPattern, filter.filterName());
                 }
             }
         });

@@ -176,34 +176,38 @@ public class MRestServer {
         return new ArrayList<>(websocketContextMap.keySet());
     }
 
+    public String getServerDesc() {
+        return String.format("Server[%s:%d]", getServerName(), getListenPort());
+    }
+
     /**
      * 检查server是否已关闭或已启动
      * @throws MRestServerInitializeException MRestServerInitializeException
      */
     public void checkServerState() throws MRestServerInitializeException {
         if (closed) {
-            throw new MRestServerCloseException(String.format("Server[%s] has already been closed", serverName));
+            throw new MRestServerCloseException(String.format("%s has already been closed", getServerDesc()));
         }
         if (started) {
-            throw new MRestServerInitializeException(String.format("Server[%s] has already been initialized", serverName));
+            throw new MRestServerInitializeException(String.format("%s has already been initialized", getServerDesc()));
         }
     }
 
     public synchronized void shutdown() {
         if (!started) {
-            throw new MRestServerCloseException(String.format("Server[%s] has not been initialized", serverName));
+            throw new MRestServerCloseException(String.format("%s has not been initialized", getServerDesc()));
         }
         if (closed) {
-            throw new MRestServerCloseException(String.format("Server[%s] has already been closed", serverName));
+            throw new MRestServerCloseException(String.format("%s has already been closed", getServerDesc()));
         }
         try {
             serverChannel.close().addListener(future -> {
                 if (logger.isInfoEnabled()) {
-                    logger.info("Server[{}] close succeed, ListenPort: {}", serverName, listenPort);
+                    logger.info("{} close succeed", getServerDesc());
                 }
             }).get();
         } catch (Throwable throwable) {
-            throw new MRestServerCloseException(String.format("Server[%s] close failed.", serverName), throwable);
+            throw new MRestServerCloseException(String.format("%s close failed.", getServerDesc()), throwable);
         }
         closed = true;
         serverChannel = null;
@@ -216,7 +220,7 @@ public class MRestServer {
     public synchronized void start() throws MRestServerInitializeException {
         checkServerState();
         if (logger.isInfoEnabled()) {
-            logger.info("Server[{}] start, ListenPort: {}, Context: {}, WebsocketContext: {}", serverName, listenPort, getContextList(), getWebsocketContextList());
+            logger.info("{} start, Context: {}, WebsocketContext: {}", getServerDesc(), getContextList(), getWebsocketContextList());
         }
         try {
             contextMap.forEach((key, restContext) -> {
@@ -237,7 +241,7 @@ public class MRestServer {
                     .childHandler(new MRestServerChannelInitializer(this));
             serverChannel = bootstrap.bind(listenPort).sync().channel();
             if (logger.isInfoEnabled()) {
-                logger.info("Server[{}] start succeed, ListenPort: {}", serverName, listenPort);
+                logger.info("{} start succeed", getServerDesc());
             }
             AtomicReference<Channel> serverChannelRef = new AtomicReference<>(serverChannel);
             final Thread syncThread = new Thread(() -> {
@@ -245,18 +249,18 @@ public class MRestServer {
                     serverChannelRef.get().closeFuture().syncUninterruptibly();
                 } catch (Throwable throwable) {
                     if (logger.isErrorEnabled()) {
-                        logger.error("Server[{}] channel close future synchronized failed", serverName, throwable);
+                        logger.error("{} channel close future synchronized failed", getServerDesc(), throwable);
                     }
                 } finally {
                     serverChannelRef.set(null);
                 }
             });
-            syncThread.setName(serverName + "-closeFuture.Sync");
+            syncThread.setName(getServerDesc() + "-closeFuture.Sync");
             syncThread.setDaemon(true);
             syncThread.start();
             started = true;
         } catch (Throwable throwable) {
-            throw new MRestServerInitializeException(String.format("Server[%s] start failed", serverName), throwable);
+            throw new MRestServerInitializeException(String.format("%s start failed", getServerDesc()), throwable);
         }
     }
 

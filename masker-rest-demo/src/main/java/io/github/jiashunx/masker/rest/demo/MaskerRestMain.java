@@ -62,7 +62,7 @@ public class MaskerRestMain {
                 .start();
         new MRestServer()
                 .listenPort(21700)
-                .serverName("demo-21700")
+                .serverName("demo")
                 .connectionKeepAlive(false)
                 .workerThreadNum(NettyRuntime.availableProcessors() * 2)
                 .bossThreadNum(1)
