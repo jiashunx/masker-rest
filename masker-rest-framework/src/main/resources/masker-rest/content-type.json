@@ -107,7 +107,7 @@
   ".jpe": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".jpg": "image/jpeg",
-  ".js": "application/x-javascript",
+  ".js": "application/javascript",
   ".jsp": "text/html",
   ".la1": "audio/x-liquid-file",
   ".lar": "application/x-laplayer-reg",
