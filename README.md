@@ -111,5 +111,8 @@
       - refactor: rest server支持设置http content的最大值
    - version 1.6.2 (released)
       - bugfix: 修正文件上传处理代码中的文件拷贝逻辑
+   - version 1.6.3 (doing)
+      - feature: 静态资源Content-Type根据文件名与Content-Type的映射表进行取值及返回
+      - bugfix: IOUtils中提供的数据流拷贝方法在执行完成执行数据流关闭操作（修正文件上传时无法删除临时文件的缺陷）
    - TODO
       - 实现websocket Java客户端（支持重连）及前端API（支持重连）
