@@ -32,7 +32,7 @@
 
    - [UserGuide](./docs/UserGuide.md)
 
-- 版本清单（最新版本：<b>1.6.2</b>）：
+- 版本清单（最新版本：<b>1.6.3</b>）：
 
    - version 1.0.0 (released)
       - feature：支持发布rest接口
@@ -111,13 +111,16 @@
       - optimizing: rest server支持设置http content的最大值
    - version 1.6.2 (released)
       - fixbug: 修正文件上传处理代码中的文件拷贝逻辑
-   - version 1.6.3 (doing)
+   - version 1.6.3 (released)
       - feature: 静态资源Content-Type根据文件名与Content-Type的映射表进行取值及返回
       - feature: MRestContext支持指定自定义的序列化处理ObjectMapper对象
       - feature: MRestContext支持设置devMode（定时更新静态资源）
       - feature: rest server添加shutdown方法及部分属性getter方法
       - optimizing: 默认响应的状态页面调整
       - optimizing: 使用VoidFunc替换Runnable
+      - optimizing: server及context日志格式化输出
       - fixbug: IOUtils中提供的数据流拷贝方法在执行完成执行数据流关闭操作（修正文件上传时无法删除临时文件的缺陷）
    - TODO
-      - 实现websocket Java客户端（支持重连）及前端API（支持重连）
+      - 实现Servlet映射注册、分发及处理
+      - 实现websocket JavaScript客户端（支持重连）
+      - 实现websocket Java客户端（支持重连）
