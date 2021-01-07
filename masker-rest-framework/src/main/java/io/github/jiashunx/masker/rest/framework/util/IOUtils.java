@@ -249,11 +249,32 @@ public final class IOUtils {
         return loadBytesFromDisk(file.getAbsolutePath());
     }
 
+    public static void close(InputStream inputStream) {
+        if (inputStream != null) {
+            try {
+                inputStream.close();
+            } catch (IOException e) {}
+        }
+    }
+
+    public static void close(OutputStream outputStream) {
+        if (outputStream != null) {
+            try {
+                outputStream.close();
+            } catch (IOException exception) {}
+        }
+    }
+
     public static void copy(InputStream inputStream, OutputStream outputStream) throws IOException {
-        byte[] buffer = new byte[1024];
-        int readSize = 0;
-        while ((readSize = inputStream.read(buffer)) >= 0) {
-            outputStream.write(buffer, 0, readSize);
+        try {
+            byte[] buffer = new byte[1024];
+            int readSize = 0;
+            while ((readSize = inputStream.read(buffer)) >= 0) {
+                outputStream.write(buffer, 0, readSize);
+            }
+        } finally {
+            close(inputStream);
+            close(outputStream);
         }
     }
 
