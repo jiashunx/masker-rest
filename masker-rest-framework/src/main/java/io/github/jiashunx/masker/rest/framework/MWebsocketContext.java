@@ -35,7 +35,7 @@ public class MWebsocketContext {
         return contextPath;
     }
 
-    public void init() {
+    void init() {
         for (Runnable runnable: websocketHandlerInitTaskList) {
             runnable.run();
         }

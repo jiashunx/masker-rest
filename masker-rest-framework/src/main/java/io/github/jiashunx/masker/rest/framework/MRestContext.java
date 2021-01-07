@@ -43,7 +43,7 @@ public class MRestContext {
     }
 
 
-    public void init() {
+    void init() {
         // mapping处理
         for (Runnable mappingTask: mappingTaskList) {
             mappingTask.run();
