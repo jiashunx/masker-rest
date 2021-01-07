@@ -34,12 +34,8 @@ public class StaticResourceFilter implements MRestFilter {
         this.staticResourceHolder = new StaticResourceHolder(restContext1);
     }
 
-    public void reloadClasspathResource(Map<String, List<String>> pathMap) {
-        this.staticResourceHolder.reloadClasspathResourceMap(pathMap);
-    }
-
-    public void reloadDiskResource(Map<String, List<String>> pathMap) {
-        this.staticResourceHolder.reloadDiskResourceMap(pathMap);
+    public void reloadResource(Map<String, List<String>> pathMap0, Map<String, List<String>> pathMap1) {
+        this.staticResourceHolder.reloadResourceMap(pathMap0, pathMap1);
     }
 
     @Override

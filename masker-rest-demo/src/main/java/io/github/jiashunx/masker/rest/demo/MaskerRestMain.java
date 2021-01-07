@@ -64,6 +64,7 @@ public class MaskerRestMain {
                     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                     return objectMapper;
                 })
+                .setDevMode(true)
 
                 // get请求样例
                 .get("/get-NoParam-NoRet", () -> {

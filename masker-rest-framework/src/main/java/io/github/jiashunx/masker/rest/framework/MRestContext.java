@@ -53,18 +53,34 @@ public class MRestContext {
             filterTask.run();
         }
         // 静态资源处理
+        reloadResource();
+        if (isDevMode()) {
+            new Thread(() -> {
+                while (true) {
+                    try {
+                        Thread.sleep(60*1000L);
+                        reloadResource();
+                    } catch (Throwable throwable) {
+                        if (logger.isErrorEnabled()) {
+                            logger.error("reload static resource failed.", throwable);
+                        }
+                    }
+                }
+            }, "ResourceReload" + restServer.getListenPort() + "_" + getContextPath()).start();
+        }
+    }
+
+    private void reloadResource() {
         Map<String, List<String>> classpathResources = getClasspathResources();
         if (logger.isInfoEnabled()) {
             logger.info("Context[{}] reload classpath resources: {}", getContextPath(), classpathResources);
         }
-        ((StaticResourceFilter) staticResourceFilter).reloadClasspathResource(classpathResources);
         Map<String, List<String>> diskResources = getDiskResources();
         if (logger.isInfoEnabled()) {
             logger.info("Context[{}] reload disk resources: {}", getContextPath(), diskResources);
         }
-        ((StaticResourceFilter) staticResourceFilter).reloadDiskResource(diskResources);
+        ((StaticResourceFilter) staticResourceFilter).reloadResource(classpathResources, diskResources);
     }
-
 
     /**************************************************** SEP ****************************************************/
     /**************************************************** SEP ****************************************************/
@@ -591,5 +607,17 @@ public class MRestContext {
 
     public Supplier<ObjectMapper> getObjectMapperSupplier() {
         return objectMapperSupplier;
+    }
+
+    private volatile boolean devMode = false;
+
+    public synchronized MRestContext setDevMode(boolean devMode) {
+        restServer.checkServerState();
+        this.devMode = devMode;
+        return this;
+    }
+
+    public boolean isDevMode() {
+        return devMode;
     }
 }

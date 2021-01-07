@@ -23,8 +23,6 @@ public final class StaticResourceHolder {
 
     private final MRestContext restContext;
 
-    private volatile Map<String, StaticResource> classpathResourceMap = new HashMap<>();
-    private volatile Map<String, StaticResource> diskResourceMap = new HashMap<>();
     private volatile Map<String, StaticResource> resourceMap = new HashMap<>();
 
     public StaticResourceHolder(MRestContext restContext) {
@@ -36,23 +34,15 @@ public final class StaticResourceHolder {
         return resourceMap;
     }
 
-    public Map<String, StaticResource> getClasspathResourceMap() {
-        return classpathResourceMap;
-    }
-
-    public Map<String, StaticResource> getDiskResourceMap() {
-        return diskResourceMap;
-    }
-
-    private synchronized void mergeResourceMap() {
+    public synchronized void reloadResourceMap(Map<String, List<String>> pathMap0, Map<String, List<String>> pathMap1) {
         Map<String, StaticResource> resourceMap = new HashMap<>();
-        resourceMap.putAll(diskResourceMap);
+        resourceMap.putAll(reloadDiskResourceMap(pathMap1));
         // classpath文件优先级高于磁盘文件优先级
-        resourceMap.putAll(classpathResourceMap);
+        resourceMap.putAll(reloadClasspathResourceMap(pathMap0));
         this.resourceMap = resourceMap;
     }
 
-    public synchronized void reloadDiskResourceMap(Map<String, List<String>> pathMap) {
+    public Map<String, StaticResource> reloadDiskResourceMap(Map<String, List<String>> pathMap) {
         // 从上到下优先级依次从高到低.
         List<StaticResource> $resourceList = new ArrayList<>();
         pathMap.forEach((prefixUrl, pathList) -> {
@@ -63,16 +53,15 @@ public final class StaticResourceHolder {
             }
         });
         Map<String, StaticResource> $resourceMap = resourceListToMap($resourceList);
-        if (logger.isInfoEnabled()) {
+        if (logger.isDebugEnabled()) {
             $resourceMap.forEach((key, resource) -> {
-                logger.info("Context[{}] load static resource from disk: {}", restContext.getContextPath(), resource.getUrl());
+                logger.debug("Context[{}] load static resource from disk: {}", restContext.getContextPath(), resource.getUrl());
             });
         }
-        this.diskResourceMap = $resourceMap;
-        mergeResourceMap();
+        return $resourceMap;
     }
 
-    public synchronized void reloadClasspathResourceMap(Map<String, List<String>> pathMap) {
+    public Map<String, StaticResource> reloadClasspathResourceMap(Map<String, List<String>> pathMap) {
         // 从上到下优先级依次从高到低.
         List<StaticResource> $resourceList = new ArrayList<>();
         pathMap.forEach((prefixUrl, pathList) -> {
@@ -83,13 +72,12 @@ public final class StaticResourceHolder {
             }
         });
         Map<String, StaticResource> $resourceMap = resourceListToMap($resourceList);
-        if (logger.isInfoEnabled()) {
+        if (logger.isDebugEnabled()) {
             $resourceMap.forEach((key, resource) -> {
-                logger.info("Context[{}] load static resource from classpath: {}", restContext.getContextPath(), resource.getUrl());
+                logger.debug("Context[{}] load static resource from classpath: {}", restContext.getContextPath(), resource.getUrl());
             });
         }
-        this.classpathResourceMap = $resourceMap;
-        mergeResourceMap();
+        return $resourceMap;
     }
 
     private static Map<String, StaticResource> resourceListToMap(List<StaticResource> $resourceList) {
@@ -149,8 +137,8 @@ public final class StaticResourceHolder {
             String location = cpDirLocation.trim();
             int urlPrefixLen = location.length();
             String _location = String.format("classpath*:%s**", location);
-            if (logger.isInfoEnabled()) {
-                logger.info("get static resources from classpath location: {}", _location);
+            if (logger.isDebugEnabled()) {
+                logger.debug("get static resources from classpath location: {}", _location);
             }
             Resource[] resources = new PathMatchingResourcePatternResolver().getResources(_location);
             for (Resource resource: resources) {
