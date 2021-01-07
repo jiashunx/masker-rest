@@ -66,12 +66,20 @@ public class MRestServer {
         return this;
     }
 
+    public int getListenPort() {
+        return listenPort;
+    }
+
     public MRestServer serverName(String serverName) {
         if (StringUtils.isBlank(serverName)) {
             throw new IllegalArgumentException("serverName -> " + serverName);
         }
         this.serverName = serverName;
         return this;
+    }
+
+    public String getServerName() {
+        return serverName;
     }
 
     public MRestServer bossThreadNum(int bossThreadNum) {
@@ -82,12 +90,20 @@ public class MRestServer {
         return this;
     }
 
+    public int getBossThreadNum() {
+        return bossThreadNum;
+    }
+
     public MRestServer workerThreadNum(int workerThreadNum) {
         if (workerThreadNum < 0) {
             throw new IllegalArgumentException("workThreadNum -> " + workerThreadNum);
         }
         this.workerThreadNum = workerThreadNum;
         return this;
+    }
+
+    public int getWorkerThreadNum() {
+        return workerThreadNum;
     }
 
     public MRestServer httpContentMaxLength(int httpContentMaxLength) {
