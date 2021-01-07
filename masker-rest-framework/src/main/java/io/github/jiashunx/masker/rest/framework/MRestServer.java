@@ -1,6 +1,7 @@
 package io.github.jiashunx.masker.rest.framework;
 
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
+import io.github.jiashunx.masker.rest.framework.exception.MRestServerCloseException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.type.MRestNettyThreadType;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author jiashunx
@@ -29,6 +31,9 @@ public class MRestServer {
     private static final Logger logger = LoggerFactory.getLogger(MRestServer.class);
 
     private volatile boolean started = false;
+    private volatile boolean closed = false;
+
+    private Channel serverChannel;
 
     private int listenPort;
     private String serverName;
@@ -172,13 +177,36 @@ public class MRestServer {
     }
 
     /**
-     * 检查server是否已启动
+     * 检查server是否已关闭或已启动
      * @throws MRestServerInitializeException MRestServerInitializeException
      */
     public void checkServerState() throws MRestServerInitializeException {
+        if (closed) {
+            throw new MRestServerCloseException(String.format("Server[%s] has already been closed", serverName));
+        }
         if (started) {
             throw new MRestServerInitializeException(String.format("Server[%s] has already been initialized", serverName));
         }
+    }
+
+    public synchronized void shutdown() {
+        if (!started) {
+            throw new MRestServerCloseException(String.format("Server[%s] has not been initialized", serverName));
+        }
+        if (closed) {
+            throw new MRestServerCloseException(String.format("Server[%s] has already been closed", serverName));
+        }
+        try {
+            serverChannel.close().addListener(future -> {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Server[{}] close succeed, ListenPort: {}", serverName, listenPort);
+                }
+            }).get();
+        } catch (Throwable throwable) {
+            throw new MRestServerCloseException(String.format("Server[%s] close failed.", serverName), throwable);
+        }
+        closed = true;
+        serverChannel = null;
     }
 
     /**
@@ -207,17 +235,20 @@ public class MRestServer {
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new MRestServerChannelInitializer(this));
-            Channel channel = bootstrap.bind(listenPort).sync().channel();
+            serverChannel = bootstrap.bind(listenPort).sync().channel();
             if (logger.isInfoEnabled()) {
                 logger.info("Server[{}] start succeed, ListenPort: {}", serverName, listenPort);
             }
+            AtomicReference<Channel> serverChannelRef = new AtomicReference<>(serverChannel);
             final Thread syncThread = new Thread(() -> {
                 try {
-                    channel.closeFuture().syncUninterruptibly();
+                    serverChannelRef.get().closeFuture().syncUninterruptibly();
                 } catch (Throwable throwable) {
                     if (logger.isErrorEnabled()) {
                         logger.error("Server[{}] channel close future synchronized failed", serverName, throwable);
                     }
+                } finally {
+                    serverChannelRef.set(null);
                 }
             });
             syncThread.setName(serverName + "-closeFuture.Sync");

@@ -37,7 +37,20 @@ public class MaskerRestMain {
 
     private static final MRestJWTHelper JWT_HELPER = new MRestJWTHelper("qwerasdfzxcv09876543231");
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
+        MRestServer autoClosedServer = new MRestServer().serverName("authclosed-server").listenPort(8090);
+        autoClosedServer.start();
+        Thread autoClosedThread = new Thread(() -> {
+            try {
+                Thread.sleep(10*1000L);
+                autoClosedServer.shutdown();
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            }
+        });
+        autoClosedThread.start();
+        autoClosedThread.join();
+
         new MRestServer(21701)
                 .context()
                 .get("/err", request -> {
