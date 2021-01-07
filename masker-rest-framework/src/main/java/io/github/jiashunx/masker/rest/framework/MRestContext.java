@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.framework;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
 import io.github.jiashunx.masker.rest.framework.filter.MRestDispatchFilter;
@@ -581,4 +582,14 @@ public class MRestContext {
         return this;
     }
 
+    private Supplier<ObjectMapper> objectMapperSupplier;
+
+    public MRestContext setObjectMapperSupplier(Supplier<ObjectMapper> objectMapperSupplier) {
+        this.objectMapperSupplier = Objects.requireNonNull(objectMapperSupplier);
+        return this;
+    }
+
+    public Supplier<ObjectMapper> getObjectMapperSupplier() {
+        return objectMapperSupplier;
+    }
 }

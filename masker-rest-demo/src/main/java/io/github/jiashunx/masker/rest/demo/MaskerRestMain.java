@@ -1,5 +1,7 @@
 package io.github.jiashunx.masker.rest.demo;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.*;
 import io.github.jiashunx.masker.rest.framework.exception.MRestJWTException;
 import io.github.jiashunx.masker.rest.framework.filter.Filter;
@@ -55,6 +57,13 @@ public class MaskerRestMain {
 
                 .addDefaultClasspathResource("/")
                 .addDiskResource("C:\\Workspace\\GitHub\\jiashunx\\masker-rest\\masker-rest-framework\\src\\main\\resources")
+
+                // 设置自定义的序列化处理对象
+                .setObjectMapperSupplier(() -> {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                    return objectMapper;
+                })
 
                 // get请求样例
                 .get("/get-NoParam-NoRet", () -> {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.exception.MRestSerializeException;
 import io.github.jiashunx.masker.rest.framework.serialize.impl.MRestJSONSerializer;
+import io.github.jiashunx.masker.rest.framework.util.SharedObjects;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -23,7 +24,7 @@ public class MRestSerializer {
 
     public static <T> T jsonToObj(String json, Class<T> klass) {
         try {
-            return new ObjectMapper().readValue(json, klass);
+            return SharedObjects.getObjectMapperFromThreadLocal().readValue(json, klass);
         } catch (Throwable throwable) {
             throw new MRestSerializeException(throwable);
         }
@@ -31,7 +32,7 @@ public class MRestSerializer {
 
     public static <T> T jsonToObj(byte[] bytes, Class<T> klass) {
         try {
-            return new ObjectMapper().readValue(bytes, klass);
+            return SharedObjects.getObjectMapperFromThreadLocal().readValue(bytes, klass);
         } catch (Throwable throwable) {
             throw new MRestSerializeException(throwable);
         }
@@ -39,7 +40,7 @@ public class MRestSerializer {
 
     public static <T> List<T> jsonToList(String json, Class<T> klass) {
         try {
-            return new ObjectMapper().readValue(json, new TypeReference<List<T>>() {
+            return SharedObjects.getObjectMapperFromThreadLocal().readValue(json, new TypeReference<List<T>>() {
                 @Override
                 public Type getType() {
                     return super.getType();
@@ -52,7 +53,7 @@ public class MRestSerializer {
 
     public static <T> List<T> jsonToList(byte[] bytes, Class<T> klass) {
         try {
-            return new ObjectMapper().readValue(bytes, new TypeReference<List<T>>() {
+            return SharedObjects.getObjectMapperFromThreadLocal().readValue(bytes, new TypeReference<List<T>>() {
                 @Override
                 public Type getType() {
                     return super.getType();
@@ -69,7 +70,7 @@ public class MRestSerializer {
 
     public static String objectToJson(Object object, boolean pretty) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectMapper objectMapper = SharedObjects.getObjectMapperFromThreadLocal();
             if (pretty) {
                 return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
             } else {
@@ -86,7 +87,7 @@ public class MRestSerializer {
 
     public static byte[] objectToJsonBytes(Object object, boolean pretty) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectMapper objectMapper = SharedObjects.getObjectMapperFromThreadLocal();
             if (pretty) {
                 return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(object);
             } else {
