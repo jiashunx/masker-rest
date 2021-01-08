@@ -55,7 +55,7 @@ public final class StaticResourceHolder {
         Map<String, StaticResource> $resourceMap = resourceListToMap($resourceList);
         if (logger.isDebugEnabled()) {
             $resourceMap.forEach((key, resource) -> {
-                logger.debug("Context[{}] load static resource from disk: {}", restContext.getContextPath(), resource.getUrl());
+                logger.debug("{} load static resource from disk: {}", restContext.getContextDesc(), resource.getUrl());
             });
         }
         return $resourceMap;
@@ -74,7 +74,7 @@ public final class StaticResourceHolder {
         Map<String, StaticResource> $resourceMap = resourceListToMap($resourceList);
         if (logger.isDebugEnabled()) {
             $resourceMap.forEach((key, resource) -> {
-                logger.debug("Context[{}] load static resource from classpath: {}", restContext.getContextPath(), resource.getUrl());
+                logger.debug("{} load static resource from classpath: {}", restContext.getContextDesc(), resource.getUrl());
             });
         }
         return $resourceMap;

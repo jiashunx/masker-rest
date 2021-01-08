@@ -36,6 +36,8 @@ public class MRestContext {
     public MRestContext(MRestServer restServer, String contextPath) {
         this.restServer = Objects.requireNonNull(restServer);
         this.contextPath = MRestUtils.formatContextPath(contextPath);
+        // 添加框架提供的静态资源
+        addClasspathResources("/masker-rest/static", new String[]{ "masker-rest/static/" });
     }
 
     public MRestServer getRestServer() {
@@ -45,7 +47,7 @@ public class MRestContext {
         return contextPath;
     }
 
-    private String getContextDesc() {
+    public String getContextDesc() {
         return String.format("%s Context[%s]", getRestServer().getServerDesc(), getContextPath());
     }
 
