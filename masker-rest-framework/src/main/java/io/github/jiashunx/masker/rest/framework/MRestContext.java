@@ -384,7 +384,7 @@ public class MRestContext {
     /**
      * servlet映射处理.
      */
-    private final Map<String, MRestServlet> servletMap = new HashMap<>();
+    private final Map<String, MRestServlet> servletMap = new LinkedHashMap<>();
     /**
      * filter映射处理.
      */
@@ -424,16 +424,16 @@ public class MRestContext {
     }
 
     public List<MRestServlet> getServlet(String requestURL) {
-        Set<MRestServlet> servletSet = new HashSet<>();
+        List<MRestServlet> servletList = new ArrayList<>();
         servletMap.forEach((urlPattern, servlet) -> {
+            if (servletList.contains(servlet)) {
+                return;
+            }
             String pattern = "^" + urlPattern.replace("*", "\\S*") + "$";
             if (requestURL.matches(pattern)) {
-                servletSet.add(servlet);
+                servletList.add(servlet);
             }
         });
-        // 对servlet进行排序, 按照url长度从小到大进行顺序排序
-        LinkedList<MRestServlet> servletList = new LinkedList<>(servletSet);
-        servletList.sort(Comparator.comparingInt(servlet -> servlet.servletName().length()));
         return servletList;
     }
 
@@ -451,7 +451,7 @@ public class MRestContext {
     public synchronized MRestContext servlet(String urlPattern, MRestServlet servlet) {
         getRestServer().checkServerState();
         servletTaskList.add(() -> {
-            String $urlPattern = servlet.urlPattern();
+            String $urlPattern = urlPattern;
             if (StringUtils.isBlank($urlPattern)) {
                 $urlPattern = Constants.DEFAULT_SERVLET_URLPATTERN;
             }
