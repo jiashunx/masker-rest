@@ -120,7 +120,15 @@
       - optimizing: 使用VoidFunc替换Runnable
       - optimizing: server及context日志格式化输出
       - fixbug: IOUtils中提供的数据流拷贝方法在执行完成执行数据流关闭操作（修正文件上传时无法删除临时文件的缺陷）
+   - version 1.6.4 (released)
+      - feature: 实现自定义Servlet的注册、分发及处理
+      - feature: JavaScript实现websocket客户端：[websocket.js][1]，并使用此客户端实现简易聊天室：[chatroom.html][2]
+      - optimizing: 原有的基于Filter的请求分发处理调整为使用Servlet实现（底层仍然使用Filter进行链式调用）
    - TODO
-      - 实现Servlet映射注册、分发及处理
-      - 实现websocket JavaScript客户端（支持重连）
+      - 参考spring实现资源扫描（移除spring-core）依赖
+      - 自定义websockt二进制传输协议实现
       - 实现websocket Java客户端（支持重连）
+      - TCP服务端及客户端实现
+
+[1]: masker-rest-framework/src/main/resources/masker-rest/static/websocket.js
+[2]: masker-rest-demo/src/main/resources/static/chatroom.html
