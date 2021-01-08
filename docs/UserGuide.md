@@ -1,5 +1,5 @@
 
-- 0、启动server样例
+- 启动server样例
 
 ```text
 # 未指定默认context-path为"/"，默认端口为8080，默认serverName为mrest-server.
@@ -34,7 +34,7 @@ new MRestServer()
     .start();
 ```
 
-- 1、get请求样例
+- get请求样例
 
 ```text
 restServer
@@ -62,7 +62,7 @@ restServer
     .start();
 ```
 
-- 2、post请求样例
+- post请求样例
 
 ```text
 restServer
@@ -94,7 +94,7 @@ private static class Vo {
 }
 ```
 
-- 3、forward请求样例
+- forward请求样例
 
 ```text
 restServer
@@ -112,7 +112,7 @@ restServer
     .start();
 ```
 
-- 4、redirect请求样例
+- redirect请求样例
 
 ```text
 restServer
@@ -128,7 +128,7 @@ restServer
     .start();
 ```
 
-- 5、filter样例
+- filter样例
 
 ```text
 restServer
@@ -161,7 +161,27 @@ private static class Filter1 implements MRestFilter {
 }
 ```
 
-- 6、cookie样例
+- servlet样例
+```text
+restServer
+    .context("/demo")
+    .servlet("/servlet/t", (request, response) -> {
+        response.writeString("/servlet/t -> =_=");
+    })
+    .servlet("/servlet/*", (request, response) -> {
+        if ("/servlet/test".equals(request.getUrl())) {
+            return;
+        }
+        response.writeString("/servlet/* -> =_=");
+    })
+    .servlet("/servlet/test", (request, response) -> {
+        response.writeString("/servlet/test -> =_=");
+    })
+    .getRestServer()
+    .start();
+```
+
+- cookie样例
 
 ```text
 restServer
@@ -181,7 +201,7 @@ restServer
     .start();
 ```
 
-- 7、jwt会话过滤样例
+- jwt会话过滤样例
 
 ```text
 // /jwt/login请求body: {"username": "admin"} 进行会话登录验证
@@ -230,7 +250,7 @@ restServer
     .start();
 ```
 
-- 8、文件上传
+- 文件上传
 
 ```text
 <body>
@@ -284,53 +304,53 @@ restServer
 
 ```text
 restServer
-.context("/demo")
-.fileupload("/fileupload/test0", (request, response) -> {
-    MRestFileUploadRequest fileUploadRequest = (MRestFileUploadRequest) request;
-    MRestFileUpload fileUpload = fileUploadRequest.getFileUploadOnlyOne();
-    logger.info("[upload one] upload file: {}", fileUpload.getFilePath());
-    String newFilePath = MRestUtils.getUserDirPath() + "logs/" + fileUpload.getFilename();
-    File newFile = new File(newFilePath);
-    try {
-        fileUpload.copyFile(newFile);
-        logger.info("[upload one] copy file to path: {}", newFilePath);
-    } catch (Throwable throwable) {
-        logger.error("[upload one] copy file to path {} failed.", newFilePath, throwable);
-    }
-})
-.fileupload("/fileupload/test1", (request, response) -> {
-    MRestFileUploadRequest fileUploadRequest = (MRestFileUploadRequest) request;
-    List<MRestFileUpload> fileUploadList = fileUploadRequest.getFileUploadList();
-    List<String> fileNames = new ArrayList<>();
-    for (MRestFileUpload fileUpload: fileUploadList) {
-        logger.info("[upload more than one] upload file: {}", fileUpload.getFilePath());
-        fileNames.add(fileUpload.getFilename());
-    }
-    return fileNames;
-})
-.getRestServer()
-.start();
+    .context("/demo")
+    .fileupload("/fileupload/test0", (request, response) -> {
+        MRestFileUploadRequest fileUploadRequest = (MRestFileUploadRequest) request;
+        MRestFileUpload fileUpload = fileUploadRequest.getFileUploadOnlyOne();
+        logger.info("[upload one] upload file: {}", fileUpload.getFilePath());
+        String newFilePath = MRestUtils.getUserDirPath() + "logs/" + fileUpload.getFilename();
+        File newFile = new File(newFilePath);
+        try {
+            fileUpload.copyFile(newFile);
+            logger.info("[upload one] copy file to path: {}", newFilePath);
+        } catch (Throwable throwable) {
+            logger.error("[upload one] copy file to path {} failed.", newFilePath, throwable);
+        }
+    })
+    .fileupload("/fileupload/test1", (request, response) -> {
+        MRestFileUploadRequest fileUploadRequest = (MRestFileUploadRequest) request;
+        List<MRestFileUpload> fileUploadList = fileUploadRequest.getFileUploadList();
+        List<String> fileNames = new ArrayList<>();
+        for (MRestFileUpload fileUpload: fileUploadList) {
+            logger.info("[upload more than one] upload file: {}", fileUpload.getFilePath());
+            fileNames.add(fileUpload.getFilename());
+        }
+        return fileNames;
+    })
+    .getRestServer()
+    .start();
 ```
 
-- 9、文件下载
+- 文件下载
 
 ```text
 restServer
-.context("/demo")
-.filedownload("/filedownload/test0", (request, response) -> {
-    String filePath = MRestUtils.getUserDirPath() + "README.md";
-    response.write(new File(filePath));
-    // 也可使用jquery+form表单提交post请求来实现文件下载.
-})
-.get("/filedownload/test1", (request, response) -> {
-    String filePath = MRestUtils.getUserDirPath() + "README.md";
-    response.write(new File(filePath));
-})
-.getRestServer()
-.start();
+    .context("/demo")
+    .filedownload("/filedownload/test0", (request, response) -> {
+        String filePath = MRestUtils.getUserDirPath() + "README.md";
+        response.write(new File(filePath));
+        // 也可使用jquery+form表单提交post请求来实现文件下载.
+    })
+    .get("/filedownload/test1", (request, response) -> {
+        String filePath = MRestUtils.getUserDirPath() + "README.md";
+        response.write(new File(filePath));
+    })
+    .getRestServer()
+    .start();
 ```
 
-- 10、启动websocket监听处理
+- 启动websocket监听处理
 
 ```text
 if (window.WebSocket) {
@@ -354,23 +374,23 @@ if (window.WebSocket) {
 }
 
 restServer
-.websocketContext("/demo000")
-.bindTextFrameHandler((frame, request, response) -> {
-    ChannelId channelId = response.getChannelHandlerContext().channel().id();
-    logger.info("receive from client: {}, text: {}", channelId, frame.text());
-    response.writeAndFlush(new TextWebSocketFrame("hello."));
-})
-.channelActiveCallback((ChannelHandlerContext ctx, MWebsocketRequest request) -> {
-    logger.info("client active: {}", ctx.channel().id().toString());
-})
-.channelInactiveCallback((ChannelHandlerContext ctx) -> {
-    logger.info("client inactive: {}", ctx.channel().id().toString());
-})
-.getRestServer()
-.start();
+    .websocketContext("/demo000")
+    .bindTextFrameHandler((frame, request, response) -> {
+        ChannelId channelId = response.getChannelHandlerContext().channel().id();
+        logger.info("receive from client: {}, text: {}", channelId, frame.text());
+        response.writeAndFlush(new TextWebSocketFrame("hello."));
+    })
+    .channelActiveCallback((ChannelHandlerContext ctx, MWebsocketRequest request) -> {
+        logger.info("client active: {}", ctx.channel().id().toString());
+    })
+    .channelInactiveCallback((ChannelHandlerContext ctx) -> {
+        logger.info("client inactive: {}", ctx.channel().id().toString());
+    })
+    .getRestServer()
+    .start();
 ```
 
-- 11、基于websocket实现聊天室demo
+- 基于websocket实现聊天室demo
 
    - 前端实现
 
@@ -457,4 +477,5 @@ restServer
           CHATROOM_CHANNEL_MAP.remove(channelId);
       })
       .getRestServer()
+      .start();
       ```

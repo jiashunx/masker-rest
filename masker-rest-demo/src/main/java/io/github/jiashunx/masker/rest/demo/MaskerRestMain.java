@@ -224,8 +224,23 @@ public class MaskerRestMain {
                     response.write(new File(filePath));
                 })
 
+                // servlet样例
+                .servlet("/servlet/t", (request, response) -> {
+                    response.writeString("/servlet/t -> =_=");
+                })
+                .servlet("/servlet/*", (request, response) -> {
+                    if ("/servlet/test".equals(request.getUrl())) {
+                        return;
+                    }
+                    response.writeString("/servlet/* -> =_=");
+                })
+                .servlet("/servlet/test", (request, response) -> {
+                    response.writeString("/servlet/test -> =_=");
+                })
+
                 .getRestServer()
 
+                // websocket样例
                 .websocketContext("/demo000")
                 .bindTextFrameHandler((frame, request, response) -> {
                     String channelId = response.getChannelId();
@@ -240,6 +255,7 @@ public class MaskerRestMain {
                 })
                 .getRestServer()
 
+                // websocket样例
                 .websocketContext("/chatroom")
                 .bindTextFrameHandler((frame, request, response) -> {
                     String channelId = response.getChannelId();
