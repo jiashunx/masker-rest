@@ -58,6 +58,7 @@ public class MaskerRestMain {
                         throw new RuntimeException("err");
                     }
                 })
+                .setIndexUrl("/index0.html")
                 .getRestServer()
                 .start();
         new MRestServer()
@@ -78,6 +79,7 @@ public class MaskerRestMain {
                     return objectMapper;
                 })
                 .setDevMode(true)
+                .setIndexUrl("/index.html")
 
                 // get请求样例
                 .get("/get-NoParam-NoRet", () -> {

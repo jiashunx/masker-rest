@@ -12,6 +12,7 @@ import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import io.github.jiashunx.masker.rest.framework.util.IOUtils;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
+import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
@@ -40,7 +41,15 @@ public class MRestDispatchServlet implements MRestServlet {
             handleRequest(restRequest, restResponse, restHandler);
             return;
         }
-        if ("/".equals(requestURL) || "/index.html".equals(requestURL)) {
+        if (Constants.ROOT_PATH.equals(requestURL) || Constants.INDEX_PATH.equals(requestURL)) {
+            if (Constants.ROOT_PATH.equals(requestURL)) {
+                // 指定了index url, 服务端进行重定向
+                String indexUrl = restContext.getIndexUrl();
+                if (StringUtils.isNotBlank(indexUrl)) {
+                    restResponse.redirect(indexUrl);
+                    return;
+                }
+            }
             // 输出默认masker-rest主页面
             restResponse.write(DEFAULT_PAGE_BYTES, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_TEXT_HTML));
             return;

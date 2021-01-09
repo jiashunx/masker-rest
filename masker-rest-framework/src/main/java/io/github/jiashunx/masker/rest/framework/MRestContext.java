@@ -700,4 +700,17 @@ public class MRestContext {
     public boolean isDevMode() {
         return devMode;
     }
+
+    private volatile String indexUrl = null;
+
+    public synchronized MRestContext setIndexUrl(String indexUrl) {
+        restServer.checkServerState();
+        this.indexUrl = Objects.requireNonNull(indexUrl).trim();
+        return this;
+    }
+
+    public String getIndexUrl() {
+        return indexUrl;
+    }
+
 }

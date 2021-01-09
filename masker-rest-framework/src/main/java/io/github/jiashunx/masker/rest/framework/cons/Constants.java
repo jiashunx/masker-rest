@@ -8,6 +8,7 @@ public class Constants {
 
     public static final int HTTP_CONTENT_MAX_LENGTH = 50*1024*1024;
     public static final String ROOT_PATH = "/";
+    public static final String INDEX_PATH = "/index.html";
     public static final String DEFAULT_CONTEXT_PATH = "/";
     public static final String DEFAULT_WEBSOCKET_CONTEXT_PATH = "/websocket";
     public static final String URL_PATH_SEP = "/";
