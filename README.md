@@ -32,7 +32,7 @@
 
    - [UserGuide](./docs/UserGuide.md)
 
-- 版本清单（最新版本：<b>1.6.3</b>）：
+- 版本清单（最新版本：<b>1.6.4</b>）：
 
    - version 1.0.0 (released)
       - feature：支持发布rest接口
@@ -124,11 +124,8 @@
       - feature: 实现自定义Servlet的注册、分发及处理
       - feature: JavaScript实现websocket客户端：[websocket.js][1]，并使用此客户端实现简易聊天室：[chatroom.html][2]
       - optimizing: 原有的基于Filter的请求分发处理调整为使用Servlet实现（底层仍然使用Filter进行链式调用）
-   - TODO
-      - 参考spring实现资源扫描（移除spring-core）依赖
-      - 自定义websockt二进制传输协议实现
-      - 实现websocket Java客户端（支持重连）
-      - TCP服务端及客户端实现
+   - version 1.6.5 (doing)
+      - feature: context支持指定默认"/"请求重定向地址
 
 [1]: masker-rest-framework/src/main/resources/masker-rest/static/websocket.js
 [2]: masker-rest-demo/src/main/resources/static/chatroom.html
