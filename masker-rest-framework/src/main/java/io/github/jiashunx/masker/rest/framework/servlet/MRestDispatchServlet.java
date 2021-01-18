@@ -8,11 +8,9 @@ import io.github.jiashunx.masker.rest.framework.exception.MRestHandleException;
 import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
+import io.github.jiashunx.masker.rest.framework.model.StaticResource;
 import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
-import io.github.jiashunx.masker.rest.framework.util.IOUtils;
-import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
-import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
-import io.github.jiashunx.masker.rest.framework.util.StringUtils;
+import io.github.jiashunx.masker.rest.framework.util.*;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
@@ -46,6 +44,12 @@ public class MRestDispatchServlet implements MRestServlet {
                 // 指定了index url, 服务端进行重定向
                 String indexUrl = restContext.getIndexUrl();
                 if (StringUtils.isNotBlank(indexUrl)) {
+                    restResponse.redirect(indexUrl);
+                    return;
+                }
+                // 静态资源指定了index url
+                StaticResource indexResource = restContext.getStaticResourceHolder().getResource(Constants.INDEX_PATH);
+                if (indexResource != null) {
                     restResponse.redirect(indexUrl);
                     return;
                 }
