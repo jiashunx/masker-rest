@@ -15,6 +15,7 @@ import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestServlet;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
+import io.github.jiashunx.masker.rest.framework.util.StaticResourceHolder;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 import io.netty.handler.codec.http.HttpMethod;
 import org.slf4j.Logger;
@@ -32,12 +33,14 @@ public class MRestContext {
 
     private final MRestServer restServer;
     private final String contextPath;
+    private final StaticResourceHolder staticResourceHolder;
 
     public MRestContext(MRestServer restServer, String contextPath) {
         this.restServer = Objects.requireNonNull(restServer);
         this.contextPath = MRestUtils.formatContextPath(contextPath);
         // 添加框架提供的静态资源
         addClasspathResources("/masker-rest/static", new String[]{ "masker-rest/static/" });
+        this.staticResourceHolder = new StaticResourceHolder(this);
     }
 
     public MRestServer getRestServer() {
@@ -49,6 +52,10 @@ public class MRestContext {
 
     public String getContextDesc() {
         return String.format("%s Context[%s]", getRestServer().getServerDesc(), getContextPath());
+    }
+
+    public StaticResourceHolder getStaticResourceHolder() {
+        return staticResourceHolder;
     }
 
     void init() {
@@ -91,7 +98,7 @@ public class MRestContext {
         if (logger.isInfoEnabled()) {
             logger.info("{} reload disk resources: {}", getContextDesc(), diskResources);
         }
-        ((StaticResourceFilter) staticResourceFilter).reloadResource(classpathResources, diskResources);
+        staticResourceHolder.reloadResourceMap(classpathResources, diskResources);
     }
 
     /**************************************************** SEP ****************************************************/

@@ -34,6 +34,10 @@ public final class StaticResourceHolder {
         return resourceMap;
     }
 
+    public StaticResource getResource(String requestUrl) {
+        return resourceMap.get(requestUrl);
+    }
+
     public synchronized void reloadResourceMap(Map<String, List<String>> pathMap0, Map<String, List<String>> pathMap1) {
         Map<String, StaticResource> resourceMap = new HashMap<>();
         resourceMap.putAll(reloadDiskResourceMap(pathMap1));

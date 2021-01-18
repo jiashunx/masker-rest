@@ -17,7 +17,7 @@ import java.util.*;
  */
 public class StaticResourceFilter implements MRestFilter {
 
-    private final StaticResourceHolder staticResourceHolder;
+    private final MRestContext restContext;
 
     private static final String DEFAULT_CONTENT_TYPE_KEY = ".*";
     private static final Map<String, String> CONTENT_TYPE_MAP = new HashMap<>();
@@ -30,18 +30,13 @@ public class StaticResourceFilter implements MRestFilter {
     }
 
     public StaticResourceFilter(MRestContext restContext) {
-        MRestContext restContext1 = Objects.requireNonNull(restContext);
-        this.staticResourceHolder = new StaticResourceHolder(restContext1);
-    }
-
-    public void reloadResource(Map<String, List<String>> pathMap0, Map<String, List<String>> pathMap1) {
-        this.staticResourceHolder.reloadResourceMap(pathMap0, pathMap1);
+        this.restContext = Objects.requireNonNull(restContext);
     }
 
     @Override
     public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {
         String requestUrl = restRequest.getUrl();
-        Map<String, StaticResource> resourceMap = staticResourceHolder.getResourceMap();
+        Map<String, StaticResource> resourceMap = restContext.getStaticResourceHolder().getResourceMap();
         StaticResource resource = resourceMap.get(requestUrl);
         if (resource != null) {
             byte[] bytes = resource.getContents();
