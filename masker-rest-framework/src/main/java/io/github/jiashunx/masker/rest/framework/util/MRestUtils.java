@@ -91,21 +91,28 @@ public class MRestUtils {
         return serverDefaultConfig;
     }
 
+    public static String formatPath(String path) {
+        if (StringUtils.isBlank(path)) {
+            throw new IllegalArgumentException("path can't be empty");
+        }
+        String _path = path.trim();
+        while (_path.endsWith(Constants.URL_PATH_SEP)) {
+            if (_path.length() == 1) {
+                break;
+            }
+            _path = _path.substring(0, _path.length() - 1);
+        }
+        if (!_path.startsWith(Constants.URL_PATH_SEP)) {
+            _path = Constants.URL_PATH_SEP + _path;
+        }
+        return _path;
+    }
+
     public static String formatContextPath(String contextPath) {
         if (StringUtils.isBlank(contextPath)) {
             throw new IllegalArgumentException("contextPath can't be empty");
         }
-        String _ctxPath = contextPath.trim();
-        while (_ctxPath.endsWith(Constants.URL_PATH_SEP)) {
-            if (_ctxPath.length() == 1) {
-                break;
-            }
-            _ctxPath = _ctxPath.substring(0, _ctxPath.length() - 1);
-        }
-        if (!_ctxPath.startsWith(Constants.URL_PATH_SEP)) {
-            _ctxPath = Constants.URL_PATH_SEP;
-        }
-        return _ctxPath;
+        return formatPath(contextPath);
     }
 
     public static void tryCatch(VoidFunc voidFunc, Consumer<Throwable> consumer) {

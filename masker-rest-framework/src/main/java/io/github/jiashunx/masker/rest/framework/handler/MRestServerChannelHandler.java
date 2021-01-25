@@ -277,18 +277,14 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         restRequest.setProtocolName(httpRequest.protocolVersion().protocolName());
         restRequest.setProtocolVersion(httpRequest.protocolVersion().text());
         QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.uri(), StandardCharsets.UTF_8, true);
-        String path = queryStringDecoder.path();
-        if (path.length() > 1 && path.endsWith("/")) {
-            path = path.substring(0, path.length() - 1);
-        }
+        String path = MRestUtils.formatPath(queryStringDecoder.path());
         restRequest.setOriginUrl(path);
         // 根据url和已配置的context-path来解析出实际context-path
         String _ctxPath = Constants.DEFAULT_CONTEXT_PATH;
         if (path.length() > 1) {
-            String _p = path.substring(1);
-            int i = _p.indexOf("/");
+            int i = path.substring(1).indexOf("/");
             if (i > 0) {
-                _ctxPath = _ctxPath + _p.substring(0, i);
+                _ctxPath = path.substring(0, i + 1);
             } else {
                 _ctxPath = path;
             }
