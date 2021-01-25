@@ -2,6 +2,7 @@ package io.github.jiashunx.masker.rest.framework;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
+import io.github.jiashunx.masker.rest.framework.exception.MRestHandleException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestDispatchServlet;
@@ -18,6 +19,7 @@ import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.StaticResourceHolder;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -432,7 +434,7 @@ public class MRestContext {
         return new MRestFilterChain(this, filterList.toArray(new MRestFilter[0]));
     }
 
-    public List<MRestServlet> getServlet(String requestURL) {
+    public MRestServlet getServlet(String requestURL) {
         List<MRestServlet> servletList = new ArrayList<>();
         servletMap.forEach((urlPattern, servlet) -> {
             if (servletList.contains(servlet)) {
@@ -443,7 +445,15 @@ public class MRestContext {
                 servletList.add(servlet);
             }
         });
-        return servletList;
+        if (servletList.isEmpty()) {
+            return null;
+        }
+        if (servletList.size() > 1) {
+            throw new MRestHandleException(
+                    String.format("%s found more than one servlet mapping handler for url: %s, servlet: %s"
+                            , getContextDesc(), requestURL, servletList.toString()));
+        }
+        return servletList.get(0);
     }
 
     public synchronized MRestContext servlet(MRestServlet... servletArr) {
@@ -492,16 +502,15 @@ public class MRestContext {
             return order0 - order1;
         });
         filterList.addLast(staticResourceFilter);
-        List<MRestServlet> servletList = getServlet(requestURL);
-        servletList.forEach(servlet -> {
-            // servlet包装为filter执行
-            filterList.addLast((request, response, filterChain) -> {
-                servlet.service(request, response);
-                // write方法未执行过, 按照filter链继续执行
-                if (!response.isWriteMethodInvoked()) {
-                    filterChain.doFilter(request, response);
-                }
-            });
+        MRestServlet servlet = getServlet(requestURL);
+        // servlet包装为filter执行
+        filterList.addLast((request, response, filterChain) -> {
+            servlet.service(request, response);
+            // servlet执行完成，不在filterChain中向后路由
+            // write方法未执行过, 直接返回成功状态码
+            if (!response.isWriteMethodInvoked()) {
+                response.write(HttpResponseStatus.OK);
+            }
         });
         // 最后才走到分发处理.
         filterList.addLast((request, response, filterChain) -> {

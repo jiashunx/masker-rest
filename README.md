@@ -126,6 +126,7 @@
       - optimizing: 原有的基于Filter的请求分发处理调整为使用Servlet实现（底层仍然使用Filter进行链式调用）
    - version 1.6.5 (doing)
       - feature: context支持指定默认"/"请求重定向地址
+      - feature: context对于servlet映射处理进行唯一性约束(一个url仅能找到唯一的servlet进行处理)
 
 [1]: masker-rest-framework/src/main/resources/masker-rest/static/websocket.js
 [2]: masker-rest-demo/src/main/resources/static/chatroom.html
