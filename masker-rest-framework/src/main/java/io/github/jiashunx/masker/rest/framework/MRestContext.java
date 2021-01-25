@@ -2,8 +2,7 @@ package io.github.jiashunx.masker.rest.framework;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
-import io.github.jiashunx.masker.rest.framework.exception.MRestHandleException;
-import io.github.jiashunx.masker.rest.framework.exception.MRestServerException;
+import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestDispatchServlet;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
@@ -449,7 +448,7 @@ public class MRestContext {
             return null;
         }
         if (servletList.size() > 1) {
-            throw new MRestHandleException(
+            throw new MRestMappingException(
                     String.format("%s found more than one servlet mapping handler for url: %s, servlet: %s"
                             , getContextDesc(), requestURL, servletList.toString()));
         }
@@ -475,7 +474,7 @@ public class MRestContext {
                 $urlPattern = Constants.DEFAULT_SERVLET_URLPATTERN;
             }
             if (servletMap.containsKey($urlPattern)) {
-                throw new MRestServerException(String.format("%s mapping servlet conflict, urlPattern: %s", getContextDesc(), $urlPattern));
+                throw new MRestMappingException(String.format("%s mapping servlet conflict, urlPattern: %s", getContextDesc(), $urlPattern));
             }
             MRestServlet restServlet = Objects.requireNonNull(servlet);
             servletMap.put($urlPattern, restServlet);
