@@ -503,14 +503,16 @@ public class MRestContext {
         filterList.addLast(staticResourceFilter);
         MRestServlet servlet = getServlet(requestURL);
         // servlet包装为filter执行
-        filterList.addLast((request, response, filterChain) -> {
-            servlet.service(request, response);
-            // servlet执行完成，不在filterChain中向后路由
-            // write方法未执行过, 直接返回成功状态码
-            if (!response.isWriteMethodInvoked()) {
-                response.write(HttpResponseStatus.OK);
-            }
-        });
+        if (servlet != null) {
+            filterList.addLast((request, response, filterChain) -> {
+                servlet.service(request, response);
+                // servlet执行完成，不在filterChain中向后路由
+                // write方法未执行过, 直接返回成功状态码
+                if (!response.isWriteMethodInvoked()) {
+                    response.write(HttpResponseStatus.OK);
+                }
+            });
+        }
         // 最后才走到分发处理.
         filterList.addLast((request, response, filterChain) -> {
             dispatchServlet.service(request, response);
