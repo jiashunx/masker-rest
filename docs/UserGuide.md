@@ -177,8 +177,26 @@ restServer
     .servlet("/servlet/test", (request, response) -> {
         response.writeString("/servlet/test -> =_=");
     })
+    .servlet(new Servlet0())
     .getRestServer()
     .start();
+
+@Servlet(urlPattern = "/servlet0/*")
+@RequestMapping(url = "/servlet0")
+public static class Servlet0 extends AbstractRestServlet {
+    @RequestMapping(url = "/method0")
+    public void method0() {
+        System.out.println("method0");
+    }
+    @GetMapping(url = "/method1")
+    public void method1(MRestRequest request) {
+        System.out.println("method1");
+    }
+    @PostMapping(url = "/method2")
+    public void method2(MRestRequest request, MRestResponse response) {
+        System.out.println("method2");
+    }
+}
 ```
 
 - cookie样例
