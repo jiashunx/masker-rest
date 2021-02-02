@@ -1,10 +1,8 @@
 package io.github.jiashunx.masker.rest.framework.model;
 
+import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
 import io.github.jiashunx.masker.rest.framework.servlet.AbstractRestServlet;
-import io.github.jiashunx.masker.rest.framework.servlet.mapping.HttpMethod;
-import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 
-import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -34,11 +32,16 @@ public class ServletMappingClass {
         return handleMapping.get(requestUrl);
     }
 
-    public void putMappingHandler(String requestUrl, ServletMappingHandler mappingHandler) {
+    public List<String> getMappingUrls() {
+        return new ArrayList<>(handleMapping.keySet());
+    }
+
+    public synchronized void putMappingHandler(String requestUrl, ServletMappingHandler mappingHandler) {
         ServletMappingHandler _mappingHandler = getMappingHandler(requestUrl);
         if (_mappingHandler != null) {
-
+            throw new MRestMappingException(String.format("url: %s mapping conflict.", requestUrl));
         }
+        handleMapping.put(requestUrl, mappingHandler);
     }
 
 }
