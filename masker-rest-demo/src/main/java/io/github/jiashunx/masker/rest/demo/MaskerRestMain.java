@@ -9,6 +9,11 @@ import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.model.MRestFileUpload;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
+import io.github.jiashunx.masker.rest.framework.servlet.AbstractRestServlet;
+import io.github.jiashunx.masker.rest.framework.servlet.Servlet;
+import io.github.jiashunx.masker.rest.framework.servlet.mapping.GetMapping;
+import io.github.jiashunx.masker.rest.framework.servlet.mapping.PostMapping;
+import io.github.jiashunx.masker.rest.framework.servlet.mapping.RequestMapping;
 import io.github.jiashunx.masker.rest.framework.util.*;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -239,6 +244,7 @@ public class MaskerRestMain {
                 .servlet("/servlet/test", (request, response) -> {
                     response.writeString("/servlet/test -> =_=");
                 })
+                .servlet(new Servlet0())
 
                 .getRestServer()
 
@@ -280,6 +286,23 @@ public class MaskerRestMain {
                 .getRestServer()
 
                 .start();
+    }
+
+    @Servlet(urlPattern = "/servlet0/*")
+    @RequestMapping(url = "/servlet0")
+    public static class Servlet0 extends AbstractRestServlet {
+        @RequestMapping(url = "/method0")
+        public void method0() {
+            System.out.println("method0");
+        }
+        @GetMapping(url = "/method1")
+        public void method1(MRestRequest request) {
+            System.out.println("method1");
+        }
+        @PostMapping(url = "/method2")
+        public void method2(MRestRequest request, MRestResponse response) {
+            System.out.println("method2");
+        }
     }
 
     private static final Map<String, Channel> CHATROOM_CHANNEL_MAP = new ConcurrentHashMap<>();
