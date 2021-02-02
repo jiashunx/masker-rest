@@ -139,7 +139,9 @@ public abstract class AbstractRestServlet implements MRestServlet {
                     arguments = new Object[0];
                     break;
             }
-            mappingHandler.getHandleMethod().invoke(this, arguments);
+            Method handleMethod = mappingHandler.getHandleMethod();
+            handleMethod.setAccessible(true);
+            handleMethod.invoke(this, arguments);
         } catch (Throwable throwable) {
             throw new MRestHandleException(throwable);
         }

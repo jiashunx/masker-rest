@@ -129,6 +129,7 @@
       - feature: context对于servlet映射处理进行唯一性约束(一个url仅能找到唯一的servlet进行处理)
       - feature: server增加启动标识、启动时间（写到响应header及cookie中）
       - feature：添加 [AbstractRestServlet][3]，配合servlet类及方法注解分发servlet请求
+      - todo：使用asm生成字节码（取代反射调用，提高执行效率）
 
 [1]: masker-rest-framework/src/main/resources/masker-rest/static/websocket.js
 [2]: masker-rest-demo/src/main/resources/static/chatroom.html
