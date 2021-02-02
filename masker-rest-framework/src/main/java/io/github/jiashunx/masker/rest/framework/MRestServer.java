@@ -19,6 +19,7 @@ import io.netty.handler.logging.LoggingHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -32,6 +33,8 @@ public class MRestServer {
 
     private volatile boolean started = false;
     private volatile boolean closed = false;
+    private final String startupTime;
+    private final String identifier;
 
     private Channel serverChannel;
 
@@ -61,6 +64,16 @@ public class MRestServer {
         serverName(serverName);
         contextMap.put(Constants.DEFAULT_CONTEXT_PATH, new MRestContext(this, Constants.DEFAULT_CONTEXT_PATH));
         websocketContextMap.put(Constants.DEFAULT_WEBSOCKET_CONTEXT_PATH, new MWebsocketContext(this, Constants.DEFAULT_WEBSOCKET_CONTEXT_PATH));
+        this.startupTime = new SimpleDateFormat("yyyy-MM-dd HH:ss:mm.SSS").format(new Date());
+        this.identifier = UUID.randomUUID().toString().replace("-", "");
+    }
+
+    public String getStartupTime() {
+        return startupTime;
+    }
+
+    public String getIdentifier() {
+        return identifier;
     }
 
     public MRestServer listenPort(int listenPort) {

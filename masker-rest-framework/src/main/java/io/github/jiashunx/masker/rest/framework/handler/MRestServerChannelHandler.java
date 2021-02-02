@@ -246,6 +246,9 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             filterChain.doFilter(restRequest, restResponse);
             restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_NAME, MRestUtils.getFrameworkName());
             restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_VERSION, MRestUtils.getFrameworkVersion());
+            restResponse.setHeader(Constants.HTTP_HEADER_SERVER_STARTUP_TIME, restResponse.getRestServer().getStartupTime());
+            restResponse.setHeader(Constants.HTTP_HEADER_SERVER_IDENTIFIER, restResponse.getRestServer().getIdentifier());
+            restResponse.setCookie(Constants.HTTP_HEADER_SERVER_IDENTIFIER, restResponse.getRestServer().getIdentifier());
             if (restResponse.getRestServer().isConnectionKeepAlive()) {
                 restResponse.setHeader(Constants.HTTP_HEADER_CONNECTION, Constants.CONNECTION_KEEP_ALIVE);
             }
