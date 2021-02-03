@@ -2,7 +2,6 @@ package io.github.jiashunx.masker.rest.framework.model;
 
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
-import io.github.jiashunx.masker.rest.framework.servlet.AbstractRestServlet;
 import io.github.jiashunx.masker.rest.framework.servlet.mapping.HttpMethod;
 import io.github.jiashunx.masker.rest.framework.type.MRestHandlerType;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;

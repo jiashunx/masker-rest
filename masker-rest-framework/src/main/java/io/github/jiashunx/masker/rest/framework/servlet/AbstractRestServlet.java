@@ -15,6 +15,7 @@ import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -126,21 +127,23 @@ public abstract class AbstractRestServlet implements MRestServlet {
             restResponse.writeStatusPageAsHtml(HttpResponseStatus.METHOD_NOT_ALLOWED);
             return;
         }
+        Method handleMethod = mappingHandler.getHandleMethod();
+        if (!Modifier.isPublic(handleMethod.getModifiers())) {
+            throw new MRestHandleException("url: %s method mapping handler is not public.");
+        }
         try {
             Object[] arguments = null;
             switch (mappingHandler.getHandlerType()) {
                 case InputReq_NoRet:
-                    arguments = new Object[] { restRequest };
+                    arguments = new Object[]{restRequest};
                     break;
                 case InputReqResp_NoRet:
-                    arguments = new Object[] { restRequest, restResponse };
+                    arguments = new Object[]{restRequest, restResponse};
                     break;
                 default:
                     arguments = new Object[0];
                     break;
             }
-            Method handleMethod = mappingHandler.getHandleMethod();
-            handleMethod.setAccessible(true);
             handleMethod.invoke(this, arguments);
         } catch (Throwable throwable) {
             throw new MRestHandleException(throwable);
