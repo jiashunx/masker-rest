@@ -16,10 +16,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -55,7 +52,7 @@ public abstract class AbstractRestServlet implements MRestServlet {
                                 throw new MRestMappingException(String.format("url [%s] mapping conflict, className.methodName=%s.%s"
                                         , mappingUrl, servletClass.getName(), method.getName()));
                             }
-                            mappingHandler = new ServletMappingHandler(mappingUrl, method);
+                            mappingHandler = new ServletMappingHandler(servletClass, mappingUrl, method);
                             mappingHandler.getMethods().addAll(Arrays.asList(HttpMethod.values()));
                             mappingClass.putMappingHandler(mappingUrl, mappingHandler);
                         }
@@ -73,7 +70,7 @@ public abstract class AbstractRestServlet implements MRestServlet {
                                 }
                                 mappingHandler.getMethods().add(HttpMethod.GET);
                             } else {
-                                mappingHandler = new ServletMappingHandler(mappingUrl, method);
+                                mappingHandler = new ServletMappingHandler(servletClass, mappingUrl, method);
                                 mappingHandler.getMethods().add(HttpMethod.GET);
                                 mappingClass.putMappingHandler(mappingUrl, mappingHandler);
                             }
@@ -92,7 +89,7 @@ public abstract class AbstractRestServlet implements MRestServlet {
                                 }
                                 mappingHandler.getMethods().add(HttpMethod.POST);
                             } else {
-                                mappingHandler = new ServletMappingHandler(mappingUrl, method);
+                                mappingHandler = new ServletMappingHandler(servletClass, mappingUrl, method);
                                 mappingHandler.getMethods().add(HttpMethod.POST);
                                 mappingClass.putMappingHandler(mappingUrl, mappingHandler);
                             }
@@ -110,6 +107,27 @@ public abstract class AbstractRestServlet implements MRestServlet {
             }
         }
         return mappingClass;
+    }
+
+    public final Map<AbstractRestServlet, MRestServlet> servletHandlerMap = new WeakHashMap<>();
+
+    private MRestServlet getServletHandlerInstance(Class<? extends MRestServlet> servletHandlerClass) {
+        MRestServlet servletInstance = servletHandlerMap.get(this);
+        if (servletInstance == null) {
+            synchronized (servletHandlerMap) {
+                final MRestServlet servletInstance0 = servletHandlerMap.get(this);
+                if (servletInstance0 == null) {
+                    try {
+                        servletInstance = servletHandlerClass.getConstructor(this.getClass()).newInstance(this);
+                    } catch (Throwable throwable) {
+                        throw new MRestHandleException(String.format("create servlet mapping handler instance failed, class: %s", servletHandlerClass.getName()), throwable);
+                    }
+                } else {
+                    servletInstance = servletInstance0;
+                }
+            }
+        }
+        return servletInstance;
     }
 
     @Override
@@ -132,19 +150,9 @@ public abstract class AbstractRestServlet implements MRestServlet {
             throw new MRestHandleException("url: %s method mapping handler is not public.");
         }
         try {
-            Object[] arguments = null;
-            switch (mappingHandler.getHandlerType()) {
-                case InputReq_NoRet:
-                    arguments = new Object[]{restRequest};
-                    break;
-                case InputReqResp_NoRet:
-                    arguments = new Object[]{restRequest, restResponse};
-                    break;
-                default:
-                    arguments = new Object[0];
-                    break;
-            }
-            handleMethod.invoke(this, arguments);
+            Class<? extends MRestServlet> servletHandlerClass = mappingHandler.getServletHandlerClass();
+            MRestServlet servletInstance = getServletHandlerInstance(servletHandlerClass);
+            servletInstance.service(restRequest, restResponse);
         } catch (Throwable throwable) {
             throw new MRestHandleException(throwable);
         }

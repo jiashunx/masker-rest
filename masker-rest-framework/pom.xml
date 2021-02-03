@@ -47,6 +47,11 @@
         <configuration>
           <source>${jdk.compiler.version}</source>
           <target>${jdk.compiler.version}</target>
+          <compilerArguments>
+            <verbose />
+            <!-- 将jdk的依赖jar打入项目中 -->
+            <bootclasspath>${java.home}/lib/rt.jar;${java.home}/lib/jce.jar;${java.home}/lib/jsse.jar</bootclasspath>
+          </compilerArguments>
         </configuration>
       </plugin>
       <plugin>

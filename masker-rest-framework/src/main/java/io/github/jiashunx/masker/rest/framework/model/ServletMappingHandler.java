@@ -2,9 +2,12 @@ package io.github.jiashunx.masker.rest.framework.model;
 
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
+import io.github.jiashunx.masker.rest.framework.servlet.AbstractRestServlet;
+import io.github.jiashunx.masker.rest.framework.servlet.MRestServlet;
 import io.github.jiashunx.masker.rest.framework.servlet.mapping.HttpMethod;
 import io.github.jiashunx.masker.rest.framework.type.MRestHandlerType;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
+import io.github.jiashunx.masker.rest.framework.util.ServletHandlerClassGenerator;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -14,15 +17,19 @@ import java.util.*;
  */
 public class ServletMappingHandler {
 
+    private final Class<? extends AbstractRestServlet> servletClass;
     private final String requestUrl;
     private final Method handleMethod;
     private final MRestHandlerType handlerType;
     private final Set<HttpMethod> methods = new HashSet<>();
+    private final Class<? extends MRestServlet> servletHandlerClass;
 
-    public ServletMappingHandler(String requestUrl, Method handleMethod) {
+    public ServletMappingHandler(Class<? extends AbstractRestServlet> servletClass, String requestUrl, Method handleMethod) {
+        this.servletClass = Objects.requireNonNull(servletClass);
         this.requestUrl = MRestUtils.formatPath(requestUrl);
         this.handleMethod = Objects.requireNonNull(handleMethod);
         this.handlerType = Objects.requireNonNull(getMethodHandlerType(handleMethod));
+        this.servletHandlerClass = ServletHandlerClassGenerator.generateClass(servletClass, this.handleMethod.getName(), this.handlerType);
     }
 
     public static MRestHandlerType getMethodHandlerType(Method method) {
@@ -53,5 +60,13 @@ public class ServletMappingHandler {
 
     public Set<HttpMethod> getMethods() {
         return methods;
+    }
+
+    public Class<? extends AbstractRestServlet> getServletClass() {
+        return servletClass;
+    }
+
+    public Class<? extends MRestServlet> getServletHandlerClass() {
+        return servletHandlerClass;
     }
 }
