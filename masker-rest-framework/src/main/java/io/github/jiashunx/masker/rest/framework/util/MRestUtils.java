@@ -23,6 +23,7 @@ public class MRestUtils {
     private static final String frameworkName;
     private static final String frameworkVersion;
     private static String systemTempDirPath;
+    private static String frameworkTempDirPath;
     private static String userDirPath;
     static {
         Properties properties = new Properties();
@@ -46,6 +47,7 @@ public class MRestUtils {
         if (!systemTempDirPath.endsWith(File.separator)) {
             systemTempDirPath = systemTempDirPath + File.separator;
         }
+        frameworkTempDirPath = systemTempDirPath + frameworkName + File.separator;
         userDirPath = System.getProperty("user.dir");
         if (!userDirPath.endsWith(File.separator)) {
             userDirPath = userDirPath + File.separator;
@@ -70,6 +72,10 @@ public class MRestUtils {
 
     public static String getSystemTempDirPath() {
         return systemTempDirPath;
+    }
+
+    public static String getFrameworkTempDirPath() {
+        return frameworkTempDirPath;
     }
 
     public static String getUserDirPath() {
