@@ -288,7 +288,6 @@ public class MaskerRestMain {
                 .start();
     }
 
-    @Servlet(urlPattern = "/servlet0/*")
     @RequestMapping(url = "/servlet0")
     public static class Servlet0 extends AbstractRestServlet {
         @RequestMapping(url = "/method0")

@@ -24,92 +24,98 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public abstract class AbstractRestServlet implements MRestServlet {
 
-    private static final Map<String, ServletMappingClass> MAPPING_CLASS_MAP = new HashMap<>();
+    private final Map<String, ServletMappingClass> MAPPING_CLASS_MAP = new HashMap<>();
+    private final Map<Class<?>, Boolean> INIT_STATE_MAP = new HashMap<>();
 
-    private static ServletMappingClass getServletMappingClass(String requestUrl
-            , Class<? extends AbstractRestServlet> servletClass) {
-        ServletMappingClass mappingClass = MAPPING_CLASS_MAP.get(requestUrl);
-        if (mappingClass == null) {
-            synchronized (AbstractRestServlet.class) {
-                mappingClass = MAPPING_CLASS_MAP.get(requestUrl);
-                if (mappingClass == null) {
-                    mappingClass = new ServletMappingClass(servletClass);
-                    final RequestMapping requestMapping = servletClass.getAnnotation(RequestMapping.class);
-                    String klassMappingUrl = Constants.ROOT_PATH;
-                    if (requestMapping != null) {
-                        klassMappingUrl = MRestUtils.formatPath(requestMapping.url());
+    public synchronized void init0() {
+        Class<? extends AbstractRestServlet> servletClass = getClass();
+        Boolean initialized = INIT_STATE_MAP.get(servletClass);
+        if (initialized != null && initialized) {
+            return;
+        }
+        ServletMappingClass mappingClass = new ServletMappingClass(servletClass);
+        final RequestMapping requestMapping = servletClass.getAnnotation(RequestMapping.class);
+        String klassMappingUrl = Constants.ROOT_PATH;
+        if (requestMapping != null) {
+            klassMappingUrl = MRestUtils.formatPath(requestMapping.url());
+        }
+        Method[] methods = servletClass.getDeclaredMethods();
+        for (Method method: methods) {
+            RequestMapping methodRequestMapping = method.getAnnotation(RequestMapping.class);
+            if (methodRequestMapping != null) {
+                String mappingUrl = MRestUtils.formatPath(methodRequestMapping.url());
+                if (!klassMappingUrl.equals(Constants.ROOT_PATH)) {
+                    mappingUrl = klassMappingUrl + mappingUrl;
+                }
+                ServletMappingHandler mappingHandler = mappingClass.getMappingHandler(mappingUrl);
+                if (mappingHandler != null) {
+                    throw new MRestMappingException(String.format("url [%s] mapping conflict, className.methodName=%s.%s"
+                            , mappingUrl, servletClass.getName(), method.getName()));
+                }
+                mappingHandler = new ServletMappingHandler(servletClass, mappingUrl, method);
+                mappingHandler.getMethods().addAll(Arrays.asList(HttpMethod.values()));
+                mappingClass.putMappingHandler(mappingUrl, mappingHandler);
+            }
+            GetMapping getMapping = method.getAnnotation(GetMapping.class);
+            if (getMapping != null) {
+                String mappingUrl = MRestUtils.formatPath(getMapping.url());
+                if (!klassMappingUrl.equals(Constants.ROOT_PATH)) {
+                    mappingUrl = klassMappingUrl + mappingUrl;
+                }
+                ServletMappingHandler mappingHandler = mappingClass.getMappingHandler(mappingUrl);
+                if (mappingHandler != null) {
+                    if (!mappingHandler.getHandleMethod().equals(method)) {
+                        throw new MRestMappingException(String.format("url [%s] mapping conflict, className.methodName=%s.%s"
+                                , mappingUrl, servletClass.getName(), method.getName()));
                     }
-                    Method[] methods = servletClass.getDeclaredMethods();
-                    for (Method method: methods) {
-                        RequestMapping methodRequestMapping = method.getAnnotation(RequestMapping.class);
-                        if (methodRequestMapping != null) {
-                            String mappingUrl = MRestUtils.formatPath(methodRequestMapping.url());
-                            if (!klassMappingUrl.equals(Constants.ROOT_PATH)) {
-                                mappingUrl = klassMappingUrl + mappingUrl;
-                            }
-                            ServletMappingHandler mappingHandler = mappingClass.getMappingHandler(mappingUrl);
-                            if (mappingHandler != null) {
-                                throw new MRestMappingException(String.format("url [%s] mapping conflict, className.methodName=%s.%s"
-                                        , mappingUrl, servletClass.getName(), method.getName()));
-                            }
-                            mappingHandler = new ServletMappingHandler(servletClass, mappingUrl, method);
-                            mappingHandler.getMethods().addAll(Arrays.asList(HttpMethod.values()));
-                            mappingClass.putMappingHandler(mappingUrl, mappingHandler);
-                        }
-                        GetMapping getMapping = method.getAnnotation(GetMapping.class);
-                        if (getMapping != null) {
-                            String mappingUrl = MRestUtils.formatPath(getMapping.url());
-                            if (!klassMappingUrl.equals(Constants.ROOT_PATH)) {
-                                mappingUrl = klassMappingUrl + mappingUrl;
-                            }
-                            ServletMappingHandler mappingHandler = mappingClass.getMappingHandler(mappingUrl);
-                            if (mappingHandler != null) {
-                                if (!mappingHandler.getHandleMethod().equals(method)) {
-                                    throw new MRestMappingException(String.format("url [%s] mapping conflict, className.methodName=%s.%s"
-                                            , mappingUrl, servletClass.getName(), method.getName()));
-                                }
-                                mappingHandler.getMethods().add(HttpMethod.GET);
-                            } else {
-                                mappingHandler = new ServletMappingHandler(servletClass, mappingUrl, method);
-                                mappingHandler.getMethods().add(HttpMethod.GET);
-                                mappingClass.putMappingHandler(mappingUrl, mappingHandler);
-                            }
-                        }
-                        PostMapping postMapping = method.getAnnotation(PostMapping.class);
-                        if (postMapping != null) {
-                            String mappingUrl = MRestUtils.formatPath(postMapping.url());
-                            if (!klassMappingUrl.equals(Constants.ROOT_PATH)) {
-                                mappingUrl = klassMappingUrl + mappingUrl;
-                            }
-                            ServletMappingHandler mappingHandler = mappingClass.getMappingHandler(mappingUrl);
-                            if (mappingHandler != null) {
-                                if (!mappingHandler.getHandleMethod().equals(method)) {
-                                    throw new MRestMappingException(String.format("url: %s mapping conflict, className.methodName=%s.%s"
-                                            , mappingUrl, servletClass.getName(), method.getName()));
-                                }
-                                mappingHandler.getMethods().add(HttpMethod.POST);
-                            } else {
-                                mappingHandler = new ServletMappingHandler(servletClass, mappingUrl, method);
-                                mappingHandler.getMethods().add(HttpMethod.POST);
-                                mappingClass.putMappingHandler(mappingUrl, mappingHandler);
-                            }
-                        }
+                    mappingHandler.getMethods().add(HttpMethod.GET);
+                } else {
+                    mappingHandler = new ServletMappingHandler(servletClass, mappingUrl, method);
+                    mappingHandler.getMethods().add(HttpMethod.GET);
+                    mappingClass.putMappingHandler(mappingUrl, mappingHandler);
+                }
+            }
+            PostMapping postMapping = method.getAnnotation(PostMapping.class);
+            if (postMapping != null) {
+                String mappingUrl = MRestUtils.formatPath(postMapping.url());
+                if (!klassMappingUrl.equals(Constants.ROOT_PATH)) {
+                    mappingUrl = klassMappingUrl + mappingUrl;
+                }
+                ServletMappingHandler mappingHandler = mappingClass.getMappingHandler(mappingUrl);
+                if (mappingHandler != null) {
+                    if (!mappingHandler.getHandleMethod().equals(method)) {
+                        throw new MRestMappingException(String.format("url: %s mapping conflict, className.methodName=%s.%s"
+                                , mappingUrl, servletClass.getName(), method.getName()));
                     }
-                    AtomicReference<ServletMappingClass> mappingClassRef = new AtomicReference<>(mappingClass);
-                    List<String> mappingUrls = mappingClass.getMappingUrls();
-                    mappingUrls.forEach(mappingUrl -> {
-                        if (MAPPING_CLASS_MAP.containsKey(mappingUrl)) {
-                            throw new MRestMappingException(String.format("url: %s mapping conflict.", mappingUrl));
-                        }
-                        MAPPING_CLASS_MAP.put(mappingUrl, mappingClassRef.get());
-                    });
+                    mappingHandler.getMethods().add(HttpMethod.POST);
+                } else {
+                    mappingHandler = new ServletMappingHandler(servletClass, mappingUrl, method);
+                    mappingHandler.getMethods().add(HttpMethod.POST);
+                    mappingClass.putMappingHandler(mappingUrl, mappingHandler);
                 }
             }
         }
-        return mappingClass;
+        AtomicReference<ServletMappingClass> mappingClassRef = new AtomicReference<>(mappingClass);
+        List<String> mappingUrls = mappingClass.getMappingUrls();
+        mappingUrls.forEach(mappingUrl -> {
+            if (MAPPING_CLASS_MAP.containsKey(mappingUrl)) {
+                throw new MRestMappingException(String.format("url: %s mapping conflict.", mappingUrl));
+            }
+            MAPPING_CLASS_MAP.put(mappingUrl, mappingClassRef.get());
+        });
+        INIT_STATE_MAP.put(servletClass, true);
     }
 
     public final Map<AbstractRestServlet, MRestServlet> servletHandlerMap = new WeakHashMap<>();
+
+    private volatile boolean initialized = false;
+    public synchronized void init() {
+        if (initialized) {
+            return;
+        }
+        init0();
+        initialized = true;
+    }
 
     private MRestServlet getServletHandlerInstance(Class<? extends MRestServlet> servletHandlerClass) {
         MRestServlet servletInstance = servletHandlerMap.get(this);
@@ -130,11 +136,20 @@ public abstract class AbstractRestServlet implements MRestServlet {
         return servletInstance;
     }
 
+    public List<String> getMappingUrlList() {
+        init();
+        return new ArrayList<>(MAPPING_CLASS_MAP.keySet());
+    }
+
     @Override
     public void service(MRestRequest restRequest, MRestResponse restResponse) {
+        init();
         String requestUrl = restRequest.getUrl();
-        Class<? extends AbstractRestServlet> servletClass = getClass();
-        ServletMappingClass mappingClass = getServletMappingClass(requestUrl, servletClass);
+        ServletMappingClass mappingClass = MAPPING_CLASS_MAP.get(requestUrl);
+        if (mappingClass == null) {
+            restResponse.writeStatusPageAsHtml(HttpResponseStatus.NOT_FOUND);
+            return;
+        }
         ServletMappingHandler mappingHandler = mappingClass.getMappingHandler(requestUrl);
         if (mappingHandler == null) {
             restResponse.writeStatusPageAsHtml(HttpResponseStatus.NOT_FOUND);

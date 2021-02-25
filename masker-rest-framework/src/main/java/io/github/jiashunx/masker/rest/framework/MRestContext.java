@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
+import io.github.jiashunx.masker.rest.framework.servlet.AbstractRestServlet;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestDispatchServlet;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
@@ -457,12 +458,20 @@ public class MRestContext {
 
     public synchronized MRestContext servlet(MRestServlet... servletArr) {
         for (MRestServlet servlet: servletArr) {
-            servlet(servlet.urlPattern(), servlet);
+            servlet(servlet);
         }
         return this;
     }
 
     public synchronized MRestContext servlet(MRestServlet servlet) {
+        if (servlet instanceof AbstractRestServlet) {
+            AbstractRestServlet restServlet = (AbstractRestServlet) servlet;
+            List<String> urlList = restServlet.getMappingUrlList();
+            urlList.forEach(url -> {
+                servlet(url, servlet);
+            });
+            return this;
+        }
         return servlet(servlet.urlPattern(), servlet);
     }
 
