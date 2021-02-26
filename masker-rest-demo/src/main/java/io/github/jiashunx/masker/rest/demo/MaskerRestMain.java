@@ -244,7 +244,7 @@ public class MaskerRestMain {
                 .servlet("/servlet/test", (request, response) -> {
                     response.writeString("/servlet/test -> =_=");
                 })
-                .servlet(new Servlet0())
+                .servlet(new Servlet0(), new Servlet1())
 
                 .getRestServer()
 
@@ -301,6 +301,13 @@ public class MaskerRestMain {
         @PostMapping(url = "/method2")
         public void method2(MRestRequest request, MRestResponse response) {
             System.out.println("method2");
+        }
+    }
+
+    public static class Servlet1 extends AbstractRestServlet {
+        @GetMapping(url = "/servlet1/method0")
+        public void method() {
+            System.out.println("Servlet1.method");
         }
     }
 

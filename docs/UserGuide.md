@@ -177,11 +177,10 @@ restServer
     .servlet("/servlet/test", (request, response) -> {
         response.writeString("/servlet/test -> =_=");
     })
-    .servlet(new Servlet0())
+    .servlet(new Servlet0(), new Servlet1())
     .getRestServer()
     .start();
 
-@Servlet(urlPattern = "/servlet0/*")
 @RequestMapping(url = "/servlet0")
 public static class Servlet0 extends AbstractRestServlet {
     @RequestMapping(url = "/method0")
@@ -195,6 +194,13 @@ public static class Servlet0 extends AbstractRestServlet {
     @PostMapping(url = "/method2")
     public void method2(MRestRequest request, MRestResponse response) {
         System.out.println("method2");
+    }
+}
+
+public static class Servlet1 extends AbstractRestServlet {
+    @GetMapping(url = "/servlet1/method0")
+    public void method() {
+        System.out.println("Servlet1.method");
     }
 }
 ```
