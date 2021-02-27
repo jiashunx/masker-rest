@@ -1,22 +1,22 @@
 
 ### masker-rest
 
-- 项目简介：基于Netty实现Http Server，极简API发布Rest服务及Websocket服务
+- 项目简介：基于Netty实现Http Server Framework，极简API发布Rest服务及Websocket服务（端口可复用）
 
 - 主要功能：
-   - Http服务器
-      - rest请求处理注册与分发（同一端口支持发布多个context-path服务）
-      - filter注册与处理
+   - Http Server Framework
+      - rest请求处理注册与分发（同一端口支持发布多个context-path服务），支持重定向、转发等
+      - filter及servlet的注册与分发处理
       - 静态资源文件访问（classpath中静态资源文件及磁盘文件）
       - 文件上传、下载、压缩解压等
       - 简易的jwt实现
-   - Websocket服务器
+   - Websocket Server Framework
       - 复用http服务器端口发布websocket服务（可发布多个）
-      - websocket请求处理回调（建立连接、销毁连接）
+      - websocket请求处理回调（建立连接、销毁连接、接收消息等）
 
 - 工程介绍：
 
-   - masker-rest-framework：http server实现framework包，引入到工程后即可使用相应API创建http server
+   - masker-rest-framework：http server实现framework包，引入到工程后即可使用相应API创建http/websocket server
 
    ```text
    <dependency>
@@ -30,9 +30,9 @@
 
 - 使用文档：
 
-   - [UserGuide](./docs/UserGuide.md)
+   - 使用样例点此链接 [UserGuide](./docs/UserGuide.md)
 
-- 版本清单（最新版本：<b>1.6.4</b>）：
+- 版本清单（最新版本：<b>1.6.5</b>）：
 
    - version 1.0.0 (released)
       - feature：支持发布rest接口
@@ -124,13 +124,19 @@
       - feature: 实现自定义Servlet的注册、分发及处理
       - feature: JavaScript实现websocket客户端：[websocket.js][1]，并使用此客户端实现简易聊天室：[chatroom.html][2]
       - optimizing: 原有的基于Filter的请求分发处理调整为使用Servlet实现（底层仍然使用Filter进行链式调用）
-   - version 1.6.5 (doing)
+   - version 1.6.5 (released)
       - feature: context支持指定默认"/"请求重定向地址
       - feature: context对于servlet映射处理进行唯一性约束(一个url仅能找到唯一的servlet进行处理)
       - feature: server增加启动标识、启动时间（写到响应header及cookie中）
-      - feature：添加 [AbstractRestServlet][3]，配合servlet类及方法注解分发servlet请求
-      - todo：使用asm生成字节码（取代反射调用，提高执行效率）
+      - feature：添加 [AbstractRestServlet][3]，子类继承此类并结合 [RequestMapping][4] 及 [GetMapping][5]、[PostMapping][6]注解实现servlet注册及分发处理
+      - feature：使用asm生成字节码（取代反射调用，提高执行效率，参见[ServletHandlerClassGenerator][7]）配合 [AbstractRestServlet][3] 实现servlet分发处理
+   - TODO（不知道什么时候才会做，先写个TODO吧）
+      - 参考spring-core实现classpath资源扫描，移除spring-core依赖
 
 [1]: masker-rest-framework/src/main/resources/masker-rest/static/websocket.js
 [2]: masker-rest-demo/src/main/resources/static/chatroom.html
 [3]: masker-rest-framework/src/main/java/io/github/jiashunx/masker/rest/framework/servlet/AbstractRestServlet.java
+[4]: masker-rest-framework/src/main/java/io/github/jiashunx/masker/rest/framework/servlet/mapping/RequestMapping.java
+[5]: masker-rest-framework/src/main/java/io/github/jiashunx/masker/rest/framework/servlet/mapping/GetMapping.java
+[6]: masker-rest-framework/src/main/java/io/github/jiashunx/masker/rest/framework/servlet/mapping/PostMapping.java
+[7]: masker-rest-framework/src/main/java/io/github/jiashunx/masker/rest/framework/util/ServletHandlerClassGenerator.java
