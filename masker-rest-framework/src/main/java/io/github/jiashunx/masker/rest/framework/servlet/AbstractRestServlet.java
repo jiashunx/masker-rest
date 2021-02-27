@@ -162,7 +162,7 @@ public abstract class AbstractRestServlet implements MRestServlet {
         }
         Method handleMethod = mappingHandler.getHandleMethod();
         if (!Modifier.isPublic(handleMethod.getModifiers())) {
-            throw new MRestHandleException("url: %s method mapping handler is not public.");
+            throw new MRestHandleException(String.format("url: %s method mapping handler is not public.", requestUrl));
         }
         try {
             Class<? extends MRestServlet> servletHandlerClass = mappingHandler.getServletHandlerClass();
