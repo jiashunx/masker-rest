@@ -131,6 +131,7 @@
       - feature：添加 [AbstractRestServlet][3]，子类继承此类并结合 [RequestMapping][4] 及 [GetMapping][5]、[PostMapping][6]注解实现servlet注册及分发处理
       - feature：使用asm生成字节码（取代反射调用，提高执行效率，参见[ServletHandlerClassGenerator][7]）配合 [AbstractRestServlet][3] 实现servlet分发处理
    - TODO（不知道什么时候才会做，先写个TODO吧）
+      - servlet映射处理url支持占位符匹配，可从request对象中获取占位符对应字符串
       - 参考spring-core实现classpath资源扫描，移除spring-core依赖
 
 [1]: masker-rest-framework/src/main/resources/masker-rest/static/websocket.js
