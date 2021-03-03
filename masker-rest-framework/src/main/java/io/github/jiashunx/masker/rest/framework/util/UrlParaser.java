@@ -1,9 +1,8 @@
 package io.github.jiashunx.masker.rest.framework.util;
 
 import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
-import io.github.jiashunx.masker.rest.framework.model.UrlModel;
 import io.github.jiashunx.masker.rest.framework.model.UrlPathModel;
-import io.github.jiashunx.masker.rest.framework.model.UrlPatternModel;
+import io.github.jiashunx.masker.rest.framework.model.UrlPatternPathModel;
 import io.github.jiashunx.masker.rest.framework.type.UrlPatternType;
 
 import java.util.ArrayList;
@@ -79,15 +78,41 @@ public class UrlParaser {
         } else if (urlPattern.startsWith("*.") && urlPattern.length() >= 3
                 && !urlPattern.substring(2).contains("/")) {
             patternType = UrlPatternType.EXT;
-        } else {
-            throw new MRestMappingException(String.format("illegal urlPattern: %s", urlPattern));
         }
         return patternType;
     }
 
-    public static UrlPatternModel parseUrlPattern(String pattern) {
-        UrlPatternModel urlPatternModel = new UrlPatternModel(pattern);
+    public static UrlPatternType getUrlPatternTypeWithCheck(String pattern) {
+        UrlPatternType patternType = getUrlPatternType(pattern);
+        if (patternType == null) {
+            throw new MRestMappingException(String.format("illegal urlPattern: %s", pattern));
+        }
+        return patternType;
+    }
 
+    public static List<UrlPatternPathModel> getUrlPatternPathModelList(String pattern) {
+        UrlPatternType patternType = getUrlPatternType(pattern);
+        if (patternType == UrlPatternType.STRICTLY) {
+            char[] urlCharArr = getUrl(pattern).toCharArray();
+            List<UrlPatternPathModel> patternPathModelList = new ArrayList<>();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0, length = urlCharArr.length; i < length; i++) {
+                char urlChar = urlCharArr[i];
+                if (urlChar == '/') {
+                    int sbLen = sb.length();
+                    if (sbLen > 0) {
+                        patternPathModelList.add(new UrlPatternPathModel(sb.toString()));
+                        sb.delete(0, sbLen);
+                    }
+                }
+                sb.append(urlChar);
+                if (i == length - 1) {
+                    patternPathModelList.add(new UrlPatternPathModel(sb.toString()));
+                }
+            }
+            // TODO 占位符名称重复检查
+            return patternPathModelList;
+        }
         return null;
     }
 
