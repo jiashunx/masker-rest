@@ -21,6 +21,8 @@ public class Test {
 //        Assert.assertTrue(url.matches("^\\{((?!(\\{|\\}))|\\S)+\\}$"));
 
 
+        arr = "/".split("/");
+        Assert.assertEquals(arr.length, 0);
         String url = "/{a}/{b}/c";
         Pattern pattern = Pattern.compile("\\{a}");
         Matcher matcher = pattern.matcher(url);
