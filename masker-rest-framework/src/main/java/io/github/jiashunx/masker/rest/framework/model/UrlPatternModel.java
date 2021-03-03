@@ -4,6 +4,7 @@ import io.github.jiashunx.masker.rest.framework.type.UrlPatternType;
 import io.github.jiashunx.masker.rest.framework.util.UrlParaser;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author jiashunx
@@ -57,4 +58,19 @@ public class UrlPatternModel {
         return getUrlPatternType() == UrlPatternType.EXT;
     }
 
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        UrlPatternModel that = (UrlPatternModel) object;
+        return supportPlaceholder == that.supportPlaceholder &&
+                /*Objects.equals(urlPattern, that.urlPattern) &&*/
+                urlPatternType == that.urlPatternType &&
+                Objects.equals(patternPathModelList, that.patternPathModelList);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(/*urlPattern, */urlPatternType, patternPathModelList, supportPlaceholder);
+    }
 }

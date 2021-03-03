@@ -7,8 +7,8 @@ import java.util.Objects;
  */
 public class UrlPathModel {
 
-    protected final String path;
-    protected final String pathVal;
+    protected String path;
+    protected String pathVal;
     protected final boolean root;
 
     public UrlPathModel(String p) {
@@ -30,5 +30,20 @@ public class UrlPathModel {
 
     public boolean isRoot() {
         return root;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        UrlPathModel that = (UrlPathModel) object;
+        return root == that.root &&
+                Objects.equals(path, that.path) &&
+                Objects.equals(pathVal, that.pathVal);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(path, pathVal, root);
     }
 }

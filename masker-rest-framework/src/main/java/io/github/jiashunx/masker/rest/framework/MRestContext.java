@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
+import io.github.jiashunx.masker.rest.framework.model.UrlMappingServlet;
+import io.github.jiashunx.masker.rest.framework.model.UrlPatternModel;
 import io.github.jiashunx.masker.rest.framework.servlet.AbstractRestServlet;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestDispatchServlet;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
@@ -14,10 +16,7 @@ import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.model.ExceptionCallbackVo;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestServlet;
-import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
-import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
-import io.github.jiashunx.masker.rest.framework.util.StaticResourceHolder;
-import io.github.jiashunx.masker.rest.framework.util.StringUtils;
+import io.github.jiashunx.masker.rest.framework.util.*;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.slf4j.Logger;
@@ -25,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.Collectors;
 
 /**
  * @author jiashunx
@@ -395,7 +395,7 @@ public class MRestContext {
     /**
      * servlet映射处理.
      */
-    private final Map<String, MRestServlet> servletMap = new LinkedHashMap<>();
+    private final Map<String, UrlMappingServlet> servletMap = new LinkedHashMap<>();
     /**
      * filter映射处理.
      */
@@ -436,10 +436,13 @@ public class MRestContext {
 
     public MRestServlet getServlet(String requestURL) {
         List<MRestServlet> servletList = new ArrayList<>();
-        servletMap.forEach((urlPattern, servlet) -> {
+        servletMap.forEach((urlPattern, urlMappingServlet) -> {
+            UrlPatternModel urlPatternModel = urlMappingServlet.getUrlPatternModel();
+            MRestServlet servlet = urlMappingServlet.getRestServlet();
             if (servletList.contains(servlet)) {
                 return;
             }
+            // TODO 根据urlPattern类别进行匹配，对于占位符进行数据解析处理
             String pattern = "^" + urlPattern.replace("*", "\\S*") + "$";
             if (requestURL.matches(pattern)) {
                 servletList.add(servlet);
@@ -487,15 +490,14 @@ public class MRestContext {
     public synchronized MRestContext servlet(String urlPattern, MRestServlet servlet) {
         getRestServer().checkServerState();
         servletTaskList.add(() -> {
-            String $urlPattern = urlPattern;
-            if (StringUtils.isBlank($urlPattern)) {
-                $urlPattern = Constants.DEFAULT_SERVLET_URLPATTERN;
-            }
-            if (servletMap.containsKey($urlPattern)) {
+            UrlPatternModel urlPatternModel = new UrlPatternModel(urlPattern);
+            String $urlPattern = urlPatternModel.getUrlPattern();
+            List<UrlPatternModel> urlPatternModelList = servletMap.values().stream().map(UrlMappingServlet::getUrlPatternModel).collect(Collectors.toList());
+            if (urlPatternModelList.contains(urlPatternModel)) {
                 throw new MRestMappingException(String.format("%s mapping servlet conflict, urlPattern: %s", getContextDesc(), $urlPattern));
             }
             MRestServlet restServlet = Objects.requireNonNull(servlet);
-            servletMap.put($urlPattern, restServlet);
+            servletMap.put($urlPattern, new UrlMappingServlet(urlPatternModel, restServlet));
             if (logger.isInfoEnabled()) {
                 logger.info("{} register servlet success, {} -> {}", getContextDesc(), $urlPattern, restServlet.servletName());
             }
