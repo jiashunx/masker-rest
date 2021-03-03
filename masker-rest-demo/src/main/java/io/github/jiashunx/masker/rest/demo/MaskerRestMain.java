@@ -241,6 +241,24 @@ public class MaskerRestMain {
                     }
                     response.writeString("/servlet/* -> =_=");
                 })
+                .servlet("/servlet/m/{abc}", (request, response) -> {
+                    response.writeString("/servlet/m/{abc}");
+                })
+                /**
+                 * Exception in thread "main" io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException: Server[demo:21700] start failed
+                 * 	at io.github.jiashunx.masker.rest.framework.MRestServer.start(MRestServer.java:276)
+                 * 	at io.github.jiashunx.masker.rest.demo.MaskerRestMain.main(MaskerRestMain.java:294)
+                 * Caused by: io.github.jiashunx.masker.rest.framework.exception.MRestMappingException: Server[demo:21700] Context[/demo] mapping servlet conflict, urlPattern: /servlet/m/{abcd}
+                 * 	at io.github.jiashunx.masker.rest.framework.MRestContext.lambda$servlet$6(MRestContext.java:497)
+                 * 	at io.github.jiashunx.masker.rest.framework.MRestContext.init(MRestContext.java:70)
+                 * 	at io.github.jiashunx.masker.rest.framework.MRestServer.lambda$start$1(MRestServer.java:240)
+                 * 	at java.util.concurrent.ConcurrentHashMap.forEach(ConcurrentHashMap.java:1597)
+                 * 	at io.github.jiashunx.masker.rest.framework.MRestServer.start(MRestServer.java:239)
+                 * 	... 1 more
+                 */
+                /*.servlet("/servlet/m/{abcd}", (request, response) -> {
+                    response.writeString("/servlet/m/{abcd}");
+                })*/
                 .servlet("/servlet/test", (request, response) -> {
                     response.writeString("/servlet/test -> =_=");
                 })
