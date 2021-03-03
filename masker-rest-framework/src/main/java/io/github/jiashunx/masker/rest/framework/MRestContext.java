@@ -443,6 +443,8 @@ public class MRestContext {
                 return;
             }
             // TODO 根据urlPattern类别进行匹配，对于占位符进行数据解析处理
+            // TODO 正则匹配时，根据urlPattern的类别分别进行匹配，然后按照精确匹配、路径匹配、拓展名匹配的优先级确定处理servlet
+            // TODO 同一类别已保证不会重复，但是不同类别可能会重复，如：/servet/\* 与/servlet/{abc}
             String pattern = "^" + urlPattern.replace("*", "\\S*") + "$";
             if (requestURL.matches(pattern)) {
                 servletList.add(servlet);
