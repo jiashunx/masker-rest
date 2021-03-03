@@ -8,8 +8,7 @@ import java.util.List;
 public class UrlModel {
 
     private final String url;
-    private List<String> pathList;
-    private List<String> pathValList;
+    private List<UrlPathModel> pathList;
 
     public UrlModel(String url) {
         this.url = url;
@@ -19,19 +18,12 @@ public class UrlModel {
         return url;
     }
 
-    public List<String> getPathList() {
+    public List<UrlPathModel> getPathList() {
         return pathList;
     }
 
-    public void setPathList(List<String> pathList) {
+    public void setPathList(List<UrlPathModel> pathList) {
         this.pathList = pathList;
     }
 
-    public List<String> getPathValList() {
-        return pathValList;
-    }
-
-    public void setPathValList(List<String> pathValList) {
-        this.pathValList = pathValList;
-    }
 }

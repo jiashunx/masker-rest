@@ -1,6 +1,10 @@
 package io.github.jiashunx.masker.rest.framework.util;
 
+import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
 import io.github.jiashunx.masker.rest.framework.model.UrlModel;
+import io.github.jiashunx.masker.rest.framework.model.UrlPathModel;
+import io.github.jiashunx.masker.rest.framework.model.UrlPatternModel;
+import io.github.jiashunx.masker.rest.framework.type.UrlPatternType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,33 +20,43 @@ public class UrlParaser {
     public static UrlModel parseRequestUrl(String requestUrl) {
         UrlModel urlModel = new UrlModel(Objects.requireNonNull(requestUrl));
         char[] urlCharArr = requestUrl.toCharArray();
-        List<String> urlPathList = new ArrayList<>();
-        List<String> urlPathValList = new ArrayList<>();
+        List<UrlPathModel> urlPathList = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         for (int i = 0, length = urlCharArr.length; i < length; i++) {
             char urlChar = urlCharArr[i];
             if (urlChar == '/') {
                 int sbLen = sb.length();
                 if (sbLen > 0) {
-                    urlPathList.add(sb.toString());
+                    urlPathList.add(new UrlPathModel(sb.toString()));
                     sb.delete(0, sbLen);
                 }
             }
             sb.append(urlChar);
             if (i == length - 1) {
-                urlPathList.add(sb.toString());
+                urlPathList.add(new UrlPathModel(sb.toString()));
             }
         }
         urlModel.setPathList(urlPathList);
-        urlPathList.forEach(urlPath -> {
-            if (urlPath.equals("/")) {
-                urlPathValList.add("");
-            } else {
-                urlPathValList.add(urlPath.substring(1));
-            }
-        });
-        urlModel.setPathValList(urlPathValList);
         return urlModel;
+    }
+
+    public static UrlPatternModel parseUrlPattern(String urlPattern) {
+        if (urlPattern.indexOf("*") != urlPattern.lastIndexOf("*")) {
+            throw new MRestMappingException(String.format("illegal urlPattern: %s", urlPattern));
+        }
+        UrlPatternType urlPatternType = null;
+        if (!urlPattern.contains("*") && urlPattern.startsWith("/")) {
+            urlPatternType = UrlPatternType.STRICTLY;
+        } else if (urlPattern.startsWith("/") && urlPattern.endsWith("/*")) {
+            urlPatternType = UrlPatternType.PATH_MATCH;
+        } else if (urlPattern.startsWith("*.") && urlPattern.length() >= 3) {
+            urlPatternType = UrlPatternType.EXT;
+        } else {
+            throw new MRestMappingException(String.format("illegal urlPattern: %s", urlPattern));
+        }
+        UrlPatternModel urlPatternModel = new UrlPatternModel();
+        urlPatternModel.setUrlPatternType(urlPatternType);
+        return null;
     }
 
 }

@@ -10,12 +10,12 @@ public class UrlParaserTest {
 
     @Test
     public void test_parseRequestUrl() {
-        UrlModel urlModel = UrlParaser.parseRequestUrl("/");
-        urlModel = UrlParaser.parseRequestUrl("/abc");
-        urlModel = UrlParaser.parseRequestUrl("/abc/");
-        urlModel = UrlParaser.parseRequestUrl("/abc/abcd");
-        urlModel = UrlParaser.parseRequestUrl("/abc/abcd/");
-        System.out.println(urlModel);
+        UrlModel urlModel0 = UrlParaser.parseRequestUrl("/");
+        UrlModel urlModel1 = UrlParaser.parseRequestUrl("/abc");
+        UrlModel urlModel2 = UrlParaser.parseRequestUrl("/abc/");
+        UrlModel urlModel3 = UrlParaser.parseRequestUrl("/abc/abcd");
+        UrlModel urlModel4 = UrlParaser.parseRequestUrl("/abc/abcd/");
+        System.out.println("");
     }
 
 }

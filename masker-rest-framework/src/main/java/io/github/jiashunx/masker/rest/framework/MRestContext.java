@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
-import io.github.jiashunx.masker.rest.framework.model.UrlPatternModel;
 import io.github.jiashunx.masker.rest.framework.servlet.AbstractRestServlet;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestDispatchServlet;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
@@ -15,7 +14,6 @@ import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.model.ExceptionCallbackVo;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestServlet;
-import io.github.jiashunx.masker.rest.framework.type.UrlPatternType;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.StaticResourceHolder;
@@ -27,8 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author jiashunx
@@ -495,26 +491,6 @@ public class MRestContext {
             if (StringUtils.isBlank($urlPattern)) {
                 $urlPattern = Constants.DEFAULT_SERVLET_URLPATTERN;
             }
-
-
-
-            if ($urlPattern.indexOf("*") != $urlPattern.lastIndexOf("*")) {
-                throw new MRestMappingException(String.format("%s mapping servlet failed, illegal urlPattern: %s", getContextDesc(), $urlPattern));
-            }
-            UrlPatternType urlPatternType = null;
-            if (!$urlPattern.contains("*") && $urlPattern.startsWith("/")) {
-                urlPatternType = UrlPatternType.STRICTLY;
-            } else if ($urlPattern.startsWith("/") && $urlPattern.endsWith("/*")) {
-                urlPatternType = UrlPatternType.PATH_MATCH;
-            } else if ($urlPattern.startsWith("*.") && $urlPattern.length() >= 3) {
-                urlPatternType = UrlPatternType.EXT;
-            } else {
-                throw new MRestMappingException(String.format("%s mapping servlet failed, illegal urlPattern: %s", getContextDesc(), $urlPattern));
-            }
-            UrlPatternModel urlPatternModel = new UrlPatternModel();
-            urlPatternModel.setUrlPatternType(urlPatternType);
-
-
             if (servletMap.containsKey($urlPattern)) {
                 throw new MRestMappingException(String.format("%s mapping servlet conflict, urlPattern: %s", getContextDesc(), $urlPattern));
             }
