@@ -1,5 +1,7 @@
 package io.github.jiashunx.masker.rest.framework.model;
 
+import io.github.jiashunx.masker.rest.framework.util.UrlParaser;
+
 import java.util.List;
 
 /**
@@ -8,22 +10,19 @@ import java.util.List;
 public class UrlModel {
 
     private final String url;
-    private List<UrlPathModel> pathList;
+    private final List<UrlPathModel> pathModelList;
 
     public UrlModel(String url) {
-        this.url = url;
+        this.url = UrlParaser.getUrl(url);
+        this.pathModelList = UrlParaser.getUrlPathModelList(url);
     }
 
     public String getUrl() {
         return url;
     }
 
-    public List<UrlPathModel> getPathList() {
-        return pathList;
-    }
-
-    public void setPathList(List<UrlPathModel> pathList) {
-        this.pathList = pathList;
+    public boolean isRoot() {
+        return pathModelList.get(0).isRoot();
     }
 
 }

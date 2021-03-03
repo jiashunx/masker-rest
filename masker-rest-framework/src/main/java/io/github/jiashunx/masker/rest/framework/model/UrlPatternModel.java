@@ -1,28 +1,39 @@
 package io.github.jiashunx.masker.rest.framework.model;
 
 import io.github.jiashunx.masker.rest.framework.type.UrlPatternType;
+import io.github.jiashunx.masker.rest.framework.util.UrlParaser;
 
 /**
  * @author jiashunx
  */
 public class UrlPatternModel {
 
-    private UrlPatternType urlPatternType;
-    private String[] pathFieldArr;
+    private final String urlPattern;
+    private final UrlPatternType urlPatternType;
+
+    public UrlPatternModel(String pattern) {
+        this.urlPattern = UrlParaser.getUrlPattern(pattern);
+        this.urlPatternType = UrlParaser.getUrlPatternType(pattern);
+    }
+
+    public String getUrlPattern() {
+        return urlPattern;
+    }
 
     public UrlPatternType getUrlPatternType() {
         return urlPatternType;
     }
 
-    public void setUrlPatternType(UrlPatternType urlPatternType) {
-        this.urlPatternType = urlPatternType;
+    public boolean isPatternStrictly() {
+        return getUrlPatternType() == UrlPatternType.STRICTLY;
     }
 
-    public String[] getPathFieldArr() {
-        return pathFieldArr;
+    public boolean isPatternPathMatch() {
+        return getUrlPatternType() == UrlPatternType.PATH_MATCH;
     }
 
-    public void setPathFieldArr(String[] pathFieldArr) {
-        this.pathFieldArr = pathFieldArr;
+    public boolean isPatternExt() {
+        return getUrlPatternType() == UrlPatternType.EXT;
     }
+
 }
