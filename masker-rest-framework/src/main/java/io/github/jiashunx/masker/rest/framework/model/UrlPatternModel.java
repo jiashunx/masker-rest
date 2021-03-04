@@ -15,6 +15,7 @@ public class UrlPatternModel {
     private final UrlPatternType urlPatternType;
     private final List<UrlPatternPathModel> patternPathModelList;
     private boolean supportPlaceholder;
+    private boolean supportRegular;
 
     public UrlPatternModel(String pattern) {
         this.urlPattern = UrlParaser.getUrlPattern(pattern);
@@ -24,9 +25,14 @@ public class UrlPatternModel {
             for (UrlPatternPathModel patternPathModel: patternPathModelList) {
                 if (patternPathModel.isPlaceholder()) {
                     this.supportPlaceholder = true;
-                    break;
+                }
+                if (patternPathModel.isRegular()) {
+                    this.supportRegular = true;
                 }
             }
+        }
+        if (isPatternExt()) {
+            this.supportRegular = true;
         }
     }
 
@@ -44,6 +50,10 @@ public class UrlPatternModel {
 
     public boolean isSupportPlaceholder() {
         return supportPlaceholder;
+    }
+
+    public boolean isSupportRegular() {
+        return supportRegular;
     }
 
     public boolean isPatternStrictly() {

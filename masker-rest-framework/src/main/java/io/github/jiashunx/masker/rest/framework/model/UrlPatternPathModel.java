@@ -11,6 +11,7 @@ public class UrlPatternPathModel extends UrlPathModel {
     private final String placeholderName;
     private String originPath;
     private String originPathVal;
+    private final boolean regular;
 
     public UrlPatternPathModel(String p) {
         super(p);
@@ -22,6 +23,7 @@ public class UrlPatternPathModel extends UrlPathModel {
             path = "/*";
             pathVal = "*";
         }
+        regular = pathVal.endsWith("*");
     }
 
     public boolean isPlaceholder() {
@@ -38,5 +40,9 @@ public class UrlPatternPathModel extends UrlPathModel {
 
     public String getOriginPathVal() {
         return originPathVal;
+    }
+
+    public boolean isRegular() {
+        return regular;
     }
 }

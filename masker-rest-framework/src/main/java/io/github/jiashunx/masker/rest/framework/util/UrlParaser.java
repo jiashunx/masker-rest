@@ -92,7 +92,7 @@ public class UrlParaser {
 
     public static List<UrlPatternPathModel> getUrlPatternPathModelList(String pattern) {
         UrlPatternType patternType = getUrlPatternType(pattern);
-        if (patternType == UrlPatternType.STRICTLY) {
+        if (patternType == UrlPatternType.STRICTLY || patternType == UrlPatternType.PATH_MATCH) {
             char[] urlCharArr = getUrl(pattern).toCharArray();
             List<UrlPatternPathModel> patternPathModelList = new ArrayList<>();
             StringBuilder sb = new StringBuilder();
