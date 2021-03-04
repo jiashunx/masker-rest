@@ -14,6 +14,9 @@ public class UrlPatternModel {
     private final String urlPattern;
     private final UrlPatternType urlPatternType;
     private final List<UrlPatternPathModel> patternPathModelList;
+    private int patternPathModelListSize;
+    private UrlPatternPathModel firstPatternPathModel;
+    private UrlPatternPathModel lastPatternPathModel;
     private boolean supportPlaceholder;
     private boolean supportRegular;
 
@@ -21,7 +24,8 @@ public class UrlPatternModel {
         this.urlPattern = UrlParaser.getUrlPattern(pattern);
         this.urlPatternType = UrlParaser.getUrlPatternTypeWithCheck(pattern);
         this.patternPathModelList = UrlParaser.getUrlPatternPathModelList(pattern);
-        if (this.patternPathModelList != null) {
+        if (this.patternPathModelList != null && !this.patternPathModelList.isEmpty()) {
+            this.patternPathModelListSize = patternPathModelList.size();
             for (UrlPatternPathModel patternPathModel: patternPathModelList) {
                 if (patternPathModel.isPlaceholder()) {
                     this.supportPlaceholder = true;
@@ -30,6 +34,8 @@ public class UrlPatternModel {
                     this.supportRegular = true;
                 }
             }
+            this.firstPatternPathModel = patternPathModelList.get(0);
+            this.lastPatternPathModel = patternPathModelList.get(patternPathModelListSize - 1);
         }
         if (isPatternExt()) {
             this.supportRegular = true;
@@ -46,6 +52,18 @@ public class UrlPatternModel {
 
     public List<UrlPatternPathModel> getPatternPathModelList() {
         return patternPathModelList;
+    }
+
+    public int getPatternPathModelListSize() {
+        return patternPathModelListSize;
+    }
+
+    public UrlPatternPathModel getFirstPatternPathModel() {
+        return firstPatternPathModel;
+    }
+
+    public UrlPatternPathModel getLastPatternPathModel() {
+        return lastPatternPathModel;
     }
 
     public boolean isSupportPlaceholder() {
