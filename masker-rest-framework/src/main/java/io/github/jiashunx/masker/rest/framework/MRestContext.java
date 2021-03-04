@@ -4,8 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
-import io.github.jiashunx.masker.rest.framework.model.UrlMappingServlet;
-import io.github.jiashunx.masker.rest.framework.model.UrlPatternModel;
+import io.github.jiashunx.masker.rest.framework.model.*;
 import io.github.jiashunx.masker.rest.framework.servlet.AbstractRestServlet;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestDispatchServlet;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
@@ -13,8 +12,6 @@ import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.filter.StaticResourceFilter;
 import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
-import io.github.jiashunx.masker.rest.framework.model.ExceptionCallbackVo;
-import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestServlet;
 import io.github.jiashunx.masker.rest.framework.util.*;
 import io.netty.handler.codec.http.HttpMethod;
@@ -23,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
 import java.util.stream.Collectors;
 
@@ -435,30 +433,100 @@ public class MRestContext {
     }
 
     public MRestServlet getServlet(String requestURL) {
-        List<MRestServlet> servletList = new ArrayList<>();
-        servletMap.forEach((urlPattern, urlMappingServlet) -> {
-            UrlPatternModel urlPatternModel = urlMappingServlet.getUrlPatternModel();
-            MRestServlet servlet = urlMappingServlet.getRestServlet();
-            if (servletList.contains(servlet)) {
+        List<UrlMappingServlet> mappingServletList = new ArrayList<>();
+        // 扩展名匹配
+        AtomicReference<UrlMappingServlet> extRef = new AtomicReference<>();
+        // 路径匹配
+        AtomicReference<UrlMappingServlet> pathMatchRef = new AtomicReference<>();
+        // 精确匹配 - 带占位符
+        AtomicReference<UrlMappingServlet> strictlyRef0 = new AtomicReference<>();
+        // 精确匹配 - 不带占位符
+        AtomicReference<UrlMappingServlet> strictlyRef1 = new AtomicReference<>();
+        servletMap.forEach((_up, urlMappingServlet) -> {
+            if (mappingServletList.contains(urlMappingServlet)) {
                 return;
             }
-            // TODO 根据urlPattern类别进行匹配，对于占位符进行数据解析处理
-            // TODO 正则匹配时，根据urlPattern的类别分别进行匹配，然后按照精确匹配、路径匹配、拓展名匹配的优先级确定处理servlet
-            // TODO 同一类别已保证不会重复，但是不同类别可能会重复，如：/servet/\* 与/servlet/{abc}
-            String pattern = "^" + urlPattern.replace("*", "\\S*") + "$";
-            if (requestURL.matches(pattern)) {
-                servletList.add(servlet);
+            UrlModel urlModel = new UrlModel(requestURL);
+            UrlPatternModel urlPatternModel = urlMappingServlet.getUrlPatternModel();
+            String url = urlModel.getUrl();
+            String urlPattern = urlPatternModel.getUrlPattern();
+            if (urlPatternModel.isPatternExt()) {
+                String pattern = "^" + urlPattern.replace("*", "\\S+") + "$";
+                if (url.matches(pattern)) {
+                    if (extRef.get() != null) {
+                        throw new MRestMappingException(
+                                String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
+                                        , getContextDesc(), requestURL, extRef.get().getUrlPatternModel().getUrlPattern(), urlPatternModel.getUrlPattern()));
+                    }
+                    extRef.set(urlMappingServlet);
+                }
+            }
+            if (urlPatternModel.isPatternPathMatch()) {
+                String pattern = "^" + urlPattern.replace("*", "\\S*") + "$";
+                if (url.matches(pattern)) {
+                    if (pathMatchRef.get() != null) {
+                        throw new MRestMappingException(
+                                String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
+                                        , getContextDesc(), requestURL, pathMatchRef.get().getUrlPatternModel().getUrlPattern(), urlPatternModel.getUrlPattern()));
+                    }
+                    pathMatchRef.set(urlMappingServlet);
+                }
+            }
+            if (urlPatternModel.isPatternStrictly()) {
+                if (urlPatternModel.isSupportPlaceholder()) {
+                    List<UrlPathModel> urlPathModelList = urlModel.getPathModelList();
+                    List<UrlPatternPathModel> urlPatternPathModelList = urlPatternModel.getPatternPathModelList();
+                    int pathModelListSize = urlModel.getPathModelListSize();
+                    int patternPathModelListSize = urlPatternModel.getPatternPathModelListSize();
+                    if (pathModelListSize == patternPathModelListSize) {
+                        boolean match = true;
+                        Map<String, String> kv = new HashMap<>();
+                        for (int index = 0; index < pathModelListSize; index++) {
+                            UrlPathModel pathModel = urlPathModelList.get(index);
+                            UrlPatternPathModel patternPathModel = urlPatternPathModelList.get(index);
+                            if (patternPathModel.isPlaceholder()) {
+                                kv.put(patternPathModel.getPlaceholderName(), pathModel.getPathVal());
+                            } else if (!patternPathModel.getPathVal().equals(pathModel.getPathVal())) {
+                                match = false;
+                                break;
+                            }
+                        }
+                        if (match) {
+                            if (strictlyRef0.get() != null) {
+                                throw new MRestMappingException(
+                                        String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
+                                                , getContextDesc(), requestURL, strictlyRef0.get().getUrlPatternModel().getUrlPattern(), urlPatternModel.getUrlPattern()));
+                            }
+                            SharedObjects.getServerThreadModel().getRestRequest().addPlaceholderKv(kv);
+                            strictlyRef0.set(urlMappingServlet);
+                        }
+                    }
+                } else if (url.equals(urlPattern)) {
+                    if (strictlyRef1.get() != null) {
+                        throw new MRestMappingException(
+                                String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
+                                        , getContextDesc(), requestURL, strictlyRef1.get().getUrlPatternModel().getUrlPattern(), urlPatternModel.getUrlPattern()));
+                    }
+                    strictlyRef1.set(urlMappingServlet);
+                }
             }
         });
-        if (servletList.isEmpty()) {
+        if (strictlyRef1.get() != null) {
+            mappingServletList.add(strictlyRef1.get());
+        }
+        if (strictlyRef0.get() != null) {
+            mappingServletList.add(strictlyRef0.get());
+        }
+        if (pathMatchRef.get() != null) {
+            mappingServletList.add(pathMatchRef.get());
+        }
+        if (extRef.get() != null) {
+            mappingServletList.add(extRef.get());
+        }
+        if (mappingServletList.isEmpty()) {
             return null;
         }
-        if (servletList.size() > 1) {
-            throw new MRestMappingException(
-                    String.format("%s found more than one servlet mapping handler for url: %s, servlet: %s"
-                            , getContextDesc(), requestURL, servletList.toString()));
-        }
-        return servletList.get(0);
+        return mappingServletList.get(0).getRestServlet();
     }
 
     public synchronized MRestContext servlet(MRestServlet... servletArr) {
