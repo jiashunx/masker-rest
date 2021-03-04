@@ -46,6 +46,7 @@ public class MRestRequest {
     private List<Cookie> cookies;
     private Map<String, Cookie> cookieMap;
     private byte[] bodyBytes;
+    private Map<String, String> placeholderMap = new HashMap<>();
 
     public MRestRequest() {}
 
@@ -71,6 +72,7 @@ public class MRestRequest {
         this.cookies = restRequest.cookies;
         this.cookieMap = restRequest.cookieMap;
         this.bodyBytes = restRequest.bodyBytes;
+        this.placeholderMap = restRequest.placeholderMap;
     }
 
     @Override
@@ -366,5 +368,13 @@ public class MRestRequest {
 
     public void setBodyBytes(byte[] bodyBytes) {
         this.bodyBytes = bodyBytes;
+    }
+
+    public void addPlaceholderKv(String key, String value) {
+        placeholderMap.put(Objects.requireNonNull(key), Objects.requireNonNull(value));
+    }
+
+    public void addPlaceholderKv(Map<String, String> map) {
+        placeholderMap.putAll(Objects.requireNonNull(map));
     }
 }
