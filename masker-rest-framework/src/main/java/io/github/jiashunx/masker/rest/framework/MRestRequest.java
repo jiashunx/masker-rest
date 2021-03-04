@@ -46,7 +46,7 @@ public class MRestRequest {
     private List<Cookie> cookies;
     private Map<String, Cookie> cookieMap;
     private byte[] bodyBytes;
-    private Map<String, String> placeholderMap = new HashMap<>();
+    private Map<String, String> placeholderMap = new LinkedHashMap<>();
 
     public MRestRequest() {}
 
@@ -376,5 +376,20 @@ public class MRestRequest {
 
     public void addPlaceholderKv(Map<String, String> map) {
         placeholderMap.putAll(Objects.requireNonNull(map));
+    }
+
+    public String getPathVariable(String key) {
+        return placeholderMap.get(key);
+    }
+
+    public boolean isSupportPlaceholder() {
+        return !placeholderMap.isEmpty();
+    }
+
+    public String[] getPathVariableKeys() {
+        if (!isSupportPlaceholder()) {
+            return new String[0];
+        }
+        return placeholderMap.keySet().toArray(new String[0]);
     }
 }
