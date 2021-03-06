@@ -7,6 +7,8 @@ import io.github.jiashunx.masker.rest.framework.exception.MRestHandleException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
 import io.github.jiashunx.masker.rest.framework.model.ServletMappingClass;
 import io.github.jiashunx.masker.rest.framework.model.ServletMappingHandler;
+import io.github.jiashunx.masker.rest.framework.model.UrlModel;
+import io.github.jiashunx.masker.rest.framework.model.UrlPatternModel;
 import io.github.jiashunx.masker.rest.framework.servlet.mapping.GetMapping;
 import io.github.jiashunx.masker.rest.framework.servlet.mapping.HttpMethod;
 import io.github.jiashunx.masker.rest.framework.servlet.mapping.PostMapping;
@@ -145,6 +147,22 @@ public abstract class AbstractRestServlet implements MRestServlet {
     public void service(MRestRequest restRequest, MRestResponse restResponse) {
         init();
         String requestUrl = restRequest.getUrl();
+        // TODO 根据url匹配请求处理ServletMappingClass对象
+        List<String> urlList = getMappingUrlList();
+        for (String url: urlList) {
+            UrlModel urlModel = new UrlModel(url);
+            UrlPatternModel urlPatternModel = new UrlPatternModel(url);
+            if (urlPatternModel.isPatternExt()) {
+
+            }
+            if (urlPatternModel.isPatternPathMatch()) {
+
+            }
+            if (urlPatternModel.isPatternStrictly()) {
+
+            }
+        }
+
         ServletMappingClass mappingClass = MAPPING_CLASS_MAP.get(requestUrl);
         if (mappingClass == null) {
             restResponse.writeStatusPageAsHtml(HttpResponseStatus.NOT_FOUND);
