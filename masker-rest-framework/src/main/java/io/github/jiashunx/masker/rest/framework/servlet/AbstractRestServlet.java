@@ -5,10 +5,7 @@ import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestHandleException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
-import io.github.jiashunx.masker.rest.framework.model.ServletMappingClass;
-import io.github.jiashunx.masker.rest.framework.model.ServletMappingHandler;
-import io.github.jiashunx.masker.rest.framework.model.UrlModel;
-import io.github.jiashunx.masker.rest.framework.model.UrlPatternModel;
+import io.github.jiashunx.masker.rest.framework.model.*;
 import io.github.jiashunx.masker.rest.framework.servlet.mapping.GetMapping;
 import io.github.jiashunx.masker.rest.framework.servlet.mapping.HttpMethod;
 import io.github.jiashunx.masker.rest.framework.servlet.mapping.PostMapping;
@@ -149,26 +146,59 @@ public abstract class AbstractRestServlet implements MRestServlet {
         String requestUrl = restRequest.getUrl();
         // TODO 根据url匹配请求处理ServletMappingClass对象
         List<String> urlList = getMappingUrlList();
-        for (String url: urlList) {
-            UrlModel urlModel = new UrlModel(url);
-            UrlPatternModel urlPatternModel = new UrlPatternModel(url);
+        String matchedUrl = null;
+        for (String _patternUrl: urlList) {
+            UrlModel urlModel = new UrlModel(requestUrl);
+            UrlPatternModel urlPatternModel = new UrlPatternModel(_patternUrl);
+            String urlPattern = urlPatternModel.getUrlPattern();
             if (urlPatternModel.isPatternExt()) {
-
+                String pattern = "^" + urlPattern.replace("*", "\\S+") + "$";
+                if (requestUrl.matches(pattern)) {
+                    matchedUrl = _patternUrl;
+                    break;
+                }
             }
             if (urlPatternModel.isPatternPathMatch()) {
-
+                String pattern = "^" + urlPattern.replace("*", "\\S*") + "$";
+                if (requestUrl.matches(pattern)) {
+                    break;
+                }
             }
             if (urlPatternModel.isPatternStrictly()) {
-
+                if (urlPatternModel.isSupportPlaceholder()) {
+                    List<UrlPathModel> urlPathModelList = urlModel.getPathModelList();
+                    List<UrlPatternPathModel> urlPatternPathModelList = urlPatternModel.getPatternPathModelList();
+                    int pathModelListSize = urlModel.getPathModelListSize();
+                    int patternPathModelListSize = urlPatternModel.getPatternPathModelListSize();
+                    if (pathModelListSize == patternPathModelListSize) {
+                        boolean match = true;
+                        for (int index = 0; index < pathModelListSize; index++) {
+                            UrlPathModel pathModel = urlPathModelList.get(index);
+                            UrlPatternPathModel patternPathModel = urlPatternPathModelList.get(index);
+                            if (patternPathModel.isPlaceholder()) {
+                                // do nothing.
+                            } else if (!patternPathModel.getPathVal().equals(pathModel.getPathVal())) {
+                                match = false;
+                                break;
+                            }
+                        }
+                        if (match) {
+                            matchedUrl = _patternUrl;
+                            break;
+                        }
+                    }
+                } else if (requestUrl.equals(urlPattern)) {
+                    matchedUrl = _patternUrl;
+                    break;
+                }
             }
         }
-
-        ServletMappingClass mappingClass = MAPPING_CLASS_MAP.get(requestUrl);
+        ServletMappingClass mappingClass = MAPPING_CLASS_MAP.get(matchedUrl);
         if (mappingClass == null) {
             restResponse.writeStatusPageAsHtml(HttpResponseStatus.NOT_FOUND);
             return;
         }
-        ServletMappingHandler mappingHandler = mappingClass.getMappingHandler(requestUrl);
+        ServletMappingHandler mappingHandler = mappingClass.getMappingHandler(matchedUrl);
         if (mappingHandler == null) {
             restResponse.writeStatusPageAsHtml(HttpResponseStatus.NOT_FOUND);
             return;
