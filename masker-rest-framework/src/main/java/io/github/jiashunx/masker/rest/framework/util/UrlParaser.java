@@ -1,13 +1,13 @@
 package io.github.jiashunx.masker.rest.framework.util;
 
 import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
+import io.github.jiashunx.masker.rest.framework.model.UrlModel;
 import io.github.jiashunx.masker.rest.framework.model.UrlPathModel;
+import io.github.jiashunx.masker.rest.framework.model.UrlPatternModel;
 import io.github.jiashunx.masker.rest.framework.model.UrlPatternPathModel;
 import io.github.jiashunx.masker.rest.framework.type.UrlPatternType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author jiashunx
@@ -114,6 +114,67 @@ public class UrlParaser {
             return patternPathModelList;
         }
         return null;
+    }
+
+    public static Map<String, String> getUrlPlaceholderMap(String _url, String _urlPattern) {
+        Map<String, String> kv = new HashMap<>();
+        if (!isUrlMatchUrlPattern(_url, _urlPattern)) {
+            return kv;
+        }
+        UrlModel urlModel = new UrlModel(_url);
+        UrlPatternModel urlPatternModel = new UrlPatternModel(_urlPattern);
+        if (urlPatternModel.isPatternStrictly() && urlPatternModel.isSupportPlaceholder()) {
+            List<UrlPathModel> urlPathModelList = urlModel.getPathModelList();
+            List<UrlPatternPathModel> urlPatternPathModelList = urlPatternModel.getPatternPathModelList();
+            int pathModelListSize = urlModel.getPathModelListSize();
+            int patternPathModelListSize = urlPatternModel.getPatternPathModelListSize();
+            // url已确认和urlPattern匹配，且支持占位符处理
+            for (int index = 0; index < pathModelListSize; index++) {
+                UrlPathModel pathModel = urlPathModelList.get(index);
+                UrlPatternPathModel patternPathModel = urlPatternPathModelList.get(index);
+                if (patternPathModel.isPlaceholder()) {
+                    kv.put(patternPathModel.getPlaceholderName(), pathModel.getPathVal());
+                }
+            }
+        }
+        return kv;
+    }
+
+    public static boolean isUrlMatchUrlPattern(String _url, String _urlPattern) {
+        UrlModel urlModel = new UrlModel(_url);
+        UrlPatternModel urlPatternModel = new UrlPatternModel(_urlPattern);
+        String url = urlModel.getUrl();
+        String urlPattern = urlPatternModel.getUrlPattern();
+        if (urlPatternModel.isPatternExt()) {
+            String pattern = "^" + urlPattern.replace("*", "\\S+") + "$";
+            return url.matches(pattern);
+        }
+        if (urlPatternModel.isPatternPathMatch()) {
+            String pattern = "^" + urlPattern.replace("*", "\\S*") + "$";
+            return url.matches(pattern);
+        }
+        if (urlPatternModel.isPatternStrictly()) {
+            if (urlPatternModel.isSupportPlaceholder()) {
+                List<UrlPathModel> urlPathModelList = urlModel.getPathModelList();
+                List<UrlPatternPathModel> urlPatternPathModelList = urlPatternModel.getPatternPathModelList();
+                int pathModelListSize = urlModel.getPathModelListSize();
+                int patternPathModelListSize = urlPatternModel.getPatternPathModelListSize();
+                if (pathModelListSize == patternPathModelListSize) {
+                    for (int index = 0; index < pathModelListSize; index++) {
+                        UrlPathModel pathModel = urlPathModelList.get(index);
+                        UrlPatternPathModel patternPathModel = urlPatternPathModelList.get(index);
+                        if (!patternPathModel.isPlaceholder()
+                                && !patternPathModel.getPathVal().equals(pathModel.getPathVal())) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            } else {
+                return url.equals(urlPattern);
+            }
+        }
+        return false;
     }
 
 }
