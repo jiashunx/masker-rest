@@ -446,68 +446,41 @@ public class MRestContext {
             if (mappingServletList.contains(urlMappingServlet)) {
                 return;
             }
-            UrlModel urlModel = new UrlModel(requestURL);
-            UrlPatternModel urlPatternModel = urlMappingServlet.getUrlPatternModel();
-            String url = urlModel.getUrl();
-            String urlPattern = urlPatternModel.getUrlPattern();
-            if (urlPatternModel.isPatternExt()) {
-                String pattern = "^" + urlPattern.replace("*", "\\S+") + "$";
-                if (url.matches(pattern)) {
+            UrlMatchModel urlMatchModel = new UrlMatchModel(requestURL, _up);
+            if (urlMatchModel.isMatched()) {
+                if (urlMatchModel.isPatternExt()) {
                     if (extRef.get() != null) {
                         throw new MRestMappingException(
                                 String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
-                                        , getContextDesc(), requestURL, extRef.get().getUrlPatternModel().getUrlPattern(), urlPatternModel.getUrlPattern()));
+                                        , getContextDesc(), requestURL, extRef.get().getUrlPatternModel().getUrlPattern(), urlMatchModel.getUrlPattern()));
                     }
                     extRef.set(urlMappingServlet);
                 }
-            }
-            if (urlPatternModel.isPatternPathMatch()) {
-                String pattern = "^" + urlPattern.replace("*", "\\S*") + "$";
-                if (url.matches(pattern)) {
+                if (urlMatchModel.isPatternPathMatch()) {
                     if (pathMatchRef.get() != null) {
                         throw new MRestMappingException(
                                 String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
-                                        , getContextDesc(), requestURL, pathMatchRef.get().getUrlPatternModel().getUrlPattern(), urlPatternModel.getUrlPattern()));
+                                        , getContextDesc(), requestURL, pathMatchRef.get().getUrlPatternModel().getUrlPattern(), urlMatchModel.getUrlPattern()));
                     }
                     pathMatchRef.set(urlMappingServlet);
                 }
-            }
-            if (urlPatternModel.isPatternStrictly()) {
-                if (urlPatternModel.isSupportPlaceholder()) {
-                    List<UrlPathModel> urlPathModelList = urlModel.getPathModelList();
-                    List<UrlPatternPathModel> urlPatternPathModelList = urlPatternModel.getPatternPathModelList();
-                    int pathModelListSize = urlModel.getPathModelListSize();
-                    int patternPathModelListSize = urlPatternModel.getPatternPathModelListSize();
-                    if (pathModelListSize == patternPathModelListSize) {
-                        boolean match = true;
-                        Map<String, String> kv = new HashMap<>();
-                        for (int index = 0; index < pathModelListSize; index++) {
-                            UrlPathModel pathModel = urlPathModelList.get(index);
-                            UrlPatternPathModel patternPathModel = urlPatternPathModelList.get(index);
-                            if (patternPathModel.isPlaceholder()) {
-                                kv.put(patternPathModel.getPlaceholderName(), pathModel.getPathVal());
-                            } else if (!patternPathModel.getPathVal().equals(pathModel.getPathVal())) {
-                                match = false;
-                                break;
-                            }
+                if (urlMatchModel.isPatternStrictly()) {
+                    if (urlMatchModel.getUrlPatternModel().isSupportPlaceholder()) {
+                        if (strictlyRef0.get() != null) {
+                            throw new MRestMappingException(
+                                    String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
+                                            , getContextDesc(), requestURL, strictlyRef0.get().getUrlPatternModel().getUrlPattern(), urlMatchModel.getUrlPattern()));
                         }
-                        if (match) {
-                            if (strictlyRef0.get() != null) {
-                                throw new MRestMappingException(
-                                        String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
-                                                , getContextDesc(), requestURL, strictlyRef0.get().getUrlPatternModel().getUrlPattern(), urlPatternModel.getUrlPattern()));
-                            }
-                            SharedObjects.getServerThreadModel().getRestRequest().addPlaceholderKv(kv);
-                            strictlyRef0.set(urlMappingServlet);
+                        SharedObjects.getServerThreadModel().getRestRequest().addPlaceholderKv(urlMatchModel.getPlaceholderMap());
+                        strictlyRef0.set(urlMappingServlet);
+                    } else {
+                        if (strictlyRef1.get() != null) {
+                            throw new MRestMappingException(
+                                    String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
+                                            , getContextDesc(), requestURL, strictlyRef1.get().getUrlPatternModel().getUrlPattern(), urlMatchModel.getUrlPattern()));
                         }
+                        strictlyRef1.set(urlMappingServlet);
                     }
-                } else if (url.equals(urlPattern)) {
-                    if (strictlyRef1.get() != null) {
-                        throw new MRestMappingException(
-                                String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
-                                        , getContextDesc(), requestURL, strictlyRef1.get().getUrlPatternModel().getUrlPattern(), urlPatternModel.getUrlPattern()));
-                    }
-                    strictlyRef1.set(urlMappingServlet);
                 }
             }
         });

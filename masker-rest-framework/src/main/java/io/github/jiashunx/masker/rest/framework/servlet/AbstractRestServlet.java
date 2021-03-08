@@ -11,6 +11,7 @@ import io.github.jiashunx.masker.rest.framework.servlet.mapping.HttpMethod;
 import io.github.jiashunx.masker.rest.framework.servlet.mapping.PostMapping;
 import io.github.jiashunx.masker.rest.framework.servlet.mapping.RequestMapping;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
+import io.github.jiashunx.masker.rest.framework.util.UrlParaser;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 import java.lang.reflect.Method;
@@ -144,61 +145,20 @@ public abstract class AbstractRestServlet implements MRestServlet {
     public void service(MRestRequest restRequest, MRestResponse restResponse) {
         init();
         String requestUrl = restRequest.getUrl();
-        // TODO 根据url匹配请求处理ServletMappingClass对象
         List<String> urlList = getMappingUrlList();
-        String matchedUrl = null;
+        String matchedPattern = null;
         for (String _patternUrl: urlList) {
-            UrlModel urlModel = new UrlModel(requestUrl);
-            UrlPatternModel urlPatternModel = new UrlPatternModel(_patternUrl);
-            String urlPattern = urlPatternModel.getUrlPattern();
-            if (urlPatternModel.isPatternExt()) {
-                String pattern = "^" + urlPattern.replace("*", "\\S+") + "$";
-                if (requestUrl.matches(pattern)) {
-                    matchedUrl = _patternUrl;
-                    break;
-                }
-            }
-            if (urlPatternModel.isPatternPathMatch()) {
-                String pattern = "^" + urlPattern.replace("*", "\\S*") + "$";
-                if (requestUrl.matches(pattern)) {
-                    break;
-                }
-            }
-            if (urlPatternModel.isPatternStrictly()) {
-                if (urlPatternModel.isSupportPlaceholder()) {
-                    List<UrlPathModel> urlPathModelList = urlModel.getPathModelList();
-                    List<UrlPatternPathModel> urlPatternPathModelList = urlPatternModel.getPatternPathModelList();
-                    int pathModelListSize = urlModel.getPathModelListSize();
-                    int patternPathModelListSize = urlPatternModel.getPatternPathModelListSize();
-                    if (pathModelListSize == patternPathModelListSize) {
-                        boolean match = true;
-                        for (int index = 0; index < pathModelListSize; index++) {
-                            UrlPathModel pathModel = urlPathModelList.get(index);
-                            UrlPatternPathModel patternPathModel = urlPatternPathModelList.get(index);
-                            if (patternPathModel.isPlaceholder()) {
-                                // do nothing.
-                            } else if (!patternPathModel.getPathVal().equals(pathModel.getPathVal())) {
-                                match = false;
-                                break;
-                            }
-                        }
-                        if (match) {
-                            matchedUrl = _patternUrl;
-                            break;
-                        }
-                    }
-                } else if (requestUrl.equals(urlPattern)) {
-                    matchedUrl = _patternUrl;
-                    break;
-                }
+            if (UrlParaser.isUrlMatchUrlPattern(requestUrl, _patternUrl)) {
+                matchedPattern = _patternUrl;
+                break;
             }
         }
-        ServletMappingClass mappingClass = MAPPING_CLASS_MAP.get(matchedUrl);
+        ServletMappingClass mappingClass = MAPPING_CLASS_MAP.get(matchedPattern);
         if (mappingClass == null) {
             restResponse.writeStatusPageAsHtml(HttpResponseStatus.NOT_FOUND);
             return;
         }
-        ServletMappingHandler mappingHandler = mappingClass.getMappingHandler(matchedUrl);
+        ServletMappingHandler mappingHandler = mappingClass.getMappingHandler(matchedPattern);
         if (mappingHandler == null) {
             restResponse.writeStatusPageAsHtml(HttpResponseStatus.NOT_FOUND);
             return;

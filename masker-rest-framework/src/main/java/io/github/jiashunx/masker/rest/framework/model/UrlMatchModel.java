@@ -1,6 +1,5 @@
 package io.github.jiashunx.masker.rest.framework.model;
 
-import io.github.jiashunx.masker.rest.framework.type.UrlPatternType;
 import io.github.jiashunx.masker.rest.framework.util.UrlParaser;
 
 import java.util.Map;
@@ -12,14 +11,14 @@ public class UrlMatchModel {
 
     private final String url;
     private final String urlPattern;
-    private final UrlPatternType urlPatternType;
+    private final UrlPatternModel urlPatternModel;
     private final boolean matched;
     private final Map<String, String> placeholderMap;
 
     public UrlMatchModel(String url, String urlPattern) {
         this.url = UrlParaser.getUrl(url);
         this.urlPattern = UrlParaser.getUrlPattern(urlPattern);
-        this.urlPatternType = UrlParaser.getUrlPatternType(urlPattern);
+        this.urlPatternModel = new UrlPatternModel(this.urlPattern);
         this.matched = UrlParaser.isUrlMatchUrlPattern(this.url, this.urlPattern);
         this.placeholderMap = UrlParaser.getUrlPlaceholderMap(this.url, this.urlPattern);
     }
@@ -36,20 +35,20 @@ public class UrlMatchModel {
         return urlPattern;
     }
 
-    public UrlPatternType getUrlPatternType() {
-        return urlPatternType;
+    public UrlPatternModel getUrlPatternModel() {
+        return urlPatternModel;
     }
 
     public boolean isPatternStrictly() {
-        return getUrlPatternType() == UrlPatternType.STRICTLY;
+        return getUrlPatternModel().isPatternStrictly();
     }
 
     public boolean isPatternPathMatch() {
-        return getUrlPatternType() == UrlPatternType.PATH_MATCH;
+        return getUrlPatternModel().isPatternPathMatch();
     }
 
     public boolean isPatternExt() {
-        return getUrlPatternType() == UrlPatternType.EXT;
+        return getUrlPatternModel().isPatternExt();
     }
 
     public Map<String, String> getPlaceholderMap() {
