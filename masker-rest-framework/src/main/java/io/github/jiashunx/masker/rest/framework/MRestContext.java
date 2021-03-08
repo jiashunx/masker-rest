@@ -13,6 +13,7 @@ import io.github.jiashunx.masker.rest.framework.filter.StaticResourceFilter;
 import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestServlet;
+import io.github.jiashunx.masker.rest.framework.servlet.MRestServletAdapter;
 import io.github.jiashunx.masker.rest.framework.util.*;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -567,12 +568,15 @@ public class MRestContext {
         MRestServlet servlet = getServlet(requestURL);
         // servlet包装为filter执行
         if (servlet != null) {
-            filterList.addLast((request, response, filterChain) -> {
-                servlet.service(request, response);
-                // servlet执行完成，不在filterChain中向后路由
-                // write方法未执行过, 直接返回成功状态码
-                if (!response.isWriteMethodInvoked()) {
-                    response.write(HttpResponseStatus.OK);
+            filterList.addLast(new MRestServletAdapter() {
+                @Override
+                public void doFilter(MRestRequest request, MRestResponse response, MRestFilterChain filterChain) {
+                    servlet.service(request, response);
+                    // servlet执行完成，不在filterChain中向后路由
+                    // write方法未执行过, 直接返回成功状态码
+                    if (!response.isWriteMethodInvoked()) {
+                        response.write(HttpResponseStatus.OK);
+                    }
                 }
             });
         }

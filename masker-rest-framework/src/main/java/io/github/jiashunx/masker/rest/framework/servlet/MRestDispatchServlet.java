@@ -31,6 +31,9 @@ public class MRestDispatchServlet implements MRestServlet {
 
     @Override
     public void service(MRestRequest restRequest, MRestResponse restResponse) {
+        if (restResponse.isWriteMethodInvoked()) {
+            return;
+        }
         // dispatch request handler
         String requestURL = restRequest.getUrl();
         MRestContext restContext = restRequest.getRestContext();
