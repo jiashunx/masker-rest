@@ -247,6 +247,9 @@ public class MaskerRestMain {
                 .servlet("/servlet/m/xxx", (request, response) -> {
                     response.writeString("/servlet/m/sss");
                 })
+                .servlet("/servlet/n/{xx}", (request, response) -> {
+                    response.writeString("/servlet/n/{xxx}");
+                })
                 /**
                  * Exception in thread "main" io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException: Server[demo:21700] start failed
                  * 	at io.github.jiashunx.masker.rest.framework.MRestServer.start(MRestServer.java:276)
