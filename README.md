@@ -32,7 +32,7 @@
 
    - 使用样例点此链接 [UserGuide](./docs/UserGuide.md)
 
-- 版本清单（最新版本：<b>1.6.5</b>）：
+- 版本清单（最新版本：<b>1.6.6</b>）：
 
    - version 1.0.0 (released)
       - feature：支持发布rest接口
@@ -130,10 +130,9 @@
       - feature: server增加启动标识、启动时间（写到响应header及cookie中）
       - feature：添加 [AbstractRestServlet][3]，子类继承此类并结合 [RequestMapping][4] 及 [GetMapping][5]、[PostMapping][6]注解实现servlet注册及分发处理
       - feature：使用asm生成字节码（取代反射调用，提高执行效率，参见[ServletHandlerClassGenerator][7]）配合 [AbstractRestServlet][3] 实现servlet分发处理
-   - version 1.6.6 (doing)
-      - feature: servlet映射处理url支持占位符匹配与解析处理，可从MRestRquest对象中获取占位符对应字符串
-      - optimizing: 优化请求url格式化处理(TODO)
-      - optimizing: 代码优化，代码重新过一遍，不合适的地方重写
+   - version 1.6.6 (released)
+      - feature: servlet映射处理url支持占位符匹配与解析处理，可从MRestRquest对象中获取占位符对应path参数
+      - feature: 添加 [MRestServletAdapter][8] 类用于servlet请求处理分发
    - TODO（不知道什么时候才会做，先写个TODO吧）
       - 参考spring-core实现classpath资源扫描，移除spring-core依赖
 
@@ -144,3 +143,4 @@
 [5]: masker-rest-framework/src/main/java/io/github/jiashunx/masker/rest/framework/servlet/mapping/GetMapping.java
 [6]: masker-rest-framework/src/main/java/io/github/jiashunx/masker/rest/framework/servlet/mapping/PostMapping.java
 [7]: masker-rest-framework/src/main/java/io/github/jiashunx/masker/rest/framework/util/ServletHandlerClassGenerator.java
+[8]: masker-rest-framework/src/main/java/io/github/jiashunx/masker/rest/framework/servlet/AbstractRestServlet.java
