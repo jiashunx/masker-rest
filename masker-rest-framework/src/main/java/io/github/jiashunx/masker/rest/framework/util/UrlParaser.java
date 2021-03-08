@@ -110,7 +110,18 @@ public class UrlParaser {
                     patternPathModelList.add(new UrlPatternPathModel(sb.toString()));
                 }
             }
-            // TODO 占位符名称重复检查
+            // 占位符名称重复检查
+            Set<String> set = new HashSet<>();
+            for (UrlPatternPathModel patternPathModel: patternPathModelList) {
+                if (patternPathModel.isPlaceholder()) {
+                    String name = patternPathModel.getOriginPathVal();
+                    if (set.contains(name)) {
+                        throw new MRestMappingException(String.format("illegal urlPattern: %s, conflict placeholder name: %s"
+                                , pattern, name));
+                    }
+                    set.add(name);
+                }
+            }
             return patternPathModelList;
         }
         return null;
