@@ -177,6 +177,15 @@ restServer
     .servlet("/servlet/test", (request, response) -> {
         response.writeString("/servlet/test -> =_=");
     })
+    .servlet("/servlet/m/{abc}", (request, response) -> {
+        response.writeString("/servlet/m/{abc}");
+    })
+    .servlet("/servlet/m/xxx", (request, response) -> {
+        response.writeString("/servlet/m/sss");
+    })
+    .servlet("/servlet/n/{xx}", (request, response) -> {
+        response.writeString("/servlet/n/{xxx}");
+    })
     .servlet(new Servlet0(), new Servlet1())
     .getRestServer()
     .start();
@@ -201,6 +210,18 @@ public static class Servlet1 extends AbstractRestServlet {
     @GetMapping(url = "/servlet1/method0")
     public void method() {
         System.out.println("Servlet1.method");
+    }
+}
+
+@RequestMapping(url = "/servlet2")
+public static class Servlet2 extends AbstractRestServlet {
+    @GetMapping(url = "/0/{m}/{n}")
+    public void method0(MRestRequest request) {
+        System.out.println("Servlet2.method0, m=" + request.getPathVariable("m") + ", n=" + request.getPathVariable("n"));
+    }
+    @GetMapping(url = "/1/{m}")
+    public void method1(MRestRequest request, MRestResponse response) {
+        System.out.println("Servlet2.method0, m=" + request.getPathVariable("m"));
     }
 }
 ```
