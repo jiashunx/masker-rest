@@ -444,9 +444,6 @@ public class MRestContext {
         // 精确匹配 - 不带占位符
         AtomicReference<UrlMappingServlet> strictlyRef1 = new AtomicReference<>();
         servletMap.forEach((_up, urlMappingServlet) -> {
-            if (mappingServletList.contains(urlMappingServlet)) {
-                return;
-            }
             UrlMatchModel urlMatchModel = new UrlMatchModel(requestURL, _up);
             if (urlMatchModel.isMatched()) {
                 if (urlMatchModel.isPatternExt()) {
