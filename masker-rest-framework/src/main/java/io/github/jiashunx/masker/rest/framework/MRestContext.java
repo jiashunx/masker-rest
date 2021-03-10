@@ -673,10 +673,10 @@ public class MRestContext {
 
     private String formatClasspathResourcePath(String path) {
         String location = String.valueOf(path).trim();
-        if (!location.endsWith(Constants.URL_PATH_SEP)) {
-            location = location + Constants.URL_PATH_SEP;
+        if (!location.endsWith(Constants.PATH_SEP)) {
+            location = location + Constants.PATH_SEP;
         }
-        while (location.startsWith(Constants.URL_PATH_SEP) && location.length() > 1) {
+        while (location.startsWith(Constants.PATH_SEP) && location.length() > 1) {
             location = location.substring(1);
         }
         return location;

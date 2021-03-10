@@ -148,13 +148,13 @@ public final class StaticResourceHolder {
             for (Resource resource: resources) {
                 String uri = resource.getURI().toString();
                 // 排除目录
-                if (uri.endsWith(Constants.URL_PATH_SEP)) {
+                if (uri.endsWith(Constants.PATH_SEP)) {
                     continue;
                 }
                 int lastIdx = uri.lastIndexOf(location);
                 String url = uri.substring(lastIdx + urlPrefixLen);
-                if (!url.startsWith(Constants.URL_PATH_SEP)) {
-                    url = Constants.URL_PATH_SEP + url;
+                if (!url.startsWith(Constants.PATH_SEP)) {
+                    url = Constants.PATH_SEP + url;
                 }
                 byte[] contentBytes = null;
                 try(InputStream inputStream = resource.getInputStream()) {

@@ -41,7 +41,7 @@ public class StaticResource {
         this.uri = Objects.requireNonNull(uri);
         this.url = Objects.requireNonNull(url);
         this.contents = Objects.requireNonNull(contents);
-        this.fileName = url.substring(url.lastIndexOf(Constants.URL_PATH_SEP) + 1);
+        this.fileName = url.substring(url.lastIndexOf(Constants.PATH_SEP) + 1);
         this.contentType = new MimetypesFileTypeMap().getContentType(this.fileName);
     }
 

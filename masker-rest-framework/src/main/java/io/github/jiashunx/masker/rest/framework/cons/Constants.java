@@ -7,11 +7,12 @@ package io.github.jiashunx.masker.rest.framework.cons;
 public class Constants {
 
     public static final int HTTP_CONTENT_MAX_LENGTH = 50*1024*1024;
+
+    public static final String PATH_SEP = "/";
     public static final String ROOT_PATH = "/";
     public static final String INDEX_PATH = "/index.html";
     public static final String DEFAULT_CONTEXT_PATH = "/";
     public static final String DEFAULT_WEBSOCKET_CONTEXT_PATH = "/websocket";
-    public static final String URL_PATH_SEP = "/";
     public static final int DEFAULT_FILTER_ORDER = 0;
     public static final String DEFAULT_FILTER_URLPATTERN = "/*";
     public static final String[] DEFAULT_FILTER_URLPATTERNS = new String[] { DEFAULT_FILTER_URLPATTERN };
