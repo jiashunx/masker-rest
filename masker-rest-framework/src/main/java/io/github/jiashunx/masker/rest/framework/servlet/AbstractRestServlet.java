@@ -95,7 +95,7 @@ public abstract class AbstractRestServlet implements MRestServlet {
         initialized = true;
     }
 
-    public final Map<AbstractRestServlet, MRestServlet> servletHandlerMap = new WeakHashMap<>();
+    public final Map<Class<? extends MRestServlet>, MRestServlet> servletHandlerMap = new WeakHashMap<>();
 
     public synchronized void init() {
         if (initialized) {
@@ -105,16 +105,17 @@ public abstract class AbstractRestServlet implements MRestServlet {
     }
 
     private MRestServlet getServletHandlerInstance(Class<? extends MRestServlet> servletHandlerClass) {
-        MRestServlet servletInstance = servletHandlerMap.get(this);
+        MRestServlet servletInstance = servletHandlerMap.get(servletHandlerClass);
         if (servletInstance == null) {
             synchronized (servletHandlerMap) {
-                final MRestServlet servletInstance0 = servletHandlerMap.get(this);
+                final MRestServlet servletInstance0 = servletHandlerMap.get(servletHandlerClass);
                 if (servletInstance0 == null) {
                     try {
                         servletInstance = servletHandlerClass.getConstructor(this.getClass()).newInstance(this);
                     } catch (Throwable throwable) {
                         throw new MRestHandleException(String.format("create servlet mapping handler instance failed, class: %s", servletHandlerClass.getName()), throwable);
                     }
+                    servletHandlerMap.put(servletHandlerClass, servletInstance);
                 } else {
                     servletInstance = servletInstance0;
                 }
