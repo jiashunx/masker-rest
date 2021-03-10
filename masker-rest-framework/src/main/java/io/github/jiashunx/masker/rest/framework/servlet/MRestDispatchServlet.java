@@ -53,7 +53,7 @@ public class MRestDispatchServlet implements MRestServlet {
                 // 静态资源指定了index url
                 StaticResource indexResource = restContext.getStaticResourceHolder().getResource(Constants.INDEX_PATH);
                 if (indexResource != null) {
-                    restResponse.redirect(indexUrl);
+                    restResponse.redirect(Constants.INDEX_PATH);
                     return;
                 }
             }
