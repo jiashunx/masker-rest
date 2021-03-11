@@ -102,12 +102,12 @@ public class MRestUtils {
             throw new IllegalArgumentException("path can't be empty");
         }
         String _path = path.trim();
-        while (_path.endsWith(Constants.PATH_SEP)) {
+        /*while (_path.endsWith(Constants.PATH_SEP)) {
             if (_path.length() == 1) {
                 break;
             }
             _path = _path.substring(0, _path.length() - 1);
-        }
+        }*/
         if (!_path.startsWith(Constants.PATH_SEP)) {
             _path = Constants.PATH_SEP + _path;
         }
