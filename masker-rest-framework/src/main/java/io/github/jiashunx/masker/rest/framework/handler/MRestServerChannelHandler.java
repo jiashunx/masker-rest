@@ -8,6 +8,7 @@ import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
 import io.github.jiashunx.masker.rest.framework.util.MResponseHelper;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.SharedObjects;
+import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -280,16 +281,20 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         restRequest.setProtocolName(httpRequest.protocolVersion().protocolName());
         restRequest.setProtocolVersion(httpRequest.protocolVersion().text());
         QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.uri(), StandardCharsets.UTF_8, true);
-        String path = MRestUtils.formatPath(queryStringDecoder.path());
-        restRequest.setOriginUrl(path);
+        String originUrl = queryStringDecoder.path();
+        if (StringUtils.isEmpty(originUrl)) {
+            originUrl = Constants.ROOT_PATH;
+        }
+        restRequest.setOriginUrl(originUrl);
+
         // 根据url和已配置的context-path来解析出实际context-path
         String _ctxPath = Constants.DEFAULT_CONTEXT_PATH;
-        if (path.length() > 1) {
-            int i = path.substring(1).indexOf("/");
-            if (i > 0) {
-                _ctxPath = path.substring(0, i + 1);
-            } else {
-                _ctxPath = path;
+        for (String context: restServer.getContextList()) {
+            if (context.equals(Constants.DEFAULT_CONTEXT_PATH)) {
+                continue;
+            }
+            if (originUrl.startsWith(context)) {
+                _ctxPath = context;
             }
         }
         MRestContext restContext = restServer.getContext(_ctxPath);
@@ -297,16 +302,17 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             restContext = restServer.context();
         }
         restRequest.setRestContext(restContext);
+
+        // 获取context-path及实际url路径
         String contextPath = restContext.getContextPath();
         restRequest.setContextPath(contextPath);
-        String url = path;
-        if (url.equals(contextPath)) {
-            url = Constants.ROOT_PATH;
-        } else if (!Constants.DEFAULT_CONTEXT_PATH.equals(contextPath) && url.startsWith(contextPath)) {
-            url = url.substring(contextPath.length());
+        String url = originUrl;
+        if (!contextPath.equals(Constants.DEFAULT_CONTEXT_PATH)) {
+            url = originUrl.substring(contextPath.length());
         }
         restRequest.setUrl(url);
         restRequest.setUrlQuery(queryStringDecoder.rawQuery());
+
         Map<String, List<String>> originParameters = queryStringDecoder.parameters();
         restRequest.setOriginParameters(originParameters);
         Map<String, String> parameters = new HashMap<>();
