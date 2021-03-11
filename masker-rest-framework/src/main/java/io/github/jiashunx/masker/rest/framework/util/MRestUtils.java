@@ -118,7 +118,17 @@ public class MRestUtils {
         if (StringUtils.isBlank(contextPath)) {
             throw new IllegalArgumentException("contextPath can't be empty");
         }
-        return formatPath(contextPath);
+        String _path = contextPath.trim();
+        while (_path.endsWith(Constants.PATH_SEP)) {
+            if (_path.length() == 1) {
+                break;
+            }
+            _path = _path.substring(0, _path.length() - 1);
+        }
+        if (!_path.startsWith(Constants.PATH_SEP)) {
+            _path = Constants.PATH_SEP + _path;
+        }
+        return _path;
     }
 
     public static void tryCatch(VoidFunc voidFunc, Consumer<Throwable> consumer) {
