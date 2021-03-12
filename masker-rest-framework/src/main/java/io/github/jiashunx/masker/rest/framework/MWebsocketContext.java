@@ -8,6 +8,8 @@ import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.ContinuationWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,24 +21,32 @@ import java.util.function.BiConsumer;
  */
 public class MWebsocketContext {
 
-    private final MRestServer restServer;
-    private final String contextPath;
+    private static final Logger logger = LoggerFactory.getLogger(MWebsocketContext.class);
 
-    public MWebsocketContext(MRestServer restServer, String contextPath) {
+    private final MRestServer restServer;
+    private final MRestContext restContext;
+    private final String websocketUrl;
+
+    public MWebsocketContext(MRestServer restServer, MRestContext restContext, String websocketUrl) {
         this.restServer = Objects.requireNonNull(restServer);
-        this.contextPath = MRestUtils.formatContextPath(contextPath);
+        this.restContext = Objects.requireNonNull(restContext);
+        this.websocketUrl = MRestUtils.formatPath(websocketUrl);
     }
 
     public MRestServer getRestServer() {
         return restServer;
     }
 
-    public String getContextPath() {
-        return contextPath;
+    public MRestContext getRestContext() {
+        return restContext;
+    }
+
+    public String getWebsocketUrl() {
+        return websocketUrl;
     }
 
     public String getWebSocketContextDesc() {
-        return String.format("%s WebSocketContext[%s]", getRestServer().getServerDesc(), getContextPath());
+        return String.format("%s WebSocketContext[%s]", getRestContext().getContextDesc(), getWebsocketUrl());
     }
 
     void init() {
@@ -101,6 +111,9 @@ public class MWebsocketContext {
                 throw new IllegalArgumentException(String.format("%s has already bind BinaryWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             this.frameHandler = Objects.requireNonNull(websocketHandler);
+            if (logger.isInfoEnabled()) {
+                logger.info("{} register WebSocketFrame handler success", getWebSocketContextDesc());
+            }
         });
         return this;
     }
@@ -115,6 +128,9 @@ public class MWebsocketContext {
                 throw new IllegalArgumentException(String.format("%s has already bind ContinuationWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             this.textFrameHandler = Objects.requireNonNull(websocketHandler);
+            if (logger.isInfoEnabled()) {
+                logger.info("{} register TextWebSocketFrame handler success", getWebSocketContextDesc());
+            }
         });
         return this;
     }
@@ -129,6 +145,9 @@ public class MWebsocketContext {
                 throw new IllegalArgumentException(String.format("%s has already bind ContinuationWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             this.binaryFrameHandler = Objects.requireNonNull(websocketHandler);
+            if (logger.isInfoEnabled()) {
+                logger.info("{} register BinaryWebSocketFrame handler success", getWebSocketContextDesc());
+            }
         });
         return this;
     }
@@ -146,6 +165,9 @@ public class MWebsocketContext {
                 throw new IllegalArgumentException(String.format("%s has already bind BinaryWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             this.continuationFrameHandler = Objects.requireNonNull(websocketHandler);
+            if (logger.isInfoEnabled()) {
+                logger.info("{} register ContinuationWebSocketFrame handler success", getWebSocketContextDesc());
+            }
         });
         return this;
     }

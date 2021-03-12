@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
 import java.util.stream.Collectors;
@@ -35,10 +36,13 @@ public class MRestContext {
     private final MRestServer restServer;
     private final String contextPath;
     private final StaticResourceHolder staticResourceHolder;
+    private final Map<String, MWebsocketContext> websocketContextMap = new ConcurrentHashMap<>();
 
     public MRestContext(MRestServer restServer, String contextPath) {
         this.restServer = Objects.requireNonNull(restServer);
         this.contextPath = MRestUtils.formatContextPath(contextPath);
+        // websocket-context初始化
+        websocketContextMap.put(Constants.DEFAULT_WEBSOCKET_CONTEXT_PATH, new MWebsocketContext(this.restServer, this, Constants.DEFAULT_WEBSOCKET_CONTEXT_PATH));
         // 添加框架提供的静态资源
         addClasspathResources("/masker-rest/static", new String[]{ "masker-rest/static/" });
         this.staticResourceHolder = new StaticResourceHolder(this);
@@ -60,6 +64,11 @@ public class MRestContext {
     }
 
     void init() {
+        // websocket-context初始化
+        websocketContextMap.forEach((key, websocketContext) -> {
+            websocketContext.init();
+        });
+
         // mapping处理
         for (VoidFunc mappingTask: mappingTaskList) {
             mappingTask.doSomething();
@@ -794,4 +803,25 @@ public class MRestContext {
         return indexUrl;
     }
 
+    public MWebsocketContext websocketContext() {
+        return websocketContext(Constants.DEFAULT_WEBSOCKET_CONTEXT_PATH);
+    }
+
+    public synchronized MWebsocketContext websocketContext(String websocketUrl) {
+        MWebsocketContext websocketContext = getWebsocketContext(websocketUrl);
+        if (websocketContext == null) {
+            String _ctxPath = MRestUtils.formatPath(websocketUrl);
+            websocketContext = new MWebsocketContext(this.restServer, this, _ctxPath);
+            websocketContextMap.put(_ctxPath, websocketContext);
+        }
+        return websocketContext;
+    }
+
+    public List<String> getWebsocketContextList() {
+        return new ArrayList<>(websocketContextMap.keySet());
+    }
+
+    public MWebsocketContext getWebsocketContext(String websocketUrl) {
+        return websocketContextMap.get(MRestUtils.formatPath(websocketUrl));
+    }
 }

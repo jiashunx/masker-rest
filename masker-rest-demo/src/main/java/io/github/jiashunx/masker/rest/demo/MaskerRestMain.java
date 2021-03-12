@@ -273,7 +273,8 @@ public class MaskerRestMain {
                 .getRestServer()
 
                 // websocket样例
-                .websocketContext("/demo000")
+                .context().
+                websocketContext("/demo000")
                 .bindTextFrameHandler((frame, request, response) -> {
                     String channelId = response.getChannelId();
                     logger.info("receive from client: {}, text: {}", channelId, frame.text());
@@ -288,6 +289,7 @@ public class MaskerRestMain {
                 .getRestServer()
 
                 // websocket样例
+                .context()
                 .websocketContext("/chatroom")
                 .bindTextFrameHandler((frame, request, response) -> {
                     String channelId = response.getChannelId();

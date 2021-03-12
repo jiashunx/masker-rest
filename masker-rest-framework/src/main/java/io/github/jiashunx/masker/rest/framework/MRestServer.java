@@ -45,7 +45,6 @@ public class MRestServer {
     private boolean connectionKeepAlive;
     private int httpContentMaxLength = Constants.HTTP_CONTENT_MAX_LENGTH;
     private final Map<String, MRestContext> contextMap = new ConcurrentHashMap<>();
-    private final Map<String, MWebsocketContext> websocketContextMap = new ConcurrentHashMap<>();
 
     public MRestServer() {
         this(MRestUtils.getDefaultServerPort(), MRestUtils.getDefaultServerName());
@@ -63,7 +62,6 @@ public class MRestServer {
         listenPort(listenPort);
         serverName(serverName);
         contextMap.put(Constants.DEFAULT_CONTEXT_PATH, new MRestContext(this, Constants.DEFAULT_CONTEXT_PATH));
-        websocketContextMap.put(Constants.DEFAULT_WEBSOCKET_CONTEXT_PATH, new MWebsocketContext(this, Constants.DEFAULT_WEBSOCKET_CONTEXT_PATH));
         this.startupTime = new SimpleDateFormat("yyyy-MM-dd HH:ss:mm.SSS").format(new Date());
         this.identifier = UUID.randomUUID().toString().replace("-", "");
     }
@@ -159,34 +157,12 @@ public class MRestServer {
         return context;
     }
 
-    public MWebsocketContext websocketContext() {
-        return websocketContext(Constants.DEFAULT_WEBSOCKET_CONTEXT_PATH);
-    }
-
-    public synchronized MWebsocketContext websocketContext(String contextPath) {
-        MWebsocketContext websocketContext = getWebsocketContext(contextPath);
-        if (websocketContext == null) {
-            String _ctxPath = MRestUtils.formatContextPath(contextPath);
-            websocketContext = new MWebsocketContext(this, _ctxPath);
-            websocketContextMap.put(_ctxPath, websocketContext);
-        }
-        return websocketContext;
-    }
-
     public MRestContext getContext(String contextPath) {
         return contextMap.get(MRestUtils.formatContextPath(contextPath));
     }
 
-    public MWebsocketContext getWebsocketContext(String contextPath) {
-        return websocketContextMap.get(MRestUtils.formatContextPath(contextPath));
-    }
-
     public List<String> getContextList() {
         return new ArrayList<>(contextMap.keySet());
-    }
-
-    public List<String> getWebsocketContextList() {
-        return new ArrayList<>(websocketContextMap.keySet());
     }
 
     public String getServerDesc() {
@@ -233,14 +209,11 @@ public class MRestServer {
     public synchronized void start() throws MRestServerInitializeException {
         checkServerState();
         if (logger.isInfoEnabled()) {
-            logger.info("{} start, Context: {}, WebsocketContext: {}", getServerDesc(), getContextList(), getWebsocketContextList());
+            logger.info("{} start, Context: {}", getServerDesc(), getContextList());
         }
         try {
             contextMap.forEach((key, restContext) -> {
                 restContext.init();
-            });
-            websocketContextMap.forEach((key, websocketContext) -> {
-                websocketContext.init();
             });
             EventLoopGroup bossGroup = new NioEventLoopGroup(bossThreadNum, new MRestThreadFactory(MRestNettyThreadType.BOSS, listenPort));
             EventLoopGroup workerGroup = new NioEventLoopGroup(workerThreadNum, new MRestThreadFactory(MRestNettyThreadType.WORKER, listenPort));

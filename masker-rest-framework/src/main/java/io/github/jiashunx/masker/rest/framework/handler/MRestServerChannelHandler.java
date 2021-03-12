@@ -183,8 +183,8 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         // 处理websocket连接请求.
         if (Constants.UPGRADE_WEBSOCKET.equals(restRequest.getHeader(Constants.HTTP_HEADER_UPGRADE))) {
             Channel channel = ctx.channel();
-            String contextPath = MRestUtils.formatContextPath(restRequest.getOriginUrl());
-            MWebsocketContext websocketContext = restRequest.getRestContext().getRestServer().getWebsocketContext(contextPath);
+            String websocketUrl = restRequest.getUrl();
+            MWebsocketContext websocketContext = restRequest.getRestContext().getWebsocketContext(websocketUrl);
             // 对于未注册WebsocketContext的websocket请求, 直接响应406
             if (websocketContext == null) {
                 HttpResponse res = new DefaultFullHttpResponse(
@@ -196,7 +196,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
                 return;
             }
             String webSocketURL = String.format("%s://%s:%d%s", restRequest.getProtocolNameLowerCase()
-                    , restRequest.getRemoteAddress(), restRequest.getRemotePort(), contextPath);
+                    , restRequest.getRemoteAddress(), restRequest.getRemotePort(), websocketUrl);
             WebSocketServerHandshakerFactory wsFactory = getWebSocketServerHandshakerFactory(webSocketURL);
             WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(object);
             if (handshaker == null) {
@@ -205,7 +205,6 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
                 String channelId = channel.id().toString();
                 handshaker.handshake(channel, object);
                 MWebsocketRequest websocketRequest = new MWebsocketRequest(restRequest);
-                websocketRequest.setContextPath(contextPath);
                 websocketRequest.setWebsocketContext(websocketContext);
                 websocketRequest.setHandshaker(handshaker);
                 webSocketServerHandshakerMap.put(channelId, websocketRequest);
