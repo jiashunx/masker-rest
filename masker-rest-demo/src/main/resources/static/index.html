@@ -80,7 +80,7 @@
             _win.location.href = "./filedownload/test0";
         });
         if (window.WebSocket) {
-            let _socket = new WebSocket("ws://localhost:21700/demo000");
+            let _socket = new WebSocket("ws://localhost:21700/demo/demo000");
             _socket.onmessage = function (ev) {
                 alert("receive from server: " + ev.data);
             };
@@ -106,7 +106,7 @@
             if (!window.WebSocket) {
                 throw new Error("browser do not support websocket");
             }
-            this.websocktURL = "ws://" + window.location.host + "/chatroom";
+            this.websocktURL = "ws://" + window.location.host + "/demo/chatroom";
             this.$websocket = new window.WebSocket(this.websocktURL);
         }
         WebsocketChatRoom.prototype = {
@@ -116,7 +116,7 @@
                     console.log(_this.$username.val(), " connectted to websocket server, url: ", _this.websocktURL);
                 };
                 _this.$websocket.onclose = function (ev) {
-                    console.log(this.$username.val(), " disconnected from websocekt server, url: ", _this.websocktURL);
+                    console.log(_this.$username.val(), " disconnected from websocekt server, url: ", _this.websocktURL);
                 };
                 _this.$websocket.onmessage = function (ev) {
                     let msg = JSON.parse(ev.data);

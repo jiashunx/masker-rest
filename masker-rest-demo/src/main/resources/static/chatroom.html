@@ -30,7 +30,7 @@
             this.$button = $("#" + button);
             let _this = this;
             _this.$wsclient = new WebSocketClient({
-                url: "/chatroom",
+                url: "/demo/chatroom",
                 onopen: function (ev) {
                     console.log(_this.$username.val(), " connectted to websocket server, url: ", this.url);
                 },

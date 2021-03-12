@@ -419,6 +419,7 @@ if (window.WebSocket) {
 }
 
 restServer
+    .context("/demo")
     .websocketContext("/demo000")
     .bindTextFrameHandler((frame, request, response) -> {
         ChannelId channelId = response.getChannelHandlerContext().channel().id();
@@ -469,7 +470,7 @@ restServer
           if (!window.WebSocket) {
               throw new Error("browser do not support websocket");
           }
-          this.websocktURL = "ws://" + window.location.host + "/chatroom";
+          this.websocktURL = "ws://" + window.location.host + "/demo/chatroom";
           this.$websocket = new window.WebSocket(this.websocktURL);
       }
       WebsocketChatRoom.prototype = {

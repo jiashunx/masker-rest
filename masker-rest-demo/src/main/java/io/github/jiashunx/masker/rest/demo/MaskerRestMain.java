@@ -270,11 +270,8 @@ public class MaskerRestMain {
                 })
                 .servlet(new Servlet0(), new Servlet1(), new Servlet2())
 
-                .getRestServer()
-
                 // websocket样例
-                .context().
-                websocketContext("/demo000")
+                .websocketContext("/demo000")
                 .bindTextFrameHandler((frame, request, response) -> {
                     String channelId = response.getChannelId();
                     logger.info("receive from client: {}, text: {}", channelId, frame.text());
@@ -286,10 +283,10 @@ public class MaskerRestMain {
                 .channelInactiveCallback((request, response) -> {
                     logger.info("client inactive: {}", response.getChannelId());
                 })
-                .getRestServer()
+
+                .getRestContext()
 
                 // websocket样例
-                .context()
                 .websocketContext("/chatroom")
                 .bindTextFrameHandler((frame, request, response) -> {
                     String channelId = response.getChannelId();
