@@ -742,12 +742,12 @@ public class MRestContext {
     }
 
     private String formatPrefixUrl(String prefixUrl) {
-        String _prefixUrl = String.valueOf(prefixUrl).replace("\\", "/");
-        while (_prefixUrl.endsWith("/") && _prefixUrl.length() > 1) {
+        String _prefixUrl = String.valueOf(prefixUrl).replace(Constants.PATH_SEP_WIN, Constants.PATH_SEP);
+        while (_prefixUrl.endsWith(Constants.PATH_SEP) && _prefixUrl.length() > 1) {
             _prefixUrl = _prefixUrl.substring(0, _prefixUrl.length() - 1);
         }
-        if (!_prefixUrl.startsWith("/")) {
-            _prefixUrl = "/" + _prefixUrl;
+        if (!_prefixUrl.startsWith(Constants.PATH_SEP)) {
+            _prefixUrl = Constants.PATH_SEP + _prefixUrl;
         }
         return _prefixUrl;
     }

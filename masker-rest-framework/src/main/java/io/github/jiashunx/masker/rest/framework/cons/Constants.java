@@ -10,6 +10,7 @@ public class Constants {
 
     public static final String PATH_SEP = "/";
     public static final String ROOT_PATH = "/";
+    public static final String PATH_SEP_WIN = "\\";
     public static final String INDEX_PATH = "/index.html";
     public static final String DEFAULT_CONTEXT_PATH = "/";
     public static final String DEFAULT_WEBSOCKET_CONTEXT_PATH = "/websocket";
