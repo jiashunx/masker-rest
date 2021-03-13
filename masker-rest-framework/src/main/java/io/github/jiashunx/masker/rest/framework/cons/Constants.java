@@ -18,6 +18,13 @@ public class Constants {
     public static final String DEFAULT_FILTER_URLPATTERN = "/*";
     public static final String[] DEFAULT_FILTER_URLPATTERNS = new String[] { DEFAULT_FILTER_URLPATTERN };
     public static final String DEFAULT_SERVLET_URLPATTERN = "/*";
+    public static final String PATH_MATCH_ALL = "/*";
+    public static final String STRING_MATCH_ALL = "*";
+    public static final String PATH_MATCH_ALL_PREFIX = "*.";
+    public static final String REGEX_PREFIX = "^";
+    public static final String REGEX_SUFFIX = "$";
+    public static final String REGEX_CHAR0N = "\\S*";
+    public static final String REGEX_CHAR1N = "\\S+";
 
     public static final String HTTP_HEADER_ACCEPT = "Accept";
     public static final String HTTP_HEADER_CONTENT_TYPE = "Content-Type";

@@ -1,5 +1,7 @@
 package io.github.jiashunx.masker.rest.framework.model;
 
+import io.github.jiashunx.masker.rest.framework.cons.Constants;
+
 import java.util.Objects;
 
 /**
@@ -13,7 +15,8 @@ public class UrlPathModel {
 
     public UrlPathModel(String p) {
         path = Objects.requireNonNull(p).trim();
-        if (!path.startsWith("/") || path.indexOf("/") != path.lastIndexOf("/")) {
+        if (!path.startsWith(Constants.PATH_SEP)
+                || path.indexOf(Constants.PATH_SEP) != path.lastIndexOf(Constants.PATH_SEP)) {
             throw new IllegalArgumentException();
         }
         root = path.length() == 1;

@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.framework.util;
 
+import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
 import io.github.jiashunx.masker.rest.framework.model.UrlModel;
 import io.github.jiashunx.masker.rest.framework.model.UrlPathModel;
@@ -18,7 +19,7 @@ public class UrlParaser {
 
     public static String getUrl(String url) {
         url = Objects.requireNonNull(url).trim();
-        if (StringUtils.isEmpty(url) || !url.startsWith("/")) {
+        if (StringUtils.isEmpty(url) || !url.startsWith(Constants.PATH_SEP)) {
             throw new IllegalArgumentException(String.format("illegal url: \"%s\"", url));
         }
         return url;
@@ -30,7 +31,7 @@ public class UrlParaser {
         StringBuilder sb = new StringBuilder();
         for (int i = 0, length = urlCharArr.length; i < length; i++) {
             char urlChar = urlCharArr[i];
-            if (urlChar == '/') {
+            if (urlChar == Constants.PATH_SEP.charAt(0)) {
                 int sbLen = sb.length();
                 if (sbLen > 0) {
                     pathModelList.add(new UrlPathModel(sb.toString()));
@@ -71,12 +72,13 @@ public class UrlParaser {
     public static UrlPatternType getUrlPatternType(String pattern) {
         String urlPattern = getUrlPattern(pattern);
         UrlPatternType patternType = null;
-        if (!urlPattern.contains("*") && urlPattern.startsWith("/")) {
+        if (!urlPattern.contains(Constants.STRING_MATCH_ALL) && urlPattern.startsWith(Constants.PATH_SEP)) {
             patternType = UrlPatternType.STRICTLY;
-        } else if (urlPattern.startsWith("/") && urlPattern.endsWith("/*")) {
+        } else if (urlPattern.startsWith(Constants.PATH_SEP) && urlPattern.endsWith(Constants.PATH_MATCH_ALL)) {
             patternType = UrlPatternType.PATH_MATCH;
-        } else if (urlPattern.startsWith("*.") && urlPattern.length() >= 3
-                && !urlPattern.substring(2).contains("/")) {
+        } else if (urlPattern.startsWith(Constants.PATH_MATCH_ALL_PREFIX) && urlPattern.length() >= (Constants.PATH_MATCH_ALL_PREFIX.length() + 1)
+//                && !urlPattern.substring(Constants.PATH_MATCH_ALL_PREFIX.length()).contains(Constants.STRING_MATCH_ALL)
+                && !urlPattern.substring(Constants.PATH_MATCH_ALL_PREFIX.length()).contains(Constants.PATH_SEP)) {
             patternType = UrlPatternType.EXT;
         }
         return patternType;
@@ -98,7 +100,7 @@ public class UrlParaser {
             StringBuilder sb = new StringBuilder();
             for (int i = 0, length = urlCharArr.length; i < length; i++) {
                 char urlChar = urlCharArr[i];
-                if (urlChar == '/') {
+                if (urlChar == Constants.PATH_SEP.charAt(0)) {
                     int sbLen = sb.length();
                     if (sbLen > 0) {
                         patternPathModelList.add(new UrlPatternPathModel(sb.toString()));
@@ -157,11 +159,11 @@ public class UrlParaser {
         String url = urlModel.getUrl();
         String urlPattern = urlPatternModel.getUrlPattern();
         if (urlPatternModel.isPatternExt()) {
-            String pattern = "^" + urlPattern.replace("*", "\\S+") + "$";
+            String pattern = Constants.REGEX_PREFIX + urlPattern.replace(Constants.STRING_MATCH_ALL, Constants.REGEX_CHAR1N) + Constants.REGEX_SUFFIX;
             return url.matches(pattern);
         }
         if (urlPatternModel.isPatternPathMatch()) {
-            String pattern = "^" + urlPattern.replace("*", "\\S*") + "$";
+            String pattern = Constants.REGEX_PREFIX + urlPattern.replace(Constants.STRING_MATCH_ALL, Constants.REGEX_CHAR0N) + Constants.REGEX_SUFFIX;
             return url.matches(pattern);
         }
         if (urlPatternModel.isPatternStrictly()) {

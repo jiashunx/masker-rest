@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.framework.model;
 
+import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.util.UrlParaser;
 
 /**
@@ -20,8 +21,8 @@ public class UrlPatternPathModel extends UrlPathModel {
         if (placeholder) {
             originPath = path;
             originPathVal = pathVal;
-            path = "/*";
-            pathVal = "*";
+            path = Constants.PATH_MATCH_ALL;
+            pathVal = Constants.STRING_MATCH_ALL;
         }
         regular = pathVal.endsWith("*");
     }
