@@ -84,7 +84,7 @@ public class MaskerRestMain {
                     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                     return objectMapper;
                 })
-                .setDevMode(true)
+                .autoRefreshStaticResources(true)
                 .setIndexUrl("/index.html")
 
                 // get请求样例

@@ -83,11 +83,11 @@ public class MRestContext {
         }
         // 静态资源处理
         reloadResource();
-        if (isDevMode()) {
+        if (isAutoRefreshStaticResources()) {
             new Thread(() -> {
                 while (true) {
                     try {
-                        Thread.sleep(60*1000L);
+                        Thread.sleep(getAutoRefreshStaticResourcesPeriod());
                         reloadResource();
                     } catch (Throwable throwable) {
                         if (logger.isErrorEnabled()) {
@@ -781,16 +781,30 @@ public class MRestContext {
         return objectMapperSupplier;
     }
 
-    private volatile boolean devMode = false;
+    private volatile boolean autoRefreshStaticResources = false;
+    private static final long DEFAULT_REFRESH_PERIOD = 60*1000L;
+    private volatile long autoRefreshStaticResourcesPeriod = DEFAULT_REFRESH_PERIOD;
 
-    public synchronized MRestContext setDevMode(boolean devMode) {
+    public synchronized MRestContext autoRefreshStaticResources(boolean autoRefreshStaticResources) {
+        return autoRefreshStaticResources(autoRefreshStaticResources, DEFAULT_REFRESH_PERIOD);
+    }
+
+    public synchronized MRestContext autoRefreshStaticResources(boolean autoRefreshStaticResources, long autoRefreshStaticResourcesPeriod) {
+        if (autoRefreshStaticResourcesPeriod <= 0) {
+            throw new IllegalArgumentException();
+        }
         restServer.checkServerState();
-        this.devMode = devMode;
+        this.autoRefreshStaticResources = autoRefreshStaticResources;
+        this.autoRefreshStaticResourcesPeriod = autoRefreshStaticResourcesPeriod;
         return this;
     }
 
-    public boolean isDevMode() {
-        return devMode;
+    public boolean isAutoRefreshStaticResources() {
+        return autoRefreshStaticResources;
+    }
+
+    public long getAutoRefreshStaticResourcesPeriod() {
+        return autoRefreshStaticResourcesPeriod;
     }
 
     private volatile String indexUrl = null;
