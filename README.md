@@ -5,13 +5,15 @@
 
 - 主要功能：
    - Http Server Framework
-      - rest请求处理注册与分发（同一端口支持发布多个context-path服务），支持重定向、转发等
-      - filter及servlet的注册与分发处理
-      - 静态资源文件访问（classpath中静态资源文件及磁盘文件）
-      - 文件上传、下载、压缩解压等
+      - 支持rest请求处理注册与分发（同一端口支持发布多个context-path服务），支持重定向、转发等
+      - 支持Filter的注册与拦截处理
+      - 支持Servlet的注册与拦截处理（精确匹配（支持占位符）、路径匹配、拓展名匹配）
+      - 支持静态资源文件访问（classpath中静态资源文件及磁盘文件，支持动态刷新）
+      - 支持文件上传、下载、压缩解压等
       - 简易的jwt实现
+      - 基于ASM实现Servlet字节码生成与处理（简单实现）
    - Websocket Server Framework
-      - 复用http服务器端口发布websocket服务（可发布多个）
+      - 复用Http服务器端口发布websocket服务（可发布多个）
       - websocket请求处理回调（建立连接、销毁连接、接收消息等）
 
 - 工程介绍：
@@ -133,8 +135,12 @@
    - version 1.6.6 (released)
       - feature: servlet映射处理url支持占位符匹配与解析处理，可从MRestRquest对象中获取占位符对应path参数
       - feature: 添加 [MRestServletAdapter][8] 类用于servlet请求处理分发
-   - TODO（不知道什么时候才会做，先写个TODO吧）
-      - 参考spring-core实现classpath资源扫描，移除spring-core依赖
+   - version 1.6.7 (doing)
+      - fixbug: 动态Servlet实例缓存实现代码修正
+      - fixbug: 修正默认index页面静态资源页面重定向缺陷
+      - feature: websocket实现调整至MRestContext（MRestServer:MRestContext对应关系：1:n，MRestContext:MWebsocketContext对应关系：1:n）
+      - optimizing: 优化对请求url的解析与匹配处理逻辑（全路径匹配，仅检查url合法性，不对url进行截取修正）
+      - TODO 参考spring-core实现classpath资源扫描，移除spring-core依赖
 
 [1]: masker-rest-framework/src/main/resources/masker-rest/static/websocket.js
 [2]: masker-rest-demo/src/main/resources/static/chatroom.html

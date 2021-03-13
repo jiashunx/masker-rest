@@ -218,6 +218,7 @@ public class MaskerRestMain {
                         logger.info("[upload more than one] upload file: {}", fileUpload.getFilePath());
                         fileNames.add(fileUpload.getFilename());
                     }
+                    // 临时文件未拷贝会被删除
                     return fileNames;
                 })
 
