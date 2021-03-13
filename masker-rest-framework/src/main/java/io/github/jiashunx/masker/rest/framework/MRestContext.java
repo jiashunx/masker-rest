@@ -543,8 +543,10 @@ public class MRestContext {
             UrlPatternModel urlPatternModel = new UrlPatternModel(urlPattern);
             String $urlPattern = urlPatternModel.getUrlPattern();
             List<UrlPatternModel> urlPatternModelList = servletMap.values().stream().map(UrlMappingServlet::getUrlPatternModel).collect(Collectors.toList());
-            if (urlPatternModelList.contains(urlPatternModel)) {
-                throw new MRestMappingException(String.format("%s mapping servlet conflict, urlPattern: %s", getContextDesc(), $urlPattern));
+            for (UrlPatternModel patternModel: urlPatternModelList) {
+                if (patternModel.equals(urlPatternModel)) {
+                    throw new MRestMappingException(String.format("%s mapping servlet conflict, urlPattern: %s | %s", getContextDesc(), $urlPattern, patternModel.getUrlPattern()));
+                }
             }
             MRestServlet restServlet = Objects.requireNonNull(servlet);
             servletMap.put($urlPattern, new UrlMappingServlet(urlPatternModel, restServlet));

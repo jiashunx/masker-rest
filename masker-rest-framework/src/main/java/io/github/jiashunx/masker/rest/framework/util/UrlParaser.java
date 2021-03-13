@@ -46,24 +46,31 @@ public class UrlParaser {
         return pathModelList;
     }
 
+    public static final String PLACEHOLDER_START = "{";
+    public static final String PLACEHOLDER_END = "}";
+    public static final int PLACEHOLDER_START_LENGTH = PLACEHOLDER_START.length();
+    public static final int PLACEHOLDER_END_LENGTH = PLACEHOLDER_END.length();
+    public static final int PLACEHOLDER_GT_LENGTH = PLACEHOLDER_START_LENGTH + PLACEHOLDER_END_LENGTH;
+
     public static boolean isPlaceholderString(String string) {
-        return string.length() > 2
-                && string.startsWith("{") && string.endsWith("}")
-                && string.indexOf("{") == string.lastIndexOf("{")
-                && string.indexOf("}") == string.lastIndexOf("}");
+        return string.length() > PLACEHOLDER_GT_LENGTH
+                && string.startsWith(PLACEHOLDER_START) && string.endsWith(PLACEHOLDER_END)
+                && string.indexOf(PLACEHOLDER_START) == string.lastIndexOf(PLACEHOLDER_START)
+                && string.indexOf(PLACEHOLDER_END) == string.lastIndexOf(PLACEHOLDER_END);
     }
 
     public static String getPlaceholderName(String string) {
         if (isPlaceholderString(string)) {
-            return string.substring(1, string.length() - 1);
+            // 占位符字符串截取
+            return string.substring(PLACEHOLDER_START_LENGTH, string.length() - PLACEHOLDER_END_LENGTH);
         }
-        return "";
+        return StringUtils.EMPTY;
     }
 
     public static String getUrlPattern(String pattern) {
         String urlPattern = Objects.requireNonNull(pattern).trim();
         if (StringUtils.isEmpty(urlPattern)
-                || urlPattern.indexOf("*") != urlPattern.lastIndexOf("*")) {
+                || urlPattern.indexOf(Constants.STRING_MATCH_ALL) != urlPattern.lastIndexOf(Constants.STRING_MATCH_ALL)) {
             throw new MRestMappingException(String.format("illegal urlPattern: %s", urlPattern));
         }
         return urlPattern;
@@ -118,8 +125,7 @@ public class UrlParaser {
                 if (patternPathModel.isPlaceholder()) {
                     String name = patternPathModel.getOriginPathVal();
                     if (set.contains(name)) {
-                        throw new MRestMappingException(String.format("illegal urlPattern: %s, conflict placeholder name: %s"
-                                , pattern, name));
+                        throw new MRestMappingException(String.format("illegal urlPattern: %s, conflict placeholder name: %s", pattern, name));
                     }
                     set.add(name);
                 }
