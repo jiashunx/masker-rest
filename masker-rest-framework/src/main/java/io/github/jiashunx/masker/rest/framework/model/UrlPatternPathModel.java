@@ -24,7 +24,7 @@ public class UrlPatternPathModel extends UrlPathModel {
             path = Constants.PATH_MATCH_ALL;
             pathVal = Constants.STRING_MATCH_ALL;
         }
-        regular = pathVal.endsWith("*");
+        regular = pathVal.endsWith(Constants.STRING_MATCH_ALL);
     }
 
     public boolean isPlaceholder() {

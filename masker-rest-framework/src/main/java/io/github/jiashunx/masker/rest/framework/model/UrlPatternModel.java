@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.framework.model;
 
+import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.type.UrlPatternType;
 import io.github.jiashunx.masker.rest.framework.util.UrlParaser;
 
@@ -48,6 +49,38 @@ public class UrlPatternModel {
 
     public UrlPatternType getUrlPatternType() {
         return urlPatternType;
+    }
+
+    public String getActualUrlPattern() {
+        StringBuilder builder = new StringBuilder();
+        for (UrlPatternPathModel urlPatternPathModel: getPatternPathModelList()) {
+            builder.append(urlPatternPathModel.getPath());
+        }
+        return builder.toString();
+    }
+
+    public int getRegularCount() {
+        if (isSupportRegular()) {
+            return getActualUrlPattern().split(Constants.STRING_MATCH_ALL).length - 1;
+        }
+        return 0;
+    }
+
+    public int getActualPathMatchCount(String url) {
+        List<UrlPathModel> urlPathModelList = UrlParaser.getUrlPathModelList(url);
+        int size0 = urlPathModelList.size();
+        int size1 = getPatternPathModelListSize();
+        // 路径匹配度
+        int pathMatchCount = 0;
+        for (int i = 0; i < size0; i++) {
+            if (i >= size1) {
+                continue;
+            }
+            if (urlPathModelList.get(i).getPath().equals(getPatternPathModelList().get(i).getPath())) {
+                pathMatchCount++;
+            }
+        }
+        return pathMatchCount;
     }
 
     public List<UrlPatternPathModel> getPatternPathModelList() {

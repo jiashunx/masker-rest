@@ -81,10 +81,14 @@ public class UrlParaser {
         UrlPatternType patternType = null;
         if (!urlPattern.contains(Constants.STRING_MATCH_ALL) && urlPattern.startsWith(Constants.PATH_SEP)) {
             patternType = UrlPatternType.STRICTLY;
-        } else if (urlPattern.startsWith(Constants.PATH_SEP) && urlPattern.endsWith(Constants.PATH_MATCH_ALL)) {
+        } else if (urlPattern.startsWith(Constants.PATH_SEP)
+                && urlPattern.endsWith(Constants.PATH_MATCH_ALL)
+                && urlPattern.indexOf(Constants.STRING_MATCH_ALL) == urlPattern.lastIndexOf(Constants.STRING_MATCH_ALL)) {
             patternType = UrlPatternType.PATH_MATCH;
-        } else if (urlPattern.startsWith(Constants.PATH_MATCH_ALL_PREFIX) && urlPattern.length() >= (Constants.PATH_MATCH_ALL_PREFIX.length() + 1)
-//                && !urlPattern.substring(Constants.PATH_MATCH_ALL_PREFIX.length()).contains(Constants.STRING_MATCH_ALL)
+        } else if (urlPattern.startsWith(Constants.PATH_MATCH_ALL_PREFIX)
+                && urlPattern.length() >= (Constants.PATH_MATCH_ALL_PREFIX.length() + 1)
+                && urlPattern.indexOf(Constants.PATH_MATCH_ALL_PREFIX) == urlPattern.lastIndexOf(Constants.PATH_MATCH_ALL_PREFIX)
+                && !urlPattern.substring(Constants.PATH_MATCH_ALL_PREFIX.length()).contains(Constants.STRING_MATCH_ALL)
                 && !urlPattern.substring(Constants.PATH_MATCH_ALL_PREFIX.length()).contains(Constants.PATH_SEP)) {
             patternType = UrlPatternType.EXT;
         }

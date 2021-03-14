@@ -494,11 +494,26 @@ public class MRestContext {
         if (strictlyRef1.get() != null) {
             mappingServletList.add(strictlyRef1.get());
         }
-        if (strictlyRef0.get() != null) {
-            mappingServletList.add(strictlyRef0.get());
-        }
-        if (pathMatchRef.get() != null) {
-            mappingServletList.add(pathMatchRef.get());
+        if (strictlyRef0.get() != null && pathMatchRef.get() != null) {
+            UrlMappingServlet servlet0 = strictlyRef0.get();
+            UrlMappingServlet servlet1 = pathMatchRef.get();
+            // 路径匹配度
+            int count0 = servlet0.getUrlPatternModel().getActualPathMatchCount(requestURL);
+            int count1 = servlet1.getUrlPatternModel().getActualPathMatchCount(requestURL);
+            if (count0 == count1) {
+                throw new MRestMappingException(
+                        String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
+                                , getContextDesc(), requestURL, servlet0.getUrlPatternModel().getUrlPattern(), servlet1.getUrlPatternModel().getUrlPattern()));
+            }
+            // 相同匹配模式 ((/*)|(\\S+)*)* 优先选择路径匹配度高的匹配模式
+            mappingServletList.add(count0 > count1 ? servlet0 : servlet1);
+        } else {
+            if (strictlyRef0.get() != null) {
+                mappingServletList.add(strictlyRef0.get());
+            }
+            if (pathMatchRef.get() != null) {
+                mappingServletList.add(pathMatchRef.get());
+            }
         }
         if (extRef.get() != null) {
             mappingServletList.add(extRef.get());
