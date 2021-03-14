@@ -140,6 +140,7 @@
       - fixbug: 修正默认index页面静态资源页面重定向缺陷
       - feature: websocket实现调整至MRestContext（MRestServer:MRestContext对应关系：1:n，MRestContext:MWebsocketContext对应关系：1:n）
       - optimizing: 优化对请求url的解析与匹配处理逻辑（全路径匹配，仅检查url合法性，不对url进行截取修正）
+      - optimizing: 路径匹配与精确匹配（带占位符）情况兼容处理（根据url匹配度进行映射优先级选择）
       - TODO 参考spring-core实现classpath资源扫描，移除spring-core依赖
 
 [1]: masker-rest-framework/src/main/resources/masker-rest/static/websocket.js
