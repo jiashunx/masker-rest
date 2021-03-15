@@ -1,7 +1,7 @@
 
 ### masker-rest
 
-- 项目简介：基于Netty实现Http Server Framework，极简API发布Rest服务及Websocket服务（端口可复用）
+- 项目简介：基于Netty实现Http Server Framework，极简API发布Rest服务及Websocket服务
 
 - 主要功能：
    - Http Server Framework
@@ -13,8 +13,7 @@
       - 简易的jwt实现
       - 基于ASM实现Servlet字节码生成与处理（简单实现）
    - Websocket Server Framework
-      - 复用Http服务器端口发布websocket服务（可发布多个）
-      - websocket请求处理回调（建立连接、销毁连接、接收消息等）
+      - 复用Http服务器端口发布Websocket服务（支持websocket服务根据url进行请求分发）
 
 - 工程介绍：
 
@@ -34,7 +33,7 @@
 
    - 使用样例点此链接 [UserGuide](./docs/UserGuide.md)
 
-- 版本清单（最新版本：<b>1.6.6</b>）：
+- 版本清单（最新版本：<b>1.6.7</b>）：
 
    - version 1.0.0 (released)
       - feature：支持发布rest接口
@@ -135,13 +134,13 @@
    - version 1.6.6 (released)
       - feature: servlet映射处理url支持占位符匹配与解析处理，可从MRestRquest对象中获取占位符对应path参数
       - feature: 添加 [MRestServletAdapter][8] 类用于servlet请求处理分发
-   - version 1.6.7 (doing)
+   - version 1.6.7 (released)
       - fixbug: 动态Servlet实例缓存实现代码修正
       - fixbug: 修正默认index页面静态资源页面重定向缺陷
       - feature: websocket实现调整至MRestContext（MRestServer:MRestContext对应关系：1:n，MRestContext:MWebsocketContext对应关系：1:n）
       - optimizing: 优化对请求url的解析与匹配处理逻辑（全路径匹配，仅检查url合法性，不对url进行截取修正）
       - optimizing: 路径匹配与精确匹配（带占位符）情况兼容处理（根据url匹配度进行映射优先级选择）
-      - TODO 参考spring-core实现classpath资源扫描，移除spring-core依赖
+   - TODO 参考spring-core实现classpath资源扫描，移除spring-core依赖
 
 [1]: masker-rest-framework/src/main/resources/masker-rest/static/websocket.js
 [2]: masker-rest-demo/src/main/resources/static/chatroom.html
