@@ -25,6 +25,11 @@
         <button type="button" id="btn-download-test0">下载</button>
     </div>
     <div>
+        <label>文件下载测试（下载项目目录）</label>
+        <br>
+        <button type="button" id="btn-download-test1">下载</button>
+    </div>
+    <div>
         <button type="button" id="btn-websocket-test">WebSocket测试</button>
     </div>
     <div>
@@ -78,6 +83,9 @@
         $("#btn-download-test0").click(function () {
             var _win = window.open("about:blank");
             _win.location.href = "./filedownload/test0";
+        });
+        $("#btn-download-test1").click(() => {
+            window.open("about:blank").location.href = "./filedownload/test1";
         });
         if (window.WebSocket) {
             let _socket = new WebSocket("ws://localhost:21700/demo/demo000");

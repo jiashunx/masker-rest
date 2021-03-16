@@ -229,8 +229,18 @@ public class MaskerRestMain {
                     // 也可使用jquery+form表单提交post请求来实现文件下载.
                 })
                 .get("/filedownload/test1", (request, response) -> {
-                    String filePath = MRestUtils.getUserDirPath() + "README.md";
-                    response.write(new File(filePath));
+                    String targetFilePath = MRestUtils.getSystemTempDirPath() + "SFS" + File.separator + System.currentTimeMillis() + File.separator + System.nanoTime() + ".zip";
+                    File targetFile = new File(targetFilePath);
+                    FileUtils.zip(new File(MRestUtils.getUserDirPath()).listFiles(), targetFile);
+                    response.write(targetFile, f -> {
+                        try {
+                            File parent = f.getParentFile();
+                            f.delete();
+                            parent.delete();
+                        } catch (Throwable throwable) {
+                            logger.error("delete tmp file failed: {}", f, throwable);
+                        }
+                    });
                 })
 
                 // servlet样例
