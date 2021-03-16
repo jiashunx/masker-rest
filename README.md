@@ -33,7 +33,7 @@
 
    - 使用样例点此链接 [UserGuide](./docs/UserGuide.md)
 
-- 版本清单（最新版本：<b>1.6.7</b>）：
+- 版本清单（最新版本：<b>1.6.8</b>）：
 
    - version 1.0.0 (released)
       - feature：支持发布rest接口
@@ -140,7 +140,7 @@
       - feature: websocket实现调整至MRestContext（MRestServer:MRestContext对应关系：1:n，MRestContext:MWebsocketContext对应关系：1:n）
       - optimizing: 优化对请求url的解析与匹配处理逻辑（全路径匹配，仅检查url合法性，不对url进行截取修正）
       - optimizing: 路径匹配与精确匹配（带占位符）情况兼容处理（根据url匹配度进行映射优先级选择）
-   - version 1.6.8 (doing)
+   - version 1.6.8 (released)
       - fixbug: 文件压缩时对文件夹下文件压缩处理修正(仅关闭Entry输出流不关闭整个zip文件输出流)
    - TODO 参考spring-core实现classpath资源扫描，移除spring-core依赖
 
