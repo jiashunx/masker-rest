@@ -93,7 +93,7 @@ public class FileUtils {
         if (srcFile.isFile()) {
             zipOutputStream.putNextEntry(new ZipEntry(entryName));
             try (FileInputStream inputStream = new FileInputStream(srcFile);) {
-                IOUtils.copy(inputStream, zipOutputStream);
+                IOUtils.copy(inputStream, zipOutputStream, false);
             } finally {
                 zipOutputStream.closeEntry();
             }

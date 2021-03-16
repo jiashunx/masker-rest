@@ -266,6 +266,10 @@ public final class IOUtils {
     }
 
     public static void copy(InputStream inputStream, OutputStream outputStream) throws IOException {
+        copy(inputStream, outputStream, true);
+    }
+
+    public static void copy(InputStream inputStream, OutputStream outputStream, boolean autoClose) throws IOException {
         try {
             byte[] buffer = new byte[1024];
             int readSize = 0;
@@ -273,8 +277,10 @@ public final class IOUtils {
                 outputStream.write(buffer, 0, readSize);
             }
         } finally {
-            close(inputStream);
-            close(outputStream);
+            if (autoClose) {
+                close(inputStream);
+                close(outputStream);
+            }
         }
     }
 
