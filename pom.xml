@@ -46,6 +46,7 @@
   <modules>
     <module>masker-rest-framework</module>
     <module>masker-rest-demo</module>
+    <module>masker-rest-jjwt</module>
   </modules>
   <distributionManagement>
     <snapshotRepository>

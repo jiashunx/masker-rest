@@ -1,5 +1,6 @@
-package io.github.jiashunx.masker.rest.framework.util;
+package io.github.jiashunx.masker.rest.jjwt;
 
+import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 

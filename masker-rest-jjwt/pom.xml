@@ -6,8 +6,8 @@
     <version>1.7.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
-  <artifactId>masker-rest-demo</artifactId>
-  <name>masker-rest-demo</name>
+  <artifactId>masker-rest-jjwt</artifactId>
+  <name>masker-rest-jjwt</name>
   <dependencies>
     <dependency>
       <groupId>io.github.jiashunx</groupId>
@@ -15,29 +15,10 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.github.jiashunx</groupId>
-      <artifactId>masker-rest-jjwt</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>2.8.5</version>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-      <version>1.2.3</version>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.2.3</version>
-    </dependency>
-    <dependency>
-      <groupId>org.fujion.webjars</groupId>
-      <artifactId>webjar-jquery</artifactId>
-      <version>3.5.1</version>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt</artifactId>
+      <version>0.9.1</version>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
   <build>
@@ -70,8 +51,8 @@
           <archive>
             <manifestEntries>
               <Manifest-Version>1.0</Manifest-Version>
-              <Bundle-Name>masker-rest-demo</Bundle-Name>
-              <Bundle-SymbolicName>masker-rest-demo</Bundle-SymbolicName>
+              <Bundle-Name>masker-rest-jjwt</Bundle-Name>
+              <Bundle-SymbolicName>masker-rest-jjwt</Bundle-SymbolicName>
               <Bundle-Version>${version}</Bundle-Version>
               <Bundle-RequiredExecutionEnvironment>J2SE-${jdk.compiler.version}</Bundle-RequiredExecutionEnvironment>
               <Bundle-Vendor>io.github.jiashunx</Bundle-Vendor>
@@ -88,8 +69,8 @@
           <archive>
             <manifestEntries>
               <Manifest-Version>1.0</Manifest-Version>
-              <Bundle-Name>masker-rest-demo</Bundle-Name>
-              <Bundle-SymbolicName>masker-rest-demo</Bundle-SymbolicName>
+              <Bundle-Name>masker-rest-jjwt</Bundle-Name>
+              <Bundle-SymbolicName>masker-rest-jjwt</Bundle-SymbolicName>
               <Bundle-Version>${version}</Bundle-Version>
               <Bundle-RequiredExecutionEnvironment>J2SE-${jdk.compiler.version}</Bundle-RequiredExecutionEnvironment>
               <Bundle-Vendor>io.github.jiashunx</Bundle-Vendor>
