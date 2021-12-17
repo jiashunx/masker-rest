@@ -7,8 +7,8 @@ import io.github.jiashunx.masker.rest.framework.model.StaticResource;
 import io.github.jiashunx.masker.rest.framework.type.StaticResourceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+//import org.springframework.core.io.Resource;
+//import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import java.io.File;
 import java.io.InputStream;
@@ -134,6 +134,7 @@ public final class StaticResourceHolder {
 
     public static List<StaticResource> getClasspathResources(String cpDirLocation) {
         List<StaticResource> resourceList = new ArrayList<>();
+        /*
         try {
             if (StringUtils.isBlank(cpDirLocation)) {
                 throw new IllegalArgumentException("classpath directory location can't be empty");
@@ -178,6 +179,7 @@ public final class StaticResourceHolder {
                 logger.error("get resources from classpath directory location: [{}] failed.", cpDirLocation, throwable);
             }
         }
+        */
         return resourceList;
     }
 
