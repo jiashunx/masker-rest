@@ -142,7 +142,9 @@
       - optimizing: 路径匹配与精确匹配（带占位符）情况兼容处理（根据url匹配度进行映射优先级选择）
    - version 1.6.8 (released)
       - fixbug: 文件压缩时对文件夹下文件压缩处理修正(仅关闭Entry输出流不关闭整个zip文件输出流)
-   - TODO 参考spring-core实现classpath资源扫描，移除spring-core依赖
+   - version 1.7.0 (doing)
+      - TODO 静态资源扫描处理方式调整, 运行时未匹配到路由处理的get请求作为静态资源进行查找
+      - TODO 移除冗余第三方包依赖, 如spring-core等
 
 [1]: masker-rest-framework/src/main/resources/masker-rest/static/websocket.js
 [2]: masker-rest-demo/src/main/resources/static/chatroom.html
