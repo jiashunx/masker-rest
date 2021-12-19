@@ -14,7 +14,7 @@ public class UrlPathModel {
     protected final boolean root;
 
     public UrlPathModel(String p) {
-        path = Objects.requireNonNull(p).trim();
+        path = Objects.requireNonNull(p);
         if (!path.startsWith(Constants.PATH_SEP)
                 || path.indexOf(Constants.PATH_SEP) != path.lastIndexOf(Constants.PATH_SEP)) {
             throw new IllegalArgumentException();

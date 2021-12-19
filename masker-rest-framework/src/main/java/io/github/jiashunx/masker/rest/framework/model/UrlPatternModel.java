@@ -23,7 +23,7 @@ public class UrlPatternModel {
 
     public UrlPatternModel(String pattern) {
         this.urlPattern = UrlParaser.getUrlPattern(pattern);
-        this.urlPatternType = UrlParaser.getUrlPatternTypeWithCheck(pattern);
+        this.urlPatternType = UrlParaser.getUrlPatternType(pattern);
         this.patternPathModelList = UrlParaser.getUrlPatternPathModelList(pattern);
         if (this.patternPathModelList != null && !this.patternPathModelList.isEmpty()) {
             this.patternPathModelListSize = patternPathModelList.size();

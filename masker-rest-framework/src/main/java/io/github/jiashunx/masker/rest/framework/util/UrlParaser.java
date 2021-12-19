@@ -18,7 +18,7 @@ public class UrlParaser {
     private UrlParaser() {}
 
     public static String getUrl(String url) {
-        url = Objects.requireNonNull(url).trim();
+        url = Objects.requireNonNull(url);
         if (StringUtils.isEmpty(url) || !url.startsWith(Constants.PATH_SEP)) {
             throw new IllegalArgumentException(String.format("illegal url: \"%s\"", url));
         }
@@ -31,7 +31,7 @@ public class UrlParaser {
         StringBuilder sb = new StringBuilder();
         for (int i = 0, length = urlCharArr.length; i < length; i++) {
             char urlChar = urlCharArr[i];
-            if (urlChar == Constants.PATH_SEP.charAt(0)) {
+            if (urlChar == Constants.CHAR_PATH_SEP) {
                 int sbLen = sb.length();
                 if (sbLen > 0) {
                     pathModelList.add(new UrlPathModel(sb.toString()));
@@ -68,7 +68,7 @@ public class UrlParaser {
     }
 
     public static String getUrlPattern(String pattern) {
-        String urlPattern = Objects.requireNonNull(pattern).trim();
+        String urlPattern = Objects.requireNonNull(pattern);
         if (StringUtils.isEmpty(urlPattern)
                 || urlPattern.indexOf(Constants.STRING_MATCH_ALL) != urlPattern.lastIndexOf(Constants.STRING_MATCH_ALL)) {
             throw new MRestMappingException(String.format("illegal urlPattern: %s", urlPattern));
@@ -91,14 +91,8 @@ public class UrlParaser {
                 && !urlPattern.substring(Constants.PATH_MATCH_ALL_PREFIX.length()).contains(Constants.STRING_MATCH_ALL)
                 && !urlPattern.substring(Constants.PATH_MATCH_ALL_PREFIX.length()).contains(Constants.PATH_SEP)) {
             patternType = UrlPatternType.EXT;
-        }
-        return patternType;
-    }
-
-    public static UrlPatternType getUrlPatternTypeWithCheck(String pattern) {
-        UrlPatternType patternType = getUrlPatternType(pattern);
-        if (patternType == null) {
-            throw new MRestMappingException(String.format("illegal urlPattern: %s", pattern));
+        } else {
+            patternType = UrlPatternType.NONE;
         }
         return patternType;
     }
@@ -111,7 +105,7 @@ public class UrlParaser {
             StringBuilder sb = new StringBuilder();
             for (int i = 0, length = urlCharArr.length; i < length; i++) {
                 char urlChar = urlCharArr[i];
-                if (urlChar == Constants.PATH_SEP.charAt(0)) {
+                if (urlChar == Constants.CHAR_PATH_SEP) {
                     int sbLen = sb.length();
                     if (sbLen > 0) {
                         patternPathModelList.add(new UrlPatternPathModel(sb.toString()));

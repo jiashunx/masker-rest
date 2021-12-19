@@ -5,6 +5,10 @@ package io.github.jiashunx.masker.rest.framework.type;
  */
 public enum UrlPatternType {
     /**
+     * 未匹配
+     */
+    NONE,
+    /**
      * 精确匹配：确定url进行匹配，例：/user/id.
      */
     STRICTLY,
