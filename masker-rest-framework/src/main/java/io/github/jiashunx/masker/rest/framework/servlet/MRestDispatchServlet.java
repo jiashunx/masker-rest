@@ -8,7 +8,6 @@ import io.github.jiashunx.masker.rest.framework.exception.MRestHandleException;
 import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.model.MRestHandlerConfig;
-import io.github.jiashunx.masker.rest.framework.model.StaticResource;
 import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import io.github.jiashunx.masker.rest.framework.util.*;
 import io.netty.handler.codec.http.HttpMethod;
@@ -23,12 +22,6 @@ import java.util.function.*;
  */
 public class MRestDispatchServlet implements MRestServlet {
 
-    private static byte[] DEFAULT_PAGE_BYTES = null;
-    static {
-        String template = IOUtils.loadContentFromClasspath("masker-rest/template/index.html", MRestDispatchServlet.class.getClassLoader());
-        DEFAULT_PAGE_BYTES = MRestUtils.format(template, "mrf.version", MRestUtils.getFrameworkVersion()).getBytes(StandardCharsets.UTF_8);
-    }
-
     @Override
     public void service(MRestRequest restRequest, MRestResponse restResponse) {
         if (restResponse.isWriteMethodInvoked()) {
@@ -40,37 +33,7 @@ public class MRestDispatchServlet implements MRestServlet {
         MRestHandler restHandler = restContext.getUrlMappingHandler(requestURL, restRequest.getMethod());
         if (restHandler != null) {
             handleRequest(restRequest, restResponse, restHandler);
-            return;
         }
-        // 默认请求url处理
-        if (Constants.ROOT_PATH.equals(requestURL) || Constants.INDEX_PATH.equals(requestURL)) {
-            if (Constants.ROOT_PATH.equals(requestURL)) {
-                // 指定了index url, 服务端进行重定向
-                String indexUrl = restContext.getIndexUrl();
-                if (StringUtils.isNotEmpty(indexUrl) && !Constants.ROOT_PATH.equals(indexUrl)) {
-                    restResponse.redirect(indexUrl);
-                    return;
-                }
-                restResponse.redirect(Constants.INDEX_PATH);
-            }
-            if (Constants.INDEX_PATH.equals(requestURL)) {
-                // 静态资源指定了index url
-                StaticResource indexResource = restContext.getStaticResourceHolder().getResource(Constants.INDEX_PATH);
-                if (indexResource != null) {
-                    restResponse.redirect(Constants.INDEX_PATH);
-                    return;
-                }
-            }
-            // 输出默认masker-rest主页面
-            restResponse.write(DEFAULT_PAGE_BYTES, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_TEXT_HTML));
-            return;
-        }
-        if (HttpMethod.GET.equals(restRequest.getMethod())) {
-            // TODO 静态资源匹配, 请求url与注册的classpath|diskpath静态资源进行匹配, 然后根据请求url进行遍历查找, 同时获取文件Content-Type
-            // StaticResourceFilter
-            // return;
-        }
-        restResponse.writeStatusPage(HttpResponseStatus.NOT_FOUND);
     }
 
     private void handleRequest(MRestRequest restRequest, MRestResponse restResponse, MRestHandler restHandler) {
