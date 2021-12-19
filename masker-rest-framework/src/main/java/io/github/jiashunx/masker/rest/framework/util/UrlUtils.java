@@ -145,7 +145,7 @@ public class UrlUtils {
      * @return 修正后的url
      */
     public static String appendPrefixSep(String url0) {
-        String url = removePrefixSeps(url0);
+        String url = nullToEmpty(url0);
         if (!url.startsWith(Constants.PATH_SEP)) {
             url = Constants.PATH_SEP + url;
         }
@@ -158,7 +158,7 @@ public class UrlUtils {
      * @return 修正后的url
      */
     public static String appendSuffixSep(String url0) {
-        String url = removeSuffixSeps(url0);
+        String url = nullToEmpty(url0);
         if (!url.endsWith(Constants.PATH_SEP)) {
             url = url + Constants.PATH_SEP;
         }

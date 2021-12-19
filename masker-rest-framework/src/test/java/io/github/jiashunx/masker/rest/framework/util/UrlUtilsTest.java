@@ -141,11 +141,11 @@ public class UrlUtilsTest {
         assertEquals("/", UrlUtils.appendPrefixSep(""));
         assertEquals("/ ", UrlUtils.appendPrefixSep(" "));
         assertEquals("/", UrlUtils.appendPrefixSep("/"));
-        assertEquals("/", UrlUtils.appendPrefixSep("//"));
+        assertEquals("//", UrlUtils.appendPrefixSep("//"));
         assertEquals("/ddd/ddd", UrlUtils.appendPrefixSep("ddd/ddd"));
         assertEquals("/ddd/ddd", UrlUtils.appendPrefixSep("/ddd/ddd"));
-        assertEquals("/ddd/ddd", UrlUtils.appendPrefixSep("//ddd/ddd"));
-        assertEquals("/ddd/ddd", UrlUtils.appendPrefixSep("///ddd/ddd"));
+        assertEquals("//ddd/ddd", UrlUtils.appendPrefixSep("//ddd/ddd"));
+        assertEquals("///ddd/ddd", UrlUtils.appendPrefixSep("///ddd/ddd"));
     }
 
     @Test
@@ -154,11 +154,11 @@ public class UrlUtilsTest {
         assertEquals("/", UrlUtils.appendSuffixSep(""));
         assertEquals(" /", UrlUtils.appendSuffixSep(" "));
         assertEquals("/", UrlUtils.appendSuffixSep("/"));
-        assertEquals("/", UrlUtils.appendSuffixSep("//"));
+        assertEquals("//", UrlUtils.appendSuffixSep("//"));
         assertEquals("/ddd/ddd/", UrlUtils.appendSuffixSep("/ddd/ddd"));
         assertEquals("/ddd/ddd/", UrlUtils.appendSuffixSep("/ddd/ddd/"));
-        assertEquals("/ddd/ddd/", UrlUtils.appendSuffixSep("/ddd/ddd//"));
-        assertEquals("/ddd/ddd/", UrlUtils.appendSuffixSep("/ddd/ddd///"));
+        assertEquals("/ddd/ddd//", UrlUtils.appendSuffixSep("/ddd/ddd//"));
+        assertEquals("/ddd/ddd///", UrlUtils.appendSuffixSep("/ddd/ddd///"));
     }
 
 }

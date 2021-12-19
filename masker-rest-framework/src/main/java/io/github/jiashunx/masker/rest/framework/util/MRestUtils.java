@@ -108,7 +108,7 @@ public class MRestUtils {
         if (StringUtils.isEmpty(contextPath)) {
             throw new IllegalArgumentException("contextPath can't be empty");
         }
-        return UrlUtils.appendPrefixSep(UrlUtils.removeSuffixSeps0(contextPath));
+        return UrlUtils.appendPrefixSep(contextPath);
     }
 
     public static String formatWebsocketContextPath(String websocketContextPath) {

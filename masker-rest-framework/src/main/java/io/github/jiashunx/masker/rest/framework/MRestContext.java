@@ -674,7 +674,7 @@ public class MRestContext {
 
     public synchronized MRestContext addClasspathResources(String prefixUrl, String[] pathArr) {
         if (pathArr != null) {
-            String _prefixUrl = formatPrefixUrl(prefixUrl);
+            String _prefixUrl = UrlUtils.appendSuffixSep(UrlUtils.appendPrefixSep(prefixUrl));
             for (String path: pathArr) {
                 classpathResources.computeIfAbsent(_prefixUrl, k -> new HashSet<>()).add(formatClasspathResourcePath(path));
             }
@@ -719,7 +719,7 @@ public class MRestContext {
 
     public synchronized MRestContext addDiskResources(String prefixUrl, String[] pathArr) {
         if (pathArr != null) {
-            String _prefixUrl = formatPrefixUrl(prefixUrl);
+            String _prefixUrl = UrlUtils.appendSuffixSep(UrlUtils.appendPrefixSep(prefixUrl));
             for (String path: pathArr) {
                 diskResources.computeIfAbsent(_prefixUrl, k -> new HashSet<>()).add(formatDiskResourcePath(path));
             }
@@ -741,17 +741,6 @@ public class MRestContext {
             map.put(key, list);
         });
         return map;
-    }
-
-    private String formatPrefixUrl(String prefixUrl) {
-        String _prefixUrl = String.valueOf(prefixUrl).replace(Constants.PATH_SEP_WIN, Constants.PATH_SEP);
-        while (_prefixUrl.endsWith(Constants.PATH_SEP) && _prefixUrl.length() > 1) {
-            _prefixUrl = _prefixUrl.substring(0, _prefixUrl.length() - 1);
-        }
-        if (!_prefixUrl.startsWith(Constants.PATH_SEP)) {
-            _prefixUrl = Constants.PATH_SEP + _prefixUrl;
-        }
-        return _prefixUrl;
     }
 
 
