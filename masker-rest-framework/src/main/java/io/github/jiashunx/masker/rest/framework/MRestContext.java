@@ -9,7 +9,6 @@ import io.github.jiashunx.masker.rest.framework.servlet.AbstractRestServlet;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestDispatchServlet;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
-import io.github.jiashunx.masker.rest.framework.filter.StaticResourceFilter;
 import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestServlet;
@@ -421,10 +420,6 @@ public class MRestContext {
      */
     private final Map<String, Set<String>> diskResources = new HashMap<>();
     /**
-     * 静态资源处理.
-     */
-    private final MRestFilter staticResourceFilter = new StaticResourceFilter(this);
-    /**
      * 添加servlet的任务(在服务启动时统一添加).
      */
     private final List<VoidFunc> servletTaskList = new ArrayList<>();
@@ -432,15 +427,6 @@ public class MRestContext {
      * 添加filter的任务(在服务启动时统一添加).
      */
     private final List<VoidFunc> filterTaskList = new ArrayList<>();
-
-    public MRestFilterChain getCommonStaticResourceFilterChain(String requestURL) {
-        List<MRestFilter> filterList = new LinkedList<>();
-        filterList.add(staticResourceFilter);
-        filterList.add((request, response, filterChain) -> {
-            dispatchServlet.service(request, response);
-        });
-        return new MRestFilterChain(this, filterList.toArray(new MRestFilter[0]));
-    }
 
     public MRestServlet getServlet(String requestURL) {
         List<UrlMappingServlet> mappingServletList = new ArrayList<>();
@@ -587,7 +573,6 @@ public class MRestContext {
             int order1 = filter1.order();
             return order0 - order1;
         });
-        filterList.addLast(staticResourceFilter);
         MRestServlet servlet = getServlet(requestURL);
         // servlet包装为filter执行
         if (servlet != null) {

@@ -42,11 +42,12 @@ public class MRestDispatchServlet implements MRestServlet {
             handleRequest(restRequest, restResponse, restHandler);
             return;
         }
+        // 默认请求url处理
         if (Constants.ROOT_PATH.equals(requestURL) || Constants.INDEX_PATH.equals(requestURL)) {
             if (Constants.ROOT_PATH.equals(requestURL)) {
                 // 指定了index url, 服务端进行重定向
                 String indexUrl = restContext.getIndexUrl();
-                if (StringUtils.isNotBlank(indexUrl) && !Constants.ROOT_PATH.equals(indexUrl)) {
+                if (StringUtils.isNotEmpty(indexUrl) && !Constants.ROOT_PATH.equals(indexUrl)) {
                     restResponse.redirect(indexUrl);
                     return;
                 }
@@ -65,7 +66,8 @@ public class MRestDispatchServlet implements MRestServlet {
             return;
         }
         if (HttpMethod.GET.equals(restRequest.getMethod())) {
-            // TODO 静态资源匹配
+            // TODO 静态资源匹配, 请求url与注册的classpath|diskpath静态资源进行匹配, 然后根据请求url进行遍历查找, 同时获取文件Content-Type
+            // StaticResourceFilter
             // return;
         }
         restResponse.writeStatusPage(HttpResponseStatus.NOT_FOUND);

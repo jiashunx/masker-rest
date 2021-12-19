@@ -168,15 +168,6 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
     /************************************************** HTTP  ****************************************************/
 
-    private static final Set<String> COMMON_STATIC_RESOURCE_URL = new HashSet<>();
-    static {
-        COMMON_STATIC_RESOURCE_URL.add("/favicon.ico");
-    }
-
-    private boolean isCommonStaticResource(String url) {
-        return COMMON_STATIC_RESOURCE_URL.contains(url);
-    }
-
     private void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest object) throws Exception {
         MRestRequest restRequest = parseHttpRequest(ctx, object);
 
@@ -237,12 +228,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
         Exception exception = null;
         try {
-            MRestFilterChain filterChain = null;
-            if (isCommonStaticResource(originUrl)) {
-                filterChain = restContext.getCommonStaticResourceFilterChain(originUrl);
-            } else {
-                filterChain = restContext.getFilterChain(requestUrl);
-            }
+            MRestFilterChain filterChain = restContext.getFilterChain(requestUrl);
             filterChain.doFilter(restRequest, restResponse);
             restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_NAME, MRestUtils.getFrameworkName());
             restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_VERSION, MRestUtils.getFrameworkVersion());
