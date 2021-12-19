@@ -139,6 +139,11 @@ public class UrlUtils {
         return url;
     }
 
+    /**
+     * 向url添加前缀"/"
+     * @param url0 原始url
+     * @return 修正后的url
+     */
     public static String appendPrefixSep(String url0) {
         String url = removePrefixSeps(url0);
         if (!url.startsWith(Constants.PATH_SEP)) {
@@ -147,6 +152,11 @@ public class UrlUtils {
         return url;
     }
 
+    /**
+     * 向url添加后缀"/"
+     * @param url0 原始url
+     * @return 修正后的url
+     */
     public static String appendSuffixSep(String url0) {
         String url = removeSuffixSeps(url0);
         if (!url.endsWith(Constants.PATH_SEP)) {
