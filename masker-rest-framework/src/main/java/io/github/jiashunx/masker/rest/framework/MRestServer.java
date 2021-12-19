@@ -87,7 +87,7 @@ public class MRestServer {
     }
 
     public MRestServer serverName(String serverName) {
-        if (StringUtils.isBlank(serverName)) {
+        if (StringUtils.isEmpty(serverName)) {
             throw new IllegalArgumentException("serverName -> " + serverName);
         }
         this.serverName = serverName;

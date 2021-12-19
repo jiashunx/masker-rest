@@ -144,7 +144,7 @@ public class MRestContext {
      * @param methods methods
      */
     private void checkMappingUrl(String url, HttpMethod... methods) {
-        if (StringUtils.isBlank(url)) {
+        if (StringUtils.isEmpty(url)) {
             throw new IllegalArgumentException(String.format("%s illegal mapping url: %s", getContextDesc(), url));
         }
         if (isMappingURL(url, methods)) {
@@ -826,7 +826,7 @@ public class MRestContext {
     public synchronized MWebsocketContext websocketContext(String websocketUrl) {
         MWebsocketContext websocketContext = getWebsocketContext(websocketUrl);
         if (websocketContext == null) {
-            String _ctxPath = MRestUtils.formatPath(websocketUrl);
+            String _ctxPath = MRestUtils.formatWebsocketContextPath(websocketUrl);
             websocketContext = new MWebsocketContext(this.restServer, this, _ctxPath);
             websocketContextMap.put(_ctxPath, websocketContext);
         }
@@ -838,6 +838,6 @@ public class MRestContext {
     }
 
     public MWebsocketContext getWebsocketContext(String websocketUrl) {
-        return websocketContextMap.get(MRestUtils.formatPath(websocketUrl));
+        return websocketContextMap.get(MRestUtils.formatWebsocketContextPath(websocketUrl));
     }
 }

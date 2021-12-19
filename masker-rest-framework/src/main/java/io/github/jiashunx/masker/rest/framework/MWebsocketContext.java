@@ -30,7 +30,7 @@ public class MWebsocketContext {
     public MWebsocketContext(MRestServer restServer, MRestContext restContext, String websocketUrl) {
         this.restServer = Objects.requireNonNull(restServer);
         this.restContext = Objects.requireNonNull(restContext);
-        this.websocketUrl = MRestUtils.formatPath(websocketUrl);
+        this.websocketUrl = MRestUtils.formatWebsocketContextPath(websocketUrl);
     }
 
     public MRestServer getRestServer() {

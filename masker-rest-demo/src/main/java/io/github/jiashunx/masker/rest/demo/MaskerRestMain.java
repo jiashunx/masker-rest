@@ -175,7 +175,7 @@ public class MaskerRestMain {
                     } else {
                         Cookie cookie = request.getCookie("mmm-jwt-token");
                         String jwtToken = cookie == null ? null : cookie.value();
-                        if (StringUtils.isBlank(jwtToken)) {
+                        if (StringUtils.isEmpty(jwtToken)) {
                             response.write(HttpResponseStatus.UNAUTHORIZED);
                             return;
                         }

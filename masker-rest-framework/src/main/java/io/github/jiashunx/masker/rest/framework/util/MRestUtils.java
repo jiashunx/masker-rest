@@ -98,37 +98,24 @@ public class MRestUtils {
     }
 
     public static String formatPath(String path) {
-        if (StringUtils.isBlank(path)) {
+        if (StringUtils.isEmpty(path)) {
             throw new IllegalArgumentException("path can't be empty");
         }
-        String _path = path.trim();
-        /*while (_path.endsWith(Constants.PATH_SEP)) {
-            if (_path.length() == 1) {
-                break;
-            }
-            _path = _path.substring(0, _path.length() - 1);
-        }*/
-        if (!_path.startsWith(Constants.PATH_SEP)) {
-            _path = Constants.PATH_SEP + _path;
-        }
-        return _path;
+        return UrlUtils.appendPrefixSep(path);
     }
 
     public static String formatContextPath(String contextPath) {
-        if (StringUtils.isBlank(contextPath)) {
+        if (StringUtils.isEmpty(contextPath)) {
             throw new IllegalArgumentException("contextPath can't be empty");
         }
-        String _path = contextPath.trim();
-        while (_path.endsWith(Constants.PATH_SEP)) {
-            if (_path.length() == 1) {
-                break;
-            }
-            _path = _path.substring(0, _path.length() - 1);
+        return UrlUtils.appendPrefixSep(UrlUtils.removeSuffixSeps0(contextPath));
+    }
+
+    public static String formatWebsocketContextPath(String websocketContextPath) {
+        if (StringUtils.isEmpty(websocketContextPath)) {
+            throw new IllegalArgumentException("websocketContextPath can't be empty");
         }
-        if (!_path.startsWith(Constants.PATH_SEP)) {
-            _path = Constants.PATH_SEP + _path;
-        }
-        return _path;
+        return UrlUtils.appendPrefixSep(websocketContextPath);
     }
 
     public static void tryCatch(VoidFunc voidFunc, Consumer<Throwable> consumer) {
