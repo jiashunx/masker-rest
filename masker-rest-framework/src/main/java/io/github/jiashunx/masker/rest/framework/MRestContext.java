@@ -5,14 +5,11 @@ import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
 import io.github.jiashunx.masker.rest.framework.model.*;
-import io.github.jiashunx.masker.rest.framework.servlet.AbstractRestServlet;
-import io.github.jiashunx.masker.rest.framework.servlet.MRestDispatchServlet;
+import io.github.jiashunx.masker.rest.framework.servlet.*;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
-import io.github.jiashunx.masker.rest.framework.servlet.MRestServlet;
-import io.github.jiashunx.masker.rest.framework.servlet.MRestServletAdapter;
 import io.github.jiashunx.masker.rest.framework.util.*;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -412,6 +409,14 @@ public class MRestContext {
      */
     private final MRestServlet dispatchServlet = new MRestDispatchServlet();
     /**
+     * 静态资源匹配处理.
+     */
+    private final MRestServlet staticResourceServlet = new StaticResourceServlet();
+    /**
+     * 请求处理末尾Servlet(扫尾工作).
+     */
+    private final MRestServlet lastServlet = new LastServlet();
+    /**
      * 配置的静态资源classpath扫描路径.
      */
     private final Map<String, Set<String>> classpathResources = new HashMap<>();
@@ -588,9 +593,15 @@ public class MRestContext {
                 }
             });
         }
-        // 最后才走到分发处理.
+        // rest请求分发处理.
         filterList.addLast((request, response, filterChain) -> {
             dispatchServlet.service(request, response);
+        });
+        filterList.addLast((request, response, filterChain) -> {
+            staticResourceServlet.service(request, response);
+        });
+        filterList.addLast((request, response, filterChain) -> {
+            lastServlet.service(request, response);
         });
         return new MRestFilterChain(this, filterList.toArray(new MRestFilter[0]));
     }
