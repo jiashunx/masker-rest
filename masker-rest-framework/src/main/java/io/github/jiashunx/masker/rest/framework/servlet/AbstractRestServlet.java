@@ -38,21 +38,6 @@ public abstract class AbstractRestServlet implements MRestServlet {
         }
         Method[] methods = servletClass.getDeclaredMethods();
         for (Method method: methods) {
-            RequestMapping methodRequestMapping = method.getAnnotation(RequestMapping.class);
-            if (methodRequestMapping != null) {
-                String mappingUrl = MRestUtils.formatPath(methodRequestMapping.url());
-                if (!klassMappingUrl.equals(Constants.ROOT_PATH)) {
-                    mappingUrl = klassMappingUrl + mappingUrl;
-                }
-                ServletMappingHandler mappingHandler = servletMappingHandlerMap.get(mappingUrl);
-                if (mappingHandler != null) {
-                    throw new MRestMappingException(String.format("url [%s] mapping conflict, className.methodName=%s.%s"
-                            , mappingUrl, servletClass.getName(), method.getName()));
-                }
-                mappingHandler = new ServletMappingHandler(servletClass, mappingUrl, method);
-                mappingHandler.getMethods().addAll(Arrays.asList(HttpMethod.values()));
-                servletMappingHandlerMap.put(mappingUrl, mappingHandler);
-            }
             GetMapping getMapping = method.getAnnotation(GetMapping.class);
             if (getMapping != null) {
                 String mappingUrl = MRestUtils.formatPath(getMapping.url());
@@ -90,6 +75,21 @@ public abstract class AbstractRestServlet implements MRestServlet {
                     mappingHandler.getMethods().add(HttpMethod.POST);
                     servletMappingHandlerMap.put(mappingUrl, mappingHandler);
                 }
+            }
+            RequestMapping methodRequestMapping = method.getAnnotation(RequestMapping.class);
+            if (methodRequestMapping != null) {
+                String mappingUrl = MRestUtils.formatPath(methodRequestMapping.url());
+                if (!klassMappingUrl.equals(Constants.ROOT_PATH)) {
+                    mappingUrl = klassMappingUrl + mappingUrl;
+                }
+                ServletMappingHandler mappingHandler = servletMappingHandlerMap.get(mappingUrl);
+                if (mappingHandler != null) {
+                    throw new MRestMappingException(String.format("url [%s] mapping conflict, className.methodName=%s.%s"
+                            , mappingUrl, servletClass.getName(), method.getName()));
+                }
+                mappingHandler = new ServletMappingHandler(servletClass, mappingUrl, method);
+                mappingHandler.getMethods().addAll(Arrays.asList(methodRequestMapping.method()));
+                servletMappingHandlerMap.put(mappingUrl, mappingHandler);
             }
         }
         initialized = true;
