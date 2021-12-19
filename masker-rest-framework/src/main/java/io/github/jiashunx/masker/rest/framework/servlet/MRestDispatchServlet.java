@@ -46,10 +46,13 @@ public class MRestDispatchServlet implements MRestServlet {
             if (Constants.ROOT_PATH.equals(requestURL)) {
                 // 指定了index url, 服务端进行重定向
                 String indexUrl = restContext.getIndexUrl();
-                if (StringUtils.isNotBlank(indexUrl)) {
+                if (StringUtils.isNotBlank(indexUrl) && !Constants.ROOT_PATH.equals(indexUrl)) {
                     restResponse.redirect(indexUrl);
                     return;
                 }
+                restResponse.redirect(Constants.INDEX_PATH);
+            }
+            if (Constants.INDEX_PATH.equals(requestURL)) {
                 // 静态资源指定了index url
                 StaticResource indexResource = restContext.getStaticResourceHolder().getResource(Constants.INDEX_PATH);
                 if (indexResource != null) {
@@ -60,6 +63,10 @@ public class MRestDispatchServlet implements MRestServlet {
             // 输出默认masker-rest主页面
             restResponse.write(DEFAULT_PAGE_BYTES, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_TEXT_HTML));
             return;
+        }
+        if (HttpMethod.GET.equals(restRequest.getMethod())) {
+            // TODO 静态资源匹配
+            // return;
         }
         restResponse.writeStatusPage(HttpResponseStatus.NOT_FOUND);
     }
