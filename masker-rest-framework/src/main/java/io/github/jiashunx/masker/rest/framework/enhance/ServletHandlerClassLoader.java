@@ -2,6 +2,7 @@ package io.github.jiashunx.masker.rest.framework.enhance;
 
 import io.github.jiashunx.masker.rest.framework.util.IOUtils;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
+import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 
 import java.io.File;
 import java.net.URL;
@@ -27,11 +28,11 @@ public class ServletHandlerClassLoader extends URLClassLoader {
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
         try {
-            String filePath = MRestUtils.getFrameworkTempDirPath() + name.replace(".", "/") + ".class";
+            String filePath = MRestUtils.getFrameworkTempDirPath() + StringUtils.replaceDotToSep(name) + ".class";
             byte[] bytes = IOUtils.readBytes(new File(filePath));
             return defineClass(name, bytes, 0, bytes.length);
         } catch (Throwable throwable) {
-            throw new ClassNotFoundException("", throwable);
+            throw new ClassNotFoundException(String.format("class [%s]", name), throwable);
         }
     }
 

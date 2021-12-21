@@ -1,11 +1,14 @@
 package io.github.jiashunx.masker.rest.framework.enhance;
 
+import io.github.jiashunx.masker.rest.framework.MRestRequest;
+import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
 import io.github.jiashunx.masker.rest.framework.servlet.MRestServlet;
 import io.github.jiashunx.masker.rest.framework.type.MRestHandlerType;
 import io.github.jiashunx.masker.rest.framework.util.FileUtils;
 import io.github.jiashunx.masker.rest.framework.util.IOUtils;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
+import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 import jdk.internal.org.objectweb.asm.*;
 
 import java.io.File;
@@ -19,11 +22,15 @@ public class ServletHandlerClassGenerator implements Opcodes {
 
     private static final AtomicInteger counter = new AtomicInteger(0);
 
-    public static final String CLASS_IDENTIFIER_REQ = "Lio/github/jiashunx/masker/rest/framework/MRestRequest;";
-    public static final String CLASS_IDENTIFIER_RESP = "Lio/github/jiashunx/masker/rest/framework/MRestResponse;";
+    public static final String CLASS_NAME_SERVLET = StringUtils.replaceDotToSep(MRestServlet.class.getName());
+    public static final String CLASS_NAME_REQ = StringUtils.replaceDotToSep(MRestRequest.class.getName());
+    public static final String CLASS_NAME_RESP = StringUtils.replaceDotToSep(MRestResponse.class.getName());
+
+    public static final String CLASS_IDENTIFIER_REQ = "L" + CLASS_NAME_REQ + ";";
+    public static final String CLASS_IDENTIFIER_RESP = "L" + CLASS_NAME_RESP + ";";
     public static final String METHOD_DESCRIPTOR_0 = "()V";
-    public static final String METHOD_DESCRIPTOR_1 = "(Lio/github/jiashunx/masker/rest/framework/MRestRequest;)V";
-    public static final String METHOD_DESCRIPTOR_2 = "(Lio/github/jiashunx/masker/rest/framework/MRestRequest;Lio/github/jiashunx/masker/rest/framework/MRestResponse;)V";
+    public static final String METHOD_DESCRIPTOR_1 = "(" + CLASS_IDENTIFIER_REQ + ")V";
+    public static final String METHOD_DESCRIPTOR_2 = "(" + CLASS_IDENTIFIER_REQ + CLASS_IDENTIFIER_RESP + ")V";
 
     public static Class<? extends MRestServlet> generateClass(Class<?> servletClass, String methodName, MRestHandlerType handlerType) {
         try {
@@ -47,7 +54,7 @@ public class ServletHandlerClassGenerator implements Opcodes {
         MethodVisitor mv;
         AnnotationVisitor av0;
 
-        cw.visit(52, ACC_PUBLIC + ACC_SUPER, targetClassName, null, "java/lang/Object", new String[]{"io/github/jiashunx/masker/rest/framework/servlet/MRestServlet"});
+        cw.visit(52, ACC_PUBLIC + ACC_SUPER, targetClassName, null, "java/lang/Object", new String[]{ CLASS_NAME_SERVLET });
 
         cw.visitSource(targetFileName, targetName);
 
@@ -116,11 +123,7 @@ public class ServletHandlerClassGenerator implements Opcodes {
         File classFile = FileUtils.newFile(MRestUtils.getFrameworkTempDirPath() + targetClassName + ".class");
         IOUtils.write(bytes, classFile);
         return (Class<? extends MRestServlet>) ServletHandlerClassLoader
-                .getInstance().loadClass(targetClassName.replace("/", "."));
-    }
-
-    private static String getClassName(Class<?> klass) {
-        return klass.getName().replace(".", "/");
+                .getInstance().loadClass(StringUtils.replaceSepToDot(targetClassName));
     }
 
 }

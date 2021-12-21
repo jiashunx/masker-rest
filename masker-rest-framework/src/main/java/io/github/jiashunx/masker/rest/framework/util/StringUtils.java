@@ -49,4 +49,12 @@ public class StringUtils {
         return str == null ? EMPTY : str.trim();
     }
 
+    public static String replaceDotToSep(String str) {
+        return str == null ? null : str.replace(".", "/");
+    }
+
+    public static String replaceSepToDot(String str) {
+        return str == null ? null : str.replace("/", ".");
+    }
+
 }
