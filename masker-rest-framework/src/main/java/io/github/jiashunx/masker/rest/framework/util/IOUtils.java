@@ -1,7 +1,6 @@
 package io.github.jiashunx.masker.rest.framework.util;
 
 import io.github.jiashunx.masker.rest.framework.exception.MRestFileOperateException;
-import io.github.jiashunx.masker.rest.framework.model.DiskFileResource;
 import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +11,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 
 /**
@@ -46,12 +44,20 @@ public final class IOUtils {
     }
 
     public static Properties loadProperties(InputStream inputStream) {
+        return loadProperties(inputStream, true);
+    }
+
+    public static Properties loadProperties(InputStream inputStream, boolean autoClose) {
         Properties properties = new Properties();
         try  {
             properties.load(inputStream);
         } catch (Throwable throwable) {
             if (logger.isErrorEnabled()) {
-                logger.error("load properties from byte array failed.", throwable);
+                logger.error("load properties from inputStream failed.", throwable);
+            }
+        } finally {
+            if (autoClose) {
+                close(inputStream);
             }
         }
         return properties;
@@ -62,14 +68,24 @@ public final class IOUtils {
     }
 
     public static byte[] loadBytesFromClasspath(String filePath, ClassLoader classLoader) {
-        try (InputStream inputStream = classLoader.getResourceAsStream(filePath);
-             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+        return loadBytesFromClasspath(filePath, classLoader, true);
+    }
+
+    public static byte[] loadBytesFromClasspath(String filePath, ClassLoader classLoader, boolean printErrLog) {
+        InputStream inputStream = null;
+        ByteArrayOutputStream outputStream = null;
+        try {
+            inputStream = classLoader.getResourceAsStream(filePath);
+            outputStream = new ByteArrayOutputStream();
             copy(inputStream, outputStream);
             return outputStream.toByteArray();
         } catch (Throwable e) {
-            if (logger.isErrorEnabled()) {
+            if (logger.isErrorEnabled() && printErrLog) {
                 logger.error("load classpath file [{}] failed, classloader [{}]", filePath, classLoader, e);
             }
+        } finally {
+            close(inputStream);
+            close(outputStream);
         }
         return null;
     }
@@ -83,7 +99,7 @@ public final class IOUtils {
     }
 
     public static String loadContentFromClasspath(String filePath, Charset charset) {
-        return loadContentFromClasspath(filePath, IOUtils.class.getClassLoader(), StandardCharsets.UTF_8);
+        return loadContentFromClasspath(filePath, IOUtils.class.getClassLoader(), charset);
     }
 
     public static String loadContentFromClasspath(String filePath, ClassLoader classLoader, Charset charset) {
@@ -94,23 +110,65 @@ public final class IOUtils {
         return null;
     }
 
+    public static class DiskFileResource {
+        private String filePath;
+        private String absoluteFilePath;
+        private byte[] bytes;
+        private String contentType;
+
+        public String getFilePath() {
+            return filePath;
+        }
+
+        public void setFilePath(String filePath) {
+            this.filePath = filePath;
+        }
+
+        public String getAbsoluteFilePath() {
+            return absoluteFilePath;
+        }
+
+        public void setAbsoluteFilePath(String absoluteFilePath) {
+            this.absoluteFilePath = absoluteFilePath;
+        }
+
+        public byte[] getBytes() {
+            return bytes;
+        }
+
+        public void setBytes(byte[] bytes) {
+            this.bytes = bytes;
+        }
+
+        public String getContentType() {
+            return contentType;
+        }
+
+        public void setContentType(String contentType) {
+            this.contentType = contentType;
+        }
+    }
+
     public static Map<String, DiskFileResource> loadResourceFromDiskDir(File file) {
         return loadResourceFromDiskDir(file.getAbsolutePath());
     }
 
     public static Map<String, DiskFileResource> loadResourceFromDiskDir(String dirPath) {
         Map<String, DiskFileResource> resourceModelMap = new HashMap<>();
-        File parentDir = new File(dirPath);
-        File[] files = Objects.requireNonNull(parentDir.listFiles());
-        for (File file: files) {
-            String filePath = file.getAbsolutePath();
-            if (file.isDirectory()) {
-                resourceModelMap.putAll(loadResourceFromDiskDir(filePath));
-            }
-            if (file.isFile()) {
-                DiskFileResource resource = loadResourceFromDisk(filePath);
-                if (resource != null) {
-                    resourceModelMap.put(filePath, resource);
+        File parentFile = new File(dirPath);
+        String parentFilePath = parentFile.getAbsolutePath();
+        if (parentFile.isFile()) {
+            resourceModelMap.put(parentFilePath, loadResourceFromDisk(parentFilePath));
+        } else if (parentFile.isDirectory()) {
+            File[] files = parentFile.listFiles();
+            if (files != null && files.length > 0) {
+                for (File file: files) {
+                    String filePath = file.getAbsolutePath();
+                    if (file.isFile()) {
+                        resourceModelMap.put(filePath, loadResourceFromDisk(filePath));
+                    } else if (file.isDirectory()) {
+                        resourceModelMap.putAll(loadResourceFromDiskDir(filePath));
+                    }
                 }
             }
         }
@@ -122,20 +180,19 @@ public final class IOUtils {
     }
 
     public static DiskFileResource loadResourceFromDisk(String filePath) {
-        try (InputStream inputStream = new FileInputStream(filePath);
-             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            copy(inputStream, outputStream);
-            DiskFileResource model = new DiskFileResource();
-            model.setBytes(outputStream.toByteArray());
-            model.setUrl(filePath);
-            model.setDiskFilePath(filePath);
-//            String contentType = Files.probeContentType(Paths.get(filePath));
-            String contentType = new MimetypesFileTypeMap().getContentType(filePath);
-//            String contentType = URLConnection.getFileNameMap().getContentTypeFor(filePath);
-            model.setContentType(contentType);
-            return model;
+        return loadResourceFromDisk(filePath, true);
+    }
+
+    public static DiskFileResource loadResourceFromDisk(String filePath, boolean printErrLog) {
+        try {
+            DiskFileResource diskFileResource = new DiskFileResource();
+            diskFileResource.setFilePath(filePath);
+            diskFileResource.setAbsoluteFilePath(new File(filePath).getAbsolutePath());
+            diskFileResource.setBytes(loadBytesFromDisk(filePath));
+            diskFileResource.setContentType(new MimetypesFileTypeMap().getContentType(filePath));
+            return diskFileResource;
         } catch (Throwable e) {
-            if (logger.isErrorEnabled()) {
+            if (logger.isErrorEnabled() && printErrLog) {
                 logger.error("load disk file [{}] failed", filePath, e);
             }
         }
@@ -147,12 +204,26 @@ public final class IOUtils {
     }
 
     public static Map<String, byte[]> loadBytesFromDiskDir(String dirPath) {
-        Map<String, byte[]> retMap = new HashMap<>();
-        Map<String, DiskFileResource> resourceMap = loadResourceFromDiskDir(dirPath);
-        resourceMap.forEach((key, value) -> {
-            retMap.put(key, value.getBytes());
-        });
-        return retMap;
+        Map<String, byte[]> resourceBytesMap = new HashMap<>();
+        File parentFile = new File(dirPath);
+        String parentFilePath = parentFile.getAbsolutePath();
+        if (parentFile.isFile()) {
+            resourceBytesMap.put(parentFilePath, loadBytesFromDisk(parentFilePath));
+        } else if (parentFile.isDirectory()) {
+            File[] files = parentFile.listFiles();
+            if (files != null && files.length > 0) {
+                for (File file: files) {
+                    String filePath = file.getAbsolutePath();
+                    if (file.isFile()) {
+                        resourceBytesMap.put(filePath, loadBytesFromDisk(filePath));
+                    } else if (file.isDirectory()) {
+                        resourceBytesMap.putAll(loadBytesFromDiskDir(filePath));
+                    }
+                }
+            }
+        }
+        return resourceBytesMap;
+
     }
 
     public static byte[] loadBytesFromDisk(File file) {
@@ -160,9 +231,25 @@ public final class IOUtils {
     }
 
     public static byte[] loadBytesFromDisk(String filePath) {
-        DiskFileResource model = loadResourceFromDisk(filePath);
-        if (model != null) {
-            return model.getBytes();
+        return loadBytesFromDisk(filePath, true);
+    }
+
+    public static byte[] loadBytesFromDisk(String filePath, boolean printErrLog) {
+        InputStream inputStream = null;
+        ByteArrayOutputStream outputStream = null;
+        try {
+            inputStream = new FileInputStream(filePath);
+            outputStream = new ByteArrayOutputStream();
+            copy(inputStream, outputStream);
+            // String contentType = new MimetypesFileTypeMap().getContentType(filePath);
+            return outputStream.toByteArray();
+        } catch (Throwable e) {
+            if (logger.isErrorEnabled() && printErrLog) {
+                logger.error("load disk file [{}] failed", filePath, e);
+            }
+        } finally {
+            close(inputStream);
+            close(outputStream);
         }
         return null;
     }

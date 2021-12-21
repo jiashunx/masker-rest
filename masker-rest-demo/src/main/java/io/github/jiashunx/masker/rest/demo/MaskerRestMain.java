@@ -76,7 +76,7 @@ public class MaskerRestMain {
                 .context("/demo")
 
                 .addDefaultClasspathResource("/")
-                .addDiskResource("C:\\Workspace\\GitHub\\jiashunx\\masker-rest\\masker-rest-framework\\src\\main\\resources")
+                .addDiskpathResource("C:\\Workspace\\GitHub\\jiashunx\\masker-rest\\masker-rest-framework\\src\\main\\resources")
 
                 // 设置自定义的序列化处理对象
                 .setObjectMapperSupplier(() -> {

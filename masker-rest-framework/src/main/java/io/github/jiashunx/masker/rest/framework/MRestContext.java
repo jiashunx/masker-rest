@@ -31,7 +31,7 @@ public class MRestContext {
 
     private final MRestServer restServer;
     private final String contextPath;
-    private final StaticResourceHolder staticResourceHolder;
+    private final StaticResourceFinder staticResourceFinder;
     private final Map<String, MWebsocketContext> websocketContextMap = new ConcurrentHashMap<>();
 
     public MRestContext(MRestServer restServer, String contextPath) {
@@ -41,7 +41,7 @@ public class MRestContext {
         websocketContextMap.put(Constants.DEFAULT_WEBSOCKET_CONTEXT_PATH, new MWebsocketContext(this.restServer, this, Constants.DEFAULT_WEBSOCKET_CONTEXT_PATH));
         // 添加框架提供的静态资源
         addClasspathResources("/masker-rest/static", new String[]{ "masker-rest/static/" });
-        this.staticResourceHolder = new StaticResourceHolder(this);
+        this.staticResourceFinder = new StaticResourceFinder(this);
     }
 
     public MRestServer getRestServer() {
@@ -55,8 +55,8 @@ public class MRestContext {
         return String.format("%s Context[%s]", getRestServer().getServerDesc(), getContextPath());
     }
 
-    public StaticResourceHolder getStaticResourceHolder() {
-        return staticResourceHolder;
+    public StaticResourceFinder getStaticResourceFinder() {
+        return this.staticResourceFinder;
     }
 
     void init() {
@@ -96,15 +96,7 @@ public class MRestContext {
     }
 
     private void reloadResource() {
-        Map<String, List<String>> classpathResources = getClasspathResources();
-        if (logger.isInfoEnabled()) {
-            logger.info("{} reload classpath resources: {}", getContextDesc(), classpathResources);
-        }
-        Map<String, List<String>> diskResources = getDiskResources();
-        if (logger.isInfoEnabled()) {
-            logger.info("{} reload disk resources: {}", getContextDesc(), diskResources);
-        }
-        staticResourceHolder.reloadResourceMap(classpathResources, diskResources);
+        staticResourceFinder.clear();
     }
 
     /**************************************************** SEP ****************************************************/
@@ -423,7 +415,7 @@ public class MRestContext {
     /**
      * 配置的静态资源磁盘扫描路径.
      */
-    private final Map<String, Set<String>> diskResources = new HashMap<>();
+    private final Map<String, Set<String>> diskpathResources = new HashMap<>();
     /**
      * 添加servlet的任务(在服务启动时统一添加).
      */
@@ -590,18 +582,22 @@ public class MRestContext {
                     if (!response.isWriteMethodInvoked()) {
                         response.write(HttpResponseStatus.OK);
                     }
+                    filterChain.doFilter(request, response);
                 }
             });
         }
         // rest请求分发处理.
         filterList.addLast((request, response, filterChain) -> {
             dispatchServlet.service(request, response);
+            filterChain.doFilter(request, response);
         });
         filterList.addLast((request, response, filterChain) -> {
             staticResourceServlet.service(request, response);
+            filterChain.doFilter(request, response);
         });
         filterList.addLast((request, response, filterChain) -> {
             lastServlet.service(request, response);
+            filterChain.doFilter(request, response);
         });
         return new MRestFilterChain(this, filterList.toArray(new MRestFilter[0]));
     }
@@ -684,8 +680,16 @@ public class MRestContext {
     }
 
     public synchronized MRestContext addClasspathResources(String prefixUrl, String[] pathArr) {
+        getRestServer().checkServerState();
         if (pathArr != null) {
-            for (String path: pathArr) {
+            if (StringUtils.isEmpty(prefixUrl)) {
+                throw new IllegalArgumentException("classpath resource prefixUrl can't be empty.");
+            }
+            for (String path0: pathArr) {
+                if (StringUtils.isEmpty(path0)) {
+                    throw new IllegalArgumentException("classpath resource path can't be empty.");
+                }
+                String path = UrlUtils.replaceWinSep(path0);
                 classpathResources.computeIfAbsent(prefixUrl, k -> new HashSet<>()).add(path);
                 if (logger.isInfoEnabled()) {
                     logger.info("{} add classpath resource, [{}] => [{}]", getContextDesc(), prefixUrl, path);
@@ -695,30 +699,38 @@ public class MRestContext {
         return this;
     }
 
-    public synchronized Map<String, List<String>> getClasspathResources() {
-        Map<String, List<String>> map = new HashMap<>();
-        classpathResources.forEach((key, value) -> {
-            map.put(key, new ArrayList<>(value == null ? new LinkedList<>() : value));
-        });
-        return map;
+    public List<String> getClasspathResourcePrefixUrls() {
+        return new ArrayList<>(classpathResources.keySet());
     }
 
-    public MRestContext addDiskResource(String path) {
-        return addDiskResource(Constants.ROOT_PATH, path);
+    public List<String> getClasspathResourcePaths(String prefixUrl) {
+        return new ArrayList<>(classpathResources.containsKey(prefixUrl) ? classpathResources.get(prefixUrl) : Collections.emptyList());
     }
 
-    public MRestContext addDiskResource(String prefixUrl, String path) {
-        return addDiskResources(prefixUrl, new String[] { path });
+    public MRestContext addDiskpathResource(String path) {
+        return addDiskpathResource(Constants.ROOT_PATH, path);
     }
 
-    public MRestContext addDiskResources(String[] pathArr) {
-        return addDiskResources(Constants.ROOT_PATH, pathArr);
+    public MRestContext addDiskpathResource(String prefixUrl, String path) {
+        return addDiskpathResources(prefixUrl, new String[] { path });
     }
 
-    public synchronized MRestContext addDiskResources(String prefixUrl, String[] pathArr) {
+    public MRestContext addDiskpathResources(String[] pathArr) {
+        return addDiskpathResources(Constants.ROOT_PATH, pathArr);
+    }
+
+    public synchronized MRestContext addDiskpathResources(String prefixUrl, String[] pathArr) {
+        getRestServer().checkServerState();
         if (pathArr != null) {
-            for (String path: pathArr) {
-                diskResources.computeIfAbsent(prefixUrl, k -> new HashSet<>()).add(path);
+            if (StringUtils.isEmpty(prefixUrl)) {
+                throw new IllegalArgumentException("classpath resource prefixUrl can't be empty.");
+            }
+            for (String path0: pathArr) {
+                if (StringUtils.isEmpty(path0)) {
+                    throw new IllegalArgumentException("classpath resource path can't be empty.");
+                }
+                String path = UrlUtils.replaceWinSep(path0);
+                diskpathResources.computeIfAbsent(prefixUrl, k -> new HashSet<>()).add(path);
                 if (logger.isInfoEnabled()) {
                     logger.info("{} add diskpath resource, [{}] => [{}]", getContextDesc(), prefixUrl, path);
                 }
@@ -727,12 +739,12 @@ public class MRestContext {
         return this;
     }
 
-    public synchronized Map<String, List<String>> getDiskResources() {
-        Map<String, List<String>> map = new HashMap<>();
-        diskResources.forEach((key, value) -> {
-            map.put(key, new ArrayList<>(value == null ? new LinkedList<>() : value));
-        });
-        return map;
+    public List<String> getDiskpathResourcePrefixUrls() {
+        return new ArrayList<>(diskpathResources.keySet());
+    }
+
+    public List<String> getDiskpathResourcePaths(String prefixUrl) {
+        return new ArrayList<>(diskpathResources.containsKey(prefixUrl) ? diskpathResources.get(prefixUrl) : Collections.emptyList());
     }
 
 

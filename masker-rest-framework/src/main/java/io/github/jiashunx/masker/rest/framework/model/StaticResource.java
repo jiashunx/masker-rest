@@ -26,7 +26,7 @@ public class StaticResource {
     /**
      * bytes of content.
      */
-    private final byte[] contents;
+    private final byte[] contentBytes;
     /**
      * file name.
      */
@@ -36,13 +36,17 @@ public class StaticResource {
      */
     private final String contentType;
 
-    public StaticResource(StaticResourceType type, String uri, String url, byte[] contents) {
+    public StaticResource(StaticResourceType type, String uri, String url, byte[] contentBytes) {
         this.type = Objects.requireNonNull(type);
         this.uri = Objects.requireNonNull(uri);
         this.url = Objects.requireNonNull(url);
-        this.contents = Objects.requireNonNull(contents);
+        this.contentBytes = Objects.requireNonNull(contentBytes);
         this.fileName = url.substring(url.lastIndexOf(Constants.PATH_SEP) + 1);
         this.contentType = new MimetypesFileTypeMap().getContentType(this.fileName);
+    }
+
+    public static StaticResource buildEmpty() {
+        return new StaticResource(StaticResourceType.CLASSPATH_FILE, "/xx.js", "/xx.js", new byte[0]);
     }
 
     public StaticResourceType getType() {
@@ -61,8 +65,8 @@ public class StaticResource {
         this.url = url;
     }
 
-    public byte[] getContents() {
-        return contents;
+    public byte[] getContentBytes() {
+        return contentBytes;
     }
 
     public String getFileName() {

@@ -295,6 +295,10 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         if (!contextPath.equals(Constants.DEFAULT_CONTEXT_PATH)) {
             url = originUrl.substring(contextPath.length());
         }
+        // 请求路径为context-path, 形如: /context-path -> 应等价于 -> /context-path/
+        if (StringUtils.isEmpty(url)) {
+            url = Constants.PATH_SEP;
+        }
         restRequest.setUrl(url);
         restRequest.setUrlQuery(queryStringDecoder.rawQuery());
 

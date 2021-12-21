@@ -25,11 +25,11 @@ public class StaticResourceServlet implements MRestServlet {
         if (restResponse.isWriteMethodInvoked()) {
             return;
         }
-        String requestURL = restRequest.getUrl();
+        String requestUrl = restRequest.getUrl();
         MRestContext restContext = restRequest.getRestContext();
         // 默认请求url处理
-        if (Constants.ROOT_PATH.equals(requestURL) || Constants.INDEX_PATH.equals(requestURL)) {
-            if (Constants.ROOT_PATH.equals(requestURL)) {
+        if (Constants.ROOT_PATH.equals(requestUrl) || Constants.INDEX_PATH.equals(requestUrl)) {
+            if (Constants.ROOT_PATH.equals(requestUrl)) {
                 // 指定了index url, 服务端进行重定向
                 String indexUrl = restContext.getIndexUrl();
                 if (StringUtils.isNotEmpty(indexUrl) && !Constants.ROOT_PATH.equals(indexUrl)) {
@@ -38,11 +38,11 @@ public class StaticResourceServlet implements MRestServlet {
                 }
                 restResponse.redirect(Constants.INDEX_PATH);
             }
-            if (Constants.INDEX_PATH.equals(requestURL)) {
+            if (Constants.INDEX_PATH.equals(requestUrl)) {
                 // 静态资源指定了index url
-                StaticResource indexResource = restContext.getStaticResourceHolder().getResource(Constants.INDEX_PATH);
+                StaticResource indexResource = restContext.getStaticResourceFinder().loadResource(Constants.INDEX_PATH);
                 if (indexResource != null) {
-                    restResponse.redirect(Constants.INDEX_PATH);
+                    restResponse.write(indexResource.getContentBytes(), MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, indexResource.getContentType()));
                     return;
                 }
             }
@@ -51,8 +51,11 @@ public class StaticResourceServlet implements MRestServlet {
             return;
         }
         // TODO 静态资源匹配, 请求url与注册的classpath|diskpath静态资源进行匹配, 然后根据请求url进行遍历查找, 同时获取文件Content-Type
-        // StaticResourceFilter
-        // return;
+        StaticResource staticResource = restContext.getStaticResourceFinder().loadResource(requestUrl);
+        if (staticResource != null) {
+            restResponse.write(staticResource.getContentBytes(), MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, staticResource.getContentType()));
+            return;
+        }
     }
 
 }
