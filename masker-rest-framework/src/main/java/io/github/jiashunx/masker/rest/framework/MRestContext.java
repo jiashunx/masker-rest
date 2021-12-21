@@ -685,33 +685,20 @@ public class MRestContext {
 
     public synchronized MRestContext addClasspathResources(String prefixUrl, String[] pathArr) {
         if (pathArr != null) {
-            String _prefixUrl = UrlUtils.appendSuffixSep(UrlUtils.appendPrefixSep(prefixUrl));
             for (String path: pathArr) {
-                classpathResources.computeIfAbsent(_prefixUrl, k -> new HashSet<>()).add(formatClasspathResourcePath(path));
+                classpathResources.computeIfAbsent(prefixUrl, k -> new HashSet<>()).add(path);
+                if (logger.isInfoEnabled()) {
+                    logger.info("{} add classpath resource, [{}] => [{}]", getContextDesc(), prefixUrl, path);
+                }
             }
         }
         return this;
     }
 
-    private String formatClasspathResourcePath(String path) {
-        String location = String.valueOf(path).trim();
-        if (!location.endsWith(Constants.PATH_SEP)) {
-            location = location + Constants.PATH_SEP;
-        }
-        while (location.startsWith(Constants.PATH_SEP) && location.length() > 1) {
-            location = location.substring(1);
-        }
-        return location;
-    }
-
     public synchronized Map<String, List<String>> getClasspathResources() {
         Map<String, List<String>> map = new HashMap<>();
         classpathResources.forEach((key, value) -> {
-            List<String> list = new ArrayList<>();
-            if (value != null) {
-                list.addAll(value);
-            }
-            map.put(key, list);
+            map.put(key, new ArrayList<>(value == null ? new LinkedList<>() : value));
         });
         return map;
     }
@@ -730,26 +717,20 @@ public class MRestContext {
 
     public synchronized MRestContext addDiskResources(String prefixUrl, String[] pathArr) {
         if (pathArr != null) {
-            String _prefixUrl = UrlUtils.appendSuffixSep(UrlUtils.appendPrefixSep(prefixUrl));
             for (String path: pathArr) {
-                diskResources.computeIfAbsent(_prefixUrl, k -> new HashSet<>()).add(formatDiskResourcePath(path));
+                diskResources.computeIfAbsent(prefixUrl, k -> new HashSet<>()).add(path);
+                if (logger.isInfoEnabled()) {
+                    logger.info("{} add diskpath resource, [{}] => [{}]", getContextDesc(), prefixUrl, path);
+                }
             }
         }
         return this;
     }
 
-    private String formatDiskResourcePath(String path) {
-        return path;
-    }
-
     public synchronized Map<String, List<String>> getDiskResources() {
         Map<String, List<String>> map = new HashMap<>();
         diskResources.forEach((key, value) -> {
-            List<String> list = new ArrayList<>();
-            if (value != null) {
-                list.addAll(value);
-            }
-            map.put(key, list);
+            map.put(key, new ArrayList<>(value == null ? new LinkedList<>() : value));
         });
         return map;
     }
