@@ -143,8 +143,12 @@
    - version 1.6.8 (released)
       - fixbug: 文件压缩时对文件夹下文件压缩处理修正(仅关闭Entry输出流不关闭整个zip文件输出流)
    - version 1.7.0 (doing)
-      - TODO 静态资源扫描处理方式调整, 运行时未匹配到路由处理的get请求作为静态资源进行查找
-      - TODO 移除冗余第三方包依赖, 如spring-core等
+      - fixbug: 请求url与context-path相同时应重置请求url为"/"
+      - feature: jwt工具移至独立依赖工程masker-rest-jjwt
+      - feature: 移除冗余第三方包依赖, 如spring-core等, 大大缩减工程构建时fatjar的体积, 最小7.xMB
+      - optimizing: 静态资源扫描处理方式调整, 运行时未匹配到路由处理的get请求作为静态资源进行查找
+      - optimizing: 优化ASM字节码生成处理逻辑, 移除部分硬编码代码
+      - optimizing: 文档结构及描述优化, 增加可读性
 
 [1]: masker-rest-framework/src/main/resources/masker-rest/static/websocket.js
 [2]: masker-rest-demo/src/main/resources/static/chatroom.html
