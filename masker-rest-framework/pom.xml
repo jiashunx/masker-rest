@@ -58,7 +58,7 @@
               <Manifest-Version>1.0</Manifest-Version>
               <Bundle-Name>masker-rest-framework</Bundle-Name>
               <Bundle-SymbolicName>masker-rest-framework</Bundle-SymbolicName>
-              <Bundle-Version>${version}</Bundle-Version>
+              <Bundle-Version>${project.version}</Bundle-Version>
               <Bundle-RequiredExecutionEnvironment>J2SE-${jdk.compiler.version}</Bundle-RequiredExecutionEnvironment>
               <Bundle-Vendor>io.github.jiashunx</Bundle-Vendor>
               <Built-By>Administrator</Built-By>
@@ -76,7 +76,7 @@
               <Manifest-Version>1.0</Manifest-Version>
               <Bundle-Name>masker-rest-framework</Bundle-Name>
               <Bundle-SymbolicName>masker-rest-framework</Bundle-SymbolicName>
-              <Bundle-Version>${version}</Bundle-Version>
+              <Bundle-Version>${project.version}</Bundle-Version>
               <Bundle-RequiredExecutionEnvironment>J2SE-${jdk.compiler.version}</Bundle-RequiredExecutionEnvironment>
               <Bundle-Vendor>io.github.jiashunx</Bundle-Vendor>
               <Built-By>Administrator</Built-By>
