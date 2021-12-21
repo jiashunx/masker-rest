@@ -9,6 +9,8 @@ import io.github.jiashunx.masker.rest.framework.util.IOUtils;
 import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpResponseStatus;
 
 import java.nio.charset.StandardCharsets;
 
@@ -37,24 +39,34 @@ public class StaticResourceServlet implements MRestServlet {
                     return;
                 }
                 restResponse.redirect(Constants.INDEX_PATH);
+                return;
             }
-            if (Constants.INDEX_PATH.equals(requestUrl)) {
-                // 静态资源指定了index url
-                StaticResource indexResource = restContext.getStaticResourceFinder().loadResource(Constants.INDEX_PATH);
-                if (indexResource != null) {
-                    restResponse.write(indexResource.getContentBytes(), MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, indexResource.getContentType()));
-                    return;
-                }
+            // 静态资源指定了index url
+            StaticResource indexResource = restContext.getStaticResourceFinder().loadResource(Constants.INDEX_PATH);
+            if (indexResource != null) {
+                writeStaticResource(restRequest, restResponse, indexResource);
+                return;
             }
             // 输出默认masker-rest主页面
-            restResponse.write(DEFAULT_PAGE_BYTES, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_TEXT_HTML));
+            writeStaticResource(restRequest, restResponse, DEFAULT_PAGE_BYTES, Constants.CONTENT_TYPE_TEXT_HTML);
             return;
         }
-        // TODO 静态资源匹配, 请求url与注册的classpath|diskpath静态资源进行匹配, 然后根据请求url进行遍历查找, 同时获取文件Content-Type
+        // 静态资源匹配, 请求url与注册的classpath|diskpath静态资源进行匹配, 然后根据请求url进行遍历查找, 同时获取文件Content-Type
         StaticResource staticResource = restContext.getStaticResourceFinder().loadResource(requestUrl);
         if (staticResource != null) {
-            restResponse.write(staticResource.getContentBytes(), MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, staticResource.getContentType()));
-            return;
+            writeStaticResource(restRequest, restResponse, staticResource);
+        }
+    }
+
+    private void writeStaticResource(MRestRequest restRequest, MRestResponse restResponse, StaticResource staticResource) {
+        writeStaticResource(restRequest, restResponse, staticResource.getContentBytes(), staticResource.getContentType());
+    }
+
+    private void writeStaticResource(MRestRequest restRequest, MRestResponse restResponse, byte[] bytes, String contentType) {
+        if (restRequest.getMethod() == HttpMethod.GET) {
+            restResponse.write(bytes, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, contentType));
+        } else {
+            restResponse.write(HttpResponseStatus.METHOD_NOT_ALLOWED);
         }
     }
 
