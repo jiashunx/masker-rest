@@ -7,7 +7,7 @@ import io.github.jiashunx.masker.rest.framework.servlet.MRestServlet;
 import io.github.jiashunx.masker.rest.framework.servlet.mapping.HttpMethod;
 import io.github.jiashunx.masker.rest.framework.type.MRestHandlerType;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
-import io.github.jiashunx.masker.rest.framework.util.ServletHandlerClassGenerator;
+import io.github.jiashunx.masker.rest.framework.enhance.ServletHandlerClassGenerator;
 
 import java.lang.reflect.Method;
 import java.util.*;
