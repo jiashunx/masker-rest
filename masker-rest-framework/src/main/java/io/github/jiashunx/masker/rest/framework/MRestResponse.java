@@ -52,153 +52,156 @@ public class MRestResponse {
         return restContext;
     }
 
-    public void redirect(String targetURL) {
+    public MRestResponse redirect(String targetURL) {
         String contextPath = getRestContext().getContextPath();
         if (!contextPath.equals(Constants.DEFAULT_CONTEXT_PATH)) {
             targetURL = contextPath + targetURL;
         }
-        MResponseHelper.redirect($channelHandlerContext, targetURL);
+        return redirectCrossDomain(targetURL);
     }
 
-    public void redirectCrossDomain(String targetURL) {
+    public MRestResponse redirectCrossDomain(String targetURL) {
         // 不需考虑context-path, 直接重定向就完事了.
-        MResponseHelper.redirect($channelHandlerContext, targetURL);
+        return write(HttpResponseStatus.TEMPORARY_REDIRECT, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_LOCATION, targetURL));
     }
 
-    public void forward(String targetURL, MRestRequest request) {
+    public MRestResponse forward(String targetURL, MRestRequest request) {
         request.setUrl(targetURL);
         MRestFilterChain filterChain = getRestContext().getFilterChain(targetURL);
         filterChain.doFilter(request, this);
+        return this;
     }
 
-    public void write(HttpResponseStatus status) {
-        write(status, new HashMap<>());
+    public MRestResponse write(HttpResponseStatus status) {
+        return write(status, new HashMap<>());
     }
 
-    public void write(HttpResponseStatus status, Map<String, Object> headers) {
-        write(status, new MRestHeaders(headers));
+    public MRestResponse write(HttpResponseStatus status, Map<String, Object> headers) {
+        return write(status, new MRestHeaders(headers));
     }
 
-    public void write(HttpResponseStatus status, MRestHeaders headers) {
-        write(status, null, headers);
+    public MRestResponse write(HttpResponseStatus status, MRestHeaders headers) {
+        return write(status, null, headers);
     }
 
-    public void writeJSON(byte[] bytes) {
-        writeJSON(bytes, new HashMap<>());
+    public MRestResponse writeJSON(byte[] bytes) {
+        return writeJSON(bytes, new HashMap<>());
     }
 
-    public void writeJSON(byte[] bytes, Map<String, Object> headers) {
-        writeJSON(bytes, new MRestHeaders(headers));
+    public MRestResponse writeJSON(byte[] bytes, Map<String, Object> headers) {
+        return writeJSON(bytes, new MRestHeaders(headers));
     }
 
-    public void writeJSON(byte[] bytes, MRestHeaders headers) {
-        write(bytes, new MRestHeaders(headers).add(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_APPLICATION_JSON));
+    public MRestResponse writeJSON(byte[] bytes, MRestHeaders headers) {
+        return write(bytes, new MRestHeaders(headers).add(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_APPLICATION_JSON));
     }
 
-    public void writeString(String string) {
-        writeString(string, new HashMap<>());
+    public MRestResponse writeString(String string) {
+        return writeString(string, new HashMap<>());
     }
 
-    public void writeString(String string, Map<String, Object> headers) {
-        writeString(string, new MRestHeaders(headers));
+    public MRestResponse writeString(String string, Map<String, Object> headers) {
+        return writeString(string, new MRestHeaders(headers));
     }
 
-    public void writeString(String string, MRestHeaders headers) {
-        write(string.getBytes(StandardCharsets.UTF_8), headers);
+    public MRestResponse writeString(String string, MRestHeaders headers) {
+        return write(string.getBytes(StandardCharsets.UTF_8), headers);
     }
 
-    public void write(Object object) {
-        write(object, new HashMap<>());
+    public MRestResponse write(Object object) {
+        return write(object, new HashMap<>());
     }
 
-    public void write(Object object, Map<String, Object> headers) {
-        write(object, new MRestHeaders(headers));
+    public MRestResponse write(Object object, Map<String, Object> headers) {
+        return write(object, new MRestHeaders(headers));
     }
 
-    public void write(Object object, MRestHeaders headers) {
-        write(MRestSerializer.jsonSerialize(object), headers);
+    public MRestResponse write(Object object, MRestHeaders headers) {
+        return write(MRestSerializer.jsonSerialize(object), headers);
     }
 
-    public void write(byte[] bytes) {
-        write(bytes, new HashMap<>());
+    public MRestResponse write(byte[] bytes) {
+        return write(bytes, new HashMap<>());
     }
 
-    public void write(byte[] bytes, Map<String, Object> headers) {
-        write(bytes, new MRestHeaders(headers));
+    public MRestResponse write(byte[] bytes, Map<String, Object> headers) {
+        return write(bytes, new MRestHeaders(headers));
     }
 
-    public void write(byte[] bytes, MRestHeaders headers) {
-        write(HttpResponseStatus.OK, bytes, headers);
+    public MRestResponse write(byte[] bytes, MRestHeaders headers) {
+        return write(HttpResponseStatus.OK, bytes, headers);
     }
 
-    public void write(HttpResponseStatus status, byte[] bytes) {
-        write(status, bytes, new HashMap<>());
+    public MRestResponse write(HttpResponseStatus status, byte[] bytes) {
+        return write(status, bytes, new HashMap<>());
     }
 
-    public void write(HttpResponseStatus status, byte[] bytes, Map<String, Object> headers) {
-        write(status, bytes, new MRestHeaders(headers));
+    public MRestResponse write(HttpResponseStatus status, byte[] bytes, Map<String, Object> headers) {
+        return write(status, bytes, new MRestHeaders(headers));
     }
 
-    public synchronized void write(HttpResponseStatus status, byte[] bytes, MRestHeaders headers) {
+    public synchronized MRestResponse write(HttpResponseStatus status, byte[] bytes, MRestHeaders headers) {
         if (isWriteMethodInvoked()) {
             throw new MRestServerException("write method has already been invoked.");
         }
         flushTask = new FlushTask(status, bytes, headers);
+        return this;
     }
 
-    public void writeStatusPageAsHtml(HttpResponseStatus status) {
-        writeStatusPage(status, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_TEXT_HTML));
+    public MRestResponse writeStatusPageAsHtml(HttpResponseStatus status) {
+        return writeStatusPage(status, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_TEXT_HTML));
     }
 
-    public void writeStatusPage(HttpResponseStatus status) {
-        writeStatusPage(status, new HashMap<>());
+    public MRestResponse writeStatusPage(HttpResponseStatus status) {
+        return writeStatusPage(status, new HashMap<>());
     }
 
-    public void writeStatusPage(HttpResponseStatus status, Map<String, Object> headers) {
-        writeStatusPage(status, new MRestHeaders(headers));
+    public MRestResponse writeStatusPage(HttpResponseStatus status, Map<String, Object> headers) {
+        return writeStatusPage(status, new MRestHeaders(headers));
     }
 
-    public void writeStatusPage(HttpResponseStatus status, MRestHeaders headers) {
-        write(status, MResponseHelper.getStatusPageBytes(status), headers);
+    public MRestResponse writeStatusPage(HttpResponseStatus status, MRestHeaders headers) {
+        return write(status, MResponseHelper.getStatusPageBytes(status), headers);
     }
 
-    public void write(HttpResponseStatus status, Object object) {
-        write(status, object, new HashMap<>());
+    public MRestResponse write(HttpResponseStatus status, Object object) {
+        return write(status, object, new HashMap<>());
     }
 
-    public void write(HttpResponseStatus status, Object object, Map<String, Object> headers) {
-        write(status, object, new MRestHeaders(headers));
+    public MRestResponse write(HttpResponseStatus status, Object object, Map<String, Object> headers) {
+        return write(status, object, new MRestHeaders(headers));
     }
 
-    public void write(HttpResponseStatus status, Object object, MRestHeaders headers) {
-        write(status, MRestSerializer.jsonSerialize(object), headers);
+    public MRestResponse write(HttpResponseStatus status, Object object, MRestHeaders headers) {
+        return write(status, MRestSerializer.jsonSerialize(object), headers);
     }
 
-    public void write(File downloadedFile) {
-        write(downloadedFile, new HashMap<>());
+    public MRestResponse write(File downloadedFile) {
+        return write(downloadedFile, new HashMap<>());
     }
 
-    public void write(File downloadedFile, Consumer<File> callback) {
-        write(downloadedFile, new HashMap<>(), callback);
+    public MRestResponse write(File downloadedFile, Consumer<File> callback) {
+        return write(downloadedFile, new HashMap<>(), callback);
     }
 
-    public void write(File downloadedFile, Map<String, Object> headers) {
-        write(downloadedFile, new MRestHeaders(headers));
+    public MRestResponse write(File downloadedFile, Map<String, Object> headers) {
+        return write(downloadedFile, new MRestHeaders(headers));
     }
 
-    public void write(File downloadedFile, Map<String, Object> headers, Consumer<File> callback) {
-        write(downloadedFile, new MRestHeaders(headers), callback);
+    public MRestResponse write(File downloadedFile, Map<String, Object> headers, Consumer<File> callback) {
+        return write(downloadedFile, new MRestHeaders(headers), callback);
     }
 
-    public void write(File downloadedFile, MRestHeaders headers) {
-        write(downloadedFile, headers, null);
+    public MRestResponse write(File downloadedFile, MRestHeaders headers) {
+        return write(downloadedFile, headers, null);
     }
 
-    public synchronized void write(File downloadedFile, MRestHeaders headers, Consumer<File> callback) {
+    public synchronized MRestResponse write(File downloadedFile, MRestHeaders headers, Consumer<File> callback) {
         if (isWriteMethodInvoked()) {
             throw new MRestServerException("write method has already been invoked.");
         }
         flushTask = new FlushTask(downloadedFile, headers, callback);
+        return this;
     }
 
     public boolean isWriteMethodInvoked() {
@@ -209,20 +212,24 @@ public class MRestResponse {
         return $flushed;
     }
 
-    public void setFlushed(boolean flushed) {
+    public MRestResponse setFlushed(boolean flushed) {
         this.$flushed = flushed;
+        return this;
     }
 
-    public void setHeader(String key, Object value) {
+    public MRestResponse setHeader(String key, Object value) {
         this.$headers.add(key, value);
+        return this;
     }
 
-    public void setHeader(Map<String, Object> headers) {
+    public MRestResponse setHeader(Map<String, Object> headers) {
         this.$headers.add(headers);
+        return this;
     }
 
-    public void removeHeader(String key) {
+    public MRestResponse removeHeader(String key) {
         this.$headers.remove(key);
+        return this;
     }
 
     public Object getHeader(String key) {
@@ -233,45 +240,45 @@ public class MRestResponse {
         return this.$headers.getAll(key);
     }
 
-    public void removeCookie(String name) {
-        removeCookie(Constants.DEFAULT_CONTEXT_PATH, name);
+    public MRestResponse removeCookie(String name) {
+        return removeCookie(Constants.DEFAULT_CONTEXT_PATH, name);
     }
 
-    public void removeCookie(String path, String name) {
+    public MRestResponse removeCookie(String path, String name) {
         Cookie cookie = new DefaultCookie(name, "");
         cookie.setPath(path);
-        removeCookie(cookie);
+        return removeCookie(cookie);
     }
 
-    public void removeCookie(Cookie cookie) {
+    public MRestResponse removeCookie(Cookie cookie) {
         cookie.setMaxAge(0);
-        setCookie(cookie);
+        return setCookie(cookie);
     }
 
-    public void setCookie(String name, String value) {
-        setCookie(Constants.DEFAULT_CONTEXT_PATH, name, value);
+    public MRestResponse setCookie(String name, String value) {
+        return setCookie(Constants.DEFAULT_CONTEXT_PATH, name, value);
     }
 
-    public void setCookie(String path, String name, String value) {
-        setCookie(path, Long.MIN_VALUE, name, value);
+    public MRestResponse setCookie(String path, String name, String value) {
+        return setCookie(path, Long.MIN_VALUE, name, value);
     }
 
-    public void setCookie(String path, long maxAge, String name, String value) {
+    public MRestResponse setCookie(String path, long maxAge, String name, String value) {
         Cookie cookie = new DefaultCookie(name, value);
         cookie.setPath(path);
         cookie.setMaxAge(maxAge);
-        setCookie(cookie);
+        return setCookie(cookie);
     }
 
     /**
      * set cookie.
      * @param cookie io.netty.handler.codec.http.cookie.DefaultCookie.
      */
-    public void setCookie(Cookie cookie) {
-        setHeader(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+    public MRestResponse setCookie(Cookie cookie) {
+        return setHeader(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
     }
 
-    public synchronized void flush() {
+    public synchronized MRestResponse flush() {
         if (isFlushed()) {
             throw new MRestServerException("flush method has already been invoked.");
         }
@@ -281,6 +288,7 @@ public class MRestResponse {
             flushTask = new FlushTask(HttpResponseStatus.OK, null, null);
             flush();
         }
+        return this;
     }
 
     private class FlushTask {
