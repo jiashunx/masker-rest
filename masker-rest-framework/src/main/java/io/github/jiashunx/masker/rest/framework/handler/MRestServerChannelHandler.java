@@ -7,7 +7,7 @@ import io.github.jiashunx.masker.rest.framework.model.ExceptionCallbackVo;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
 import io.github.jiashunx.masker.rest.framework.util.MResponseHelper;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
-import io.github.jiashunx.masker.rest.framework.util.SharedObjects;
+import io.github.jiashunx.masker.rest.framework.global.SharedObjects;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.exception.MRestSerializeException;
 import io.github.jiashunx.masker.rest.framework.serialize.impl.MRestJSONSerializer;
-import io.github.jiashunx.masker.rest.framework.util.SharedObjects;
+import io.github.jiashunx.masker.rest.framework.global.SharedObjects;
 
 import java.lang.reflect.Type;
 import java.util.List;

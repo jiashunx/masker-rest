@@ -7,6 +7,7 @@ import io.github.jiashunx.masker.rest.framework.exception.MRestJWTException;
 import io.github.jiashunx.masker.rest.framework.filter.Filter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
+import io.github.jiashunx.masker.rest.framework.global.SharedObjects;
 import io.github.jiashunx.masker.rest.framework.model.MRestFileUpload;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
 import io.github.jiashunx.masker.rest.framework.servlet.AbstractRestServlet;

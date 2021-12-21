@@ -1,4 +1,4 @@
-package io.github.jiashunx.masker.rest.framework.util;
+package io.github.jiashunx.masker.rest.framework.global;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.MRestContext;

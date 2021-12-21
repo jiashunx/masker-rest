@@ -2,7 +2,7 @@ package io.github.jiashunx.masker.rest.framework.serialize.impl;
 
 import io.github.jiashunx.masker.rest.framework.exception.MRestSerializeException;
 import io.github.jiashunx.masker.rest.framework.serialize.ISerializer;
-import io.github.jiashunx.masker.rest.framework.util.SharedObjects;
+import io.github.jiashunx.masker.rest.framework.global.SharedObjects;
 
 /**
  * @author jiashunx

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
+import io.github.jiashunx.masker.rest.framework.global.SharedObjects;
 import io.github.jiashunx.masker.rest.framework.model.*;
 import io.github.jiashunx.masker.rest.framework.servlet.*;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
