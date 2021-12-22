@@ -565,7 +565,7 @@ public class Test {
 }
 ```
 
-- 访问 http://127.0.0.1:10009/demo/upload.html进行文件上传测试
+- 访问 http://127.0.0.1:10009/demo/upload.html 进行文件上传测试
 
 <h5 id="1.1.11">1.1.11、文件下载</h5>
 
@@ -640,7 +640,7 @@ public class Test {
 }
 ```
 
-- 访问 http://127.0.0.1:10010/demo/download.html进行文件下载测试
+- 访问 http://127.0.0.1:10010/demo/download.html 进行文件下载测试
 
 <h4 id="1.2">1.2、发布静态资源服务</h4>
 
@@ -764,7 +764,7 @@ public class Test {
 }
 ```
 
-- 访问 http://127.0.0.1:10013/demo/websocket.html进行websocket测试
+- 访问 http://127.0.0.1:10013/demo/websocket.html 进行websocket测试
 
 <h4 id="2.2">2.2、WebSocket实现简易聊天室</h4>
 
@@ -878,7 +878,7 @@ public class Test {
 }
 ```
 
-- 访问 http://127.0.0.1:10014/demo/chatroom.html进行测试
+- 访问 http://127.0.0.1:10014/demo/chatroom.html 进行测试
 
 
 [0]: ../docs/Version.md
