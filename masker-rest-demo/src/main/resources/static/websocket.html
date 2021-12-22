@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>websocket测试</title>
+</head>
+<body>
+<div>
+    <button type="button" id="btn-websocket-test">WebSocket测试</button>
+</div>
+<!--<script type="text/javascript" src="../../../webjars/webjar-jquery/3.5.1/dist/jquery.min.js"></script>-->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+<script>
+    if (window.WebSocket) {
+        let _socket = new WebSocket("ws://" + window.location.host + "/demo/websocket-test");
+        _socket.onmessage = function (ev) {
+            alert("receive from server: " + ev.data);
+        };
+        _socket.onopen = function (ev) {
+            console.log("connected to server");
+        };
+        _socket.onclose = function (ev) {
+            console.log("disconnected from server");
+        };
+        $("#btn-websocket-test").click(function () {
+            if (_socket.readyState === WebSocket.OPEN) {
+                _socket.send("hahahhahahhhhhh");
+            } else {
+                alert("WebSocket Connection is not ready.");
+            }
+        });
+    }
+</script>
+</body>
+</html>

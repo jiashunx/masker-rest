@@ -2,74 +2,66 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>聊天室</title>
+    <title>websocket实现聊天室</title>
 </head>
 <body>
-    <div>
-        <label>用户A</label>
-        <input id="usernameA" value="用户A" style="width: 100px;" />
-        <textarea id="textareaA" style="width: 200px; height: 200px;"></textarea>
-        <input id="inputA" style="width: 100px;">
-        <button id="submitA" type="button">用户A提交</button>
-    </div>
-    <div>
-        <label>用户B</label>
-        <input id="usernameB" value="用户B" style="width: 100px;" />
-        <textarea id="textareaB" style="width: 200px; height: 200px;"></textarea>
-        <input id="inputB" style="width: 100px;">
-        <button id="submitB" type="button">用户B提交</button>
-    </div>
-    <!-- 引入框架封装的websocket客户端javascript实现 -->
-    <script type="application/javascript" src="./masker-rest/static/websocket.js"></script>
-    <script type="text/javascript" src="./webjars/webjar-jquery/3.5.1/dist/jquery.min.js"></script>
-    <script>
-        var WebsocketChatRoom = function (username, textarea, input, button) {
-            this.$username = $("#" + username);
-            this.$textarea = $("#" + textarea);
-            this.$input = $("#" + input);
-            this.$button = $("#" + button);
-            let _this = this;
-            _this.$wsclient = new WebSocketClient({
-                url: "/demo/chatroom",
-                onopen: function (ev) {
-                    console.log(_this.$username.val(), " connectted to websocket server, url: ", this.url);
-                },
-                onclose: function (ev) {
-                    console.log(_this.$username.val(), " disconnected from websocekt server, url: ", this.url);
-                },
-                onmessage: function (msgEvent) {
-                    let msg = JSON.parse(msgEvent.data);
-                    _this.$textarea.val(_this.$textarea.val() + "\n" + msg.username + ": " + msg.text);
-                }
-            }).start();
+<div>
+    <label>用户A</label>
+    <input id="usernameA" value="用户A" style="width: 100px;" />
+    <textarea id="textareaA" style="width: 200px; height: 200px;"></textarea>
+    <input id="inputA" style="width: 100px;">
+    <button id="submitA" type="button">用户A提交</button>
+</div>
+<div>
+    <label>用户B</label>
+    <input id="usernameB" value="用户B" style="width: 100px;" />
+    <textarea id="textareaB" style="width: 200px; height: 200px;"></textarea>
+    <input id="inputB" style="width: 100px;">
+    <button id="submitB" type="button">用户B提交</button>
+</div>
+<!-- 引入框架封装的websocket客户端javascript实现 -->
+<script type="application/javascript" src="../../../../../masker-rest-framework/src/main/resources/masker-rest/static/websocket.js"></script>
+<script>
+    console.log(WebSocketClient);
+</script>
+<!--<script type="text/javascript" src="../../../webjars/webjar-jquery/3.5.1/dist/jquery.min.js"></script>-->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+<script>
+    var WebsocketChatRoom = function (username, textarea, input, button) {
+        this.$username = $("#" + username);
+        this.$textarea = $("#" + textarea);
+        this.$input = $("#" + input);
+        this.$button = $("#" + button);
+        if (!window.WebSocket) {
+            throw new Error("browser do not support websocket");
         }
-        WebsocketChatRoom.prototype = {
-            bindEvent: function () {
-                let _this = this;
-                _this.$button.click(function () {
-                    let text = JSON.stringify({
-                        username: _this.$username.val(),
-                        text: _this.$input.val()
-                    });
-                    _this.$wsclient.send(text);
+        this.websocktURL = "ws://" + window.location.host + "/demo/chatroom";
+        this.$websocket = new window.WebSocket(this.websocktURL);
+    }
+    WebsocketChatRoom.prototype = {
+        bindEvent: function () {
+            let _this = this;
+            _this.$websocket.onopen = function (ev) {
+                console.log(_this.$username.val(), " connectted to websocket server, url: ", _this.websocktURL);
+            };
+            _this.$websocket.onclose = function (ev) {
+                console.log(_this.$username.val(), " disconnected from websocekt server, url: ", _this.websocktURL);
+            };
+            _this.$websocket.onmessage = function (ev) {
+                let msg = JSON.parse(ev.data);
+                _this.$textarea.val(_this.$textarea.val() + "\n" + msg.username + ": " + msg.text);
+            };
+            _this.$button.click(function () {
+                let text = JSON.stringify({
+                    username: _this.$username.val(),
+                    text: _this.$input.val()
                 });
-                return this;
-            },
-            quit: function () {
-                this.$wsclient.close();
-            },
-            reconnect: function () {
-                this.$wsclient.reconnect();
-            }
-        };
-        let chatObj0 = new WebsocketChatRoom("usernameA", "textareaA", "inputA", "submitA").bindEvent();
-        let chatObj2 = new WebsocketChatRoom("usernameB", "textareaB", "inputB", "submitB").bindEvent();
-        setTimeout(() => {
-            chatObj0.quit();
-            setTimeout(() => {
-                chatObj0.reconnect();
-            }, 50*1000);
-        }, 50*1000);
-    </script>
+                _this.$websocket.send(text);
+            });
+        },
+    };
+    new WebsocketChatRoom("usernameA", "textareaA", "inputA", "submitA").bindEvent();
+    new WebsocketChatRoom("usernameB", "textareaB", "inputB", "submitB").bindEvent();
+</script>
 </body>
 </html>
