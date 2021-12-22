@@ -30,5 +30,5 @@
 
    - 参见: [UserGuide][1]
 
-[0]: ../docs/Version.md
-[1]: ../docs/UserGuide.md
+[0]: ./docs/Version.md
+[1]: ./docs/UserGuide.md
