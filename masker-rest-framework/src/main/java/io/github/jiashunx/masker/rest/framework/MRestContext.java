@@ -410,13 +410,13 @@ public class MRestContext {
      */
     private final MRestServlet lastServlet = new LastServlet();
     /**
-     * 配置的静态资源classpath扫描路径.
+     * 配置的静态资源classpath扫描路径, 按照配置的先后顺序进行扫描, classpath静态资源扫描顺序高于磁盘静态资源.
      */
-    private final Map<String, Set<String>> classpathResources = new HashMap<>();
+    private final Map<String, List<String>> classpathResources = new HashMap<>();
     /**
-     * 配置的静态资源磁盘扫描路径.
+     * 配置的静态资源磁盘扫描路径, 按照配置的先后顺序进行扫描.
      */
-    private final Map<String, Set<String>> diskpathResources = new HashMap<>();
+    private final Map<String, List<String>> diskpathResources = new HashMap<>();
     /**
      * 添加servlet的任务(在服务启动时统一添加).
      */
@@ -691,7 +691,7 @@ public class MRestContext {
                     throw new IllegalArgumentException("classpath resource path can't be empty.");
                 }
                 String path = UrlUtils.replaceWinSep(path0);
-                classpathResources.computeIfAbsent(prefixUrl, k -> new HashSet<>()).add(path);
+                classpathResources.computeIfAbsent(prefixUrl, k -> new ArrayList<>()).add(path);
                 if (logger.isInfoEnabled()) {
                     logger.info("{} add classpath resource, [{}] => [{}]", getContextDesc(), prefixUrl, path);
                 }
@@ -705,7 +705,7 @@ public class MRestContext {
     }
 
     public List<String> getClasspathResourcePaths(String prefixUrl) {
-        return new ArrayList<>(classpathResources.containsKey(prefixUrl) ? classpathResources.get(prefixUrl) : Collections.emptyList());
+        return new ArrayList<>(classpathResources.getOrDefault(prefixUrl, Collections.emptyList()));
     }
 
     public MRestContext addDiskpathResource(String path) {
@@ -731,7 +731,7 @@ public class MRestContext {
                     throw new IllegalArgumentException("classpath resource path can't be empty.");
                 }
                 String path = UrlUtils.replaceWinSep(path0);
-                diskpathResources.computeIfAbsent(prefixUrl, k -> new HashSet<>()).add(path);
+                diskpathResources.computeIfAbsent(prefixUrl, k -> new ArrayList<>()).add(path);
                 if (logger.isInfoEnabled()) {
                     logger.info("{} add diskpath resource, [{}] => [{}]", getContextDesc(), prefixUrl, path);
                 }
@@ -745,7 +745,7 @@ public class MRestContext {
     }
 
     public List<String> getDiskpathResourcePaths(String prefixUrl) {
-        return new ArrayList<>(diskpathResources.containsKey(prefixUrl) ? diskpathResources.get(prefixUrl) : Collections.emptyList());
+        return new ArrayList<>(diskpathResources.getOrDefault(prefixUrl, Collections.emptyList()));
     }
 
 
