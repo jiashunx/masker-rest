@@ -9,7 +9,7 @@ import io.github.jiashunx.masker.rest.framework.util.FileUtils;
 import io.github.jiashunx.masker.rest.framework.util.IOUtils;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
-import jdk.internal.org.objectweb.asm.*;
+import org.objectweb.asm.*;
 
 import java.io.File;
 import java.net.MalformedURLException;
