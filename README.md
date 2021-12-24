@@ -14,7 +14,7 @@
    - Websocket Server Framework
       - 复用Http服务器端口发布Websocket服务（websocket服务可根据url进行请求分发）
 
-- 版本清单(最新版本: <b>1.6.8</b>): 
+- 版本清单(最新版本: <b>1.7.0</b>): 
 
    - 参见: [Version.md][0]
 

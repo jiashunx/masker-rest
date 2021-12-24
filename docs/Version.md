@@ -1,7 +1,7 @@
 
 <h3 id="V">masker-rest版本清单</h3>
 
-- [V1.7.0(doing)](#V1.7.0)
+- [V1.7.0(released)](#V1.7.0)
 - [V1.6.8(released)](#V1.6.8)
 - [V1.6.7(released)](#V1.6.7)
 - [V1.6.6(released)](#V1.6.6)
@@ -31,7 +31,7 @@
 - [V1.0.0(released)](#V1.0.0)
 
 
-<h4 id="V1.7.0">V1.7.0(doing)</h4>
+<h4 id="V1.7.0">V1.7.0(released)</h4>
 
 - fixbug: 请求url与context-path相同时应重置请求url为"/"
 
