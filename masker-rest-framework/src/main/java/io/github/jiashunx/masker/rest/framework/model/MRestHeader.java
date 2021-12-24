@@ -23,4 +23,8 @@ public class MRestHeader {
         return value;
     }
 
+    public MRestHeader copy() {
+        return new MRestHeader(this.key, this.value);
+    }
+
 }

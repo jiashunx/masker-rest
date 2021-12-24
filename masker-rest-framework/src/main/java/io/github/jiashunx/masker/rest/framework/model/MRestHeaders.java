@@ -41,7 +41,7 @@ public class MRestHeaders {
     }
 
     public List<MRestHeader> getHeaders() {
-        return $headers;
+        return new ArrayList<>($headers);
     }
 
     public MRestHeaders addAll(MRestHeaders headers) {
@@ -60,7 +60,7 @@ public class MRestHeaders {
             if (header == null) {
                 continue;
             }
-            getHeaders().add(header);
+            $headers.add(header);
         }
         return this;
     }
@@ -94,7 +94,7 @@ public class MRestHeaders {
 
     public List<Object> getAll(String key) {
         List<Object> valueList = new LinkedList<>();
-        for (MRestHeader header: getHeaders()) {
+        for (MRestHeader header: $headers) {
             if (header.getKey().equals(key)) {
                 valueList.add(header.getValue());
             }
@@ -103,7 +103,20 @@ public class MRestHeaders {
     }
 
     public void remove(String key) {
-        getHeaders().removeIf(header -> header.getKey().equals(key));
+        $headers.removeIf(header -> header.getKey().equals(key));
+    }
+
+    public MRestHeaders copy() {
+        MRestHeaders newHeadersObj = new MRestHeaders();
+        List<MRestHeader> headerList = this.getHeaders();
+        if (headerList != null && !headerList.isEmpty()) {
+            for (MRestHeader headerObj: headerList) {
+                if (headerObj != null) {
+                    newHeadersObj.add(headerObj.copy());
+                }
+            }
+        }
+        return newHeadersObj;
     }
 
 }
