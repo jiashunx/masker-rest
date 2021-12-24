@@ -84,7 +84,11 @@ public class StaticResourceFinder {
         String requestUrl = MRestUtils.formatPath(requestUrl0);
         List<String> classpathResourcePrefixUrls = findPrefixUrls(requestUrl, restContext.getClasspathResourcePrefixUrls());
         for (String prefixUrl: classpathResourcePrefixUrls) {
-            String filePathSuffix = requestUrl.substring(prefixUrl.length());
+            // requestUrl: /webjars/webjar-jquery/3.5.1/dist/jquery.min.js
+            // prefixUrl: /webjars -> META-INFO/resources/webjars/
+            // filePathSuffix: /webjar-jquery/3.5.1/dist/jquery.min.js
+            // classpathResourcePath = META-INFO/resources/webjars/webjar-jquery/3.5.1/dist/jquery.min.js
+            String filePathSuffix = UrlUtils.removePrefixSep0(requestUrl.substring(prefixUrl.length()));
             List<String> classpathResourcePaths = restContext.getClasspathResourcePaths(prefixUrl);
             for (String classpathResourcePath0: classpathResourcePaths) {
                 String classpathResourcePath = UrlUtils.appendSuffixSep(classpathResourcePath0) + filePathSuffix;
@@ -110,7 +114,11 @@ public class StaticResourceFinder {
         String requestUrl = MRestUtils.formatPath(requestUrl0);
         List<String> diskpathResourcePrefixUrls = findPrefixUrls(requestUrl, restContext.getDiskpathResourcePrefixUrls());
         for (String prefixUrl: diskpathResourcePrefixUrls) {
-            String filePathSuffix = requestUrl.substring(prefixUrl.length());
+            // requestUrl: /webjars/webjar-jquery/3.5.1/dist/jquery.min.js
+            // prefixUrl: /webjars -> /app/xxx/dist/webjars/
+            // filePathSuffix: /webjar-jquery/3.5.1/dist/jquery.min.js
+            // classpathResourcePath = /app/xxx/dist/webjars/webjar-jquery/3.5.1/dist/jquery.min.js
+            String filePathSuffix = UrlUtils.removePrefixSep0(requestUrl.substring(prefixUrl.length()));
             List<String> diskpathResourcePaths = restContext.getDiskpathResourcePaths(prefixUrl);
             for (String diskpathResourcePath0: diskpathResourcePaths) {
                 String diskpathResourcePath = UrlUtils.appendSuffixSep(UrlUtils.replaceWinSep(diskpathResourcePath0)) + filePathSuffix;
