@@ -6,7 +6,6 @@ import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.model.StaticResource;
 import io.github.jiashunx.masker.rest.framework.util.IOUtils;
-import io.github.jiashunx.masker.rest.framework.util.MRestHeaderBuilder;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 import io.netty.handler.codec.http.HttpMethod;
@@ -64,7 +63,8 @@ public class StaticResourceServlet implements MRestServlet {
 
     private void writeStaticResource(MRestRequest restRequest, MRestResponse restResponse, byte[] bytes, String contentType) {
         if (restRequest.getMethod() == HttpMethod.GET) {
-            restResponse.write(bytes, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, contentType));
+            restResponse.setHeader(Constants.HTTP_HEADER_CONTENT_TYPE, contentType);
+            restResponse.write(bytes);
         } else {
             restResponse.write(HttpResponseStatus.METHOD_NOT_ALLOWED);
         }

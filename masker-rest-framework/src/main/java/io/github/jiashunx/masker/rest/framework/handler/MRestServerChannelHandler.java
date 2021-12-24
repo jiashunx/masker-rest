@@ -8,6 +8,7 @@ import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
 import io.github.jiashunx.masker.rest.framework.util.MResponseHelper;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.global.SharedObjects;
+import io.github.jiashunx.masker.rest.framework.util.MimetypeUtils;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
@@ -237,6 +238,12 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             restResponse.setCookie(Constants.HTTP_HEADER_SERVER_IDENTIFIER, restResponse.getRestServer().getIdentifier());
             if (restResponse.getRestServer().isConnectionKeepAlive()) {
                 restResponse.setHeader(Constants.HTTP_HEADER_CONNECTION, Constants.CONNECTION_KEEP_ALIVE);
+            }
+            // Content-Type修正
+            String acceptContentType = restRequest.getAcceptFirst();
+            String contentType = (String) restResponse.getHeader(Constants.HTTP_HEADER_CONTENT_TYPE);
+            if (StringUtils.isNotEmpty(acceptContentType) && (StringUtils.isEmpty(contentType) || MimetypeUtils.DEFAULT_CONTENT_TYPE_VALUE.equals(contentType))) {
+                restResponse.setHeader(Constants.HTTP_HEADER_CONTENT_TYPE, acceptContentType);
             }
             restResponse.flush();
         } catch (Throwable throwable) {

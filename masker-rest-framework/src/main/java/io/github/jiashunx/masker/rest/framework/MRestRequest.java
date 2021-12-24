@@ -2,6 +2,7 @@ package io.github.jiashunx.masker.rest.framework;
 
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
+import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -276,7 +277,7 @@ public class MRestRequest {
                 acceptFirst = acceptFirst.substring(0, idx);
             }
         }
-        if ("*/*".equals(acceptFirst)) {
+        if (StringUtils.isEmpty(acceptFirst) || "*/*".equals(acceptFirst)) {
             acceptFirst = null;
         }
         return acceptFirst;

@@ -130,14 +130,8 @@ public class MResponseHelper {
     public static void write(ChannelHandlerContext ctx, HttpResponseStatus status, byte[] bytes, MRestHeaders headers) {
         byte[] _bytes = bytes == null ? new byte[0] : bytes;
         FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.wrappedBuffer(_bytes));
-        HttpHeaders httpHeaders = response.headers();
-        if (headers != null) {
-            List<MRestHeader> headerList = headers.getHeaders();
-            headerList.forEach(header -> {
-                httpHeaders.add(header.getKey(), header.getValue());
-            });
-        }
-        httpHeaders.add(Constants.HTTP_HEADER_CONTENT_LENGTH, response.content().readableBytes());
+        HttpHeaders httpHeaders = setRespHeaders(response, headers);
+        httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_LENGTH).add(Constants.HTTP_HEADER_CONTENT_LENGTH, response.content().readableBytes());
         ctx.write(response);
         ctx.flush();
     }
@@ -167,16 +161,10 @@ public class MResponseHelper {
             RandomAccessFile randomAccessFile = new RandomAccessFile(downloadedFile, "r");
             long fileLength = randomAccessFile.length();
             HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
-            HttpHeaders httpHeaders = response.headers();
-            if (headers != null) {
-                List<MRestHeader> headerList = headers.getHeaders();
-                headerList.forEach(header -> {
-                    httpHeaders.add(header.getKey(), header.getValue());
-                });
-            }
-            httpHeaders.add(Constants.HTTP_HEADER_CONTENT_LENGTH, fileLength);
-            httpHeaders.add(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_APPLICATION_OCTETSTREAM);
-            httpHeaders.add(Constants.HTTP_HEADER_CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", downloadedFile.getName()));
+            HttpHeaders httpHeaders = setRespHeaders(response, headers);
+            httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_LENGTH).add(Constants.HTTP_HEADER_CONTENT_LENGTH, fileLength);
+            httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_TYPE).add(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_APPLICATION_OCTETSTREAM);
+            httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_DISPOSITION).add(Constants.HTTP_HEADER_CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", downloadedFile.getName()));
             ctx.write(response);
             ChannelFuture sendFileFuture = ctx.write(new DefaultFileRegion(randomAccessFile.getChannel(), 0, fileLength), ctx.newProgressivePromise());
             sendFileFuture.addListener(new ChannelProgressiveFutureListener() {
@@ -196,6 +184,19 @@ public class MResponseHelper {
         } catch (Throwable throwable) {
             throw new MRestFileDownloadException(throwable);
         }
+    }
+
+    private static HttpHeaders setRespHeaders(HttpResponse response, MRestHeaders headers) {
+        HttpHeaders httpHeaders = response.headers();
+        Map<String, Object> headers0 = new HashMap<>();
+        if (headers != null) {
+            List<MRestHeader> headerList = headers.getHeaders();
+            headerList.forEach(header -> {
+                headers0.put(header.getKey(), header.getValue());
+            });
+        }
+        headers0.forEach(httpHeaders::add);
+        return httpHeaders;
     }
 
 }

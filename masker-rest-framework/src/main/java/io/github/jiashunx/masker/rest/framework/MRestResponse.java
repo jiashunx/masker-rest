@@ -311,11 +311,12 @@ public class MRestResponse {
         }
         void execute() {
             try {
-                this.headers.addAll($headers);
+                MRestHeaders headers = $headers.copy();
+                headers.addAll(this.headers);
                 if (isDownloadFile) {
-                    MResponseHelper.write($channelHandlerContext, downloadedFile, this.headers, downloadCallback);
+                    MResponseHelper.write($channelHandlerContext, downloadedFile, headers, downloadCallback);
                 } else {
-                    MResponseHelper.write($channelHandlerContext, status, bytes, this.headers);
+                    MResponseHelper.write($channelHandlerContext, status, bytes, headers);
                 }
             } catch (Throwable throwable) {
                 throw new MRestFlushException(throwable);

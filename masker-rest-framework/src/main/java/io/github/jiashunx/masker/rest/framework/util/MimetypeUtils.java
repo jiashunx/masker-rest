@@ -15,8 +15,8 @@ public class MimetypeUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(MimetypeUtils.class);
 
-    private static final String DEFAULT_CONTENT_TYPE_KEY = ".*";
-    private static final String DEFAULT_CONTENT_TYPE_VALUE = "application/octet-stream";
+    public static final String DEFAULT_CONTENT_TYPE_KEY = ".*";
+    public static final String DEFAULT_CONTENT_TYPE_VALUE = "application/octet-stream";
 
     private static final Map<String, String> CONTENT_TYPE_MAP = new HashMap<>();
     static {
