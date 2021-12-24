@@ -45,6 +45,8 @@
 
 - optimizing: 优化ASM字节码生成处理逻辑, 移除部分硬编码代码
 
+- optimizing: 优化写响应输出流时的Header处理
+
 - optimizing: 文档结构及描述优化, 增加可读性
 
 <h4 id="V1.6.8">V1.6.8(released)</h4>

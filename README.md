@@ -12,7 +12,7 @@
       - 支持文件上传、下载、压缩解压等
       - 基于ASM实现Servlet字节码生成与处理（简单实现）
    - Websocket Server Framework
-      - 复用Http服务器端口发布Websocket服务（支持websocket服务根据url进行请求分发）
+      - 复用Http服务器端口发布Websocket服务（websocket服务可根据url进行请求分发）
 
 - 版本清单(最新版本: <b>1.6.8</b>): 
 
