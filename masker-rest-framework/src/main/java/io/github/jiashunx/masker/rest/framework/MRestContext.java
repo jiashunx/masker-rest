@@ -559,7 +559,7 @@ public class MRestContext {
     public MRestFilterChain getFilterChain(String requestURL) {
         Set<MRestFilter> filterSet = new HashSet<>();
         filterMap.forEach((urlPattern, filterList) -> {
-            String pattern = "^" + urlPattern.replace("*", "\\S*") + "$";
+            String pattern = "^" + urlPattern.replace("*", "(\\S|\\s)*") + "$";
             if (requestURL.matches(pattern)) {
                 filterSet.addAll(filterList);
             }
