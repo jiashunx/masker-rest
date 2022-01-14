@@ -193,6 +193,13 @@ public class Test {
                 .mapping("/put_delete", (request, response) -> {
                     response.write(new HashMap<>());
                 }, HttpMethod.PUT, HttpMethod.DELETE)
+                .mapping("/空格测试 1 2", (request, response) -> {
+                    response.write("空格测试成功");
+                }, HttpMethod.GET)
+                .filter("/*", (request, response, filterChain) -> {
+                    System.out.println("拦截到url: " + request.getUrl());
+                    filterChain.doFilter(request, response);
+                })
             .getRestServer()
             .start();
     }
