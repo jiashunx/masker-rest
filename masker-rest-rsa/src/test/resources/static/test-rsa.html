@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RSA测试</title>
+    <script type="text/javascript" src="/masker-rest/static/lib/jquery.min.js"></script>
+    <script type="text/javascript" src="/masker-rest/static/lib/jsencrypt.min.js"></script>
+    <script type="text/javascript" src="/masker-rest/static/lib/jsrsasign.min.js"></script>
+    <script type="text/javascript" src="/masker-rest/static/rsa.js"></script>
+</head>
+<body>
+    <script>
+
+        // 前端公钥加密 -> 后端私钥解密
+        // 后端公钥加密 -> 前端私钥解密
+        $.get({
+            url: "/demo/key",
+            headers: {
+                'Accept': 'application/json'
+            },
+            success: (resp) => {
+                var content = "啊阿萨的浪费空间卢卡斯京东方立即释放的秦沛儒跑去哦i额u日破i确认破秋儿剖切啊撒旦解放拉萨觉得拉萨大家发的立法精神阿斯利康都是浪费大家了解拉萨酱豆腐跑去哦i微软破求而抛弃哦i恶如破弃如破i却皮肉iu钦佩日去陪日u强迫恶如脾气";
+                console.log("原文: " + content);
+                var publicKey = resp.publicKey;
+                console.log("公钥: " + publicKey);
+                var publicKeyPem = resp.publicKeyPem;
+                console.log("公钥pem: " + publicKeyPem);
+                var privateKey = resp.privateKey;
+                console.log("私钥: " + privateKey);
+                var privateKeyPem = resp.privateKeyPem;
+                console.log("私钥pem: " + privateKeyPem);
+                console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                var encryptBase64 = MCrypto.publicKeyEncrypt(publicKey, content);
+                console.log("公钥加密密文: " + encryptBase64);
+                var decryptStr = MCrypto.privateKeyDecrypt(privateKey, encryptBase64);
+                console.log("私钥解密密文: " + decryptStr);
+
+
+                var signBase64 = MSign.sign(privateKeyPem, encryptBase64);
+                console.log("私钥签名密文: " + signBase64);
+                var verified = MSign.verify(publicKeyPem, encryptBase64, signBase64);
+                console.log("公钥签名验证结果: " + verified);
+            },
+        });
+    </script>
+</body>
+</html>

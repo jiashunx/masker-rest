@@ -1,11 +1,16 @@
 package io.github.jiashunx.masker.rest.rsa;
 
+import io.github.jiashunx.masker.rest.framework.MRestServer;
+import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MRSATest {
 
-    private static void test(String keyAlgorithm, String signAlgorithm) {
+    private static MRSAKeyPair test(String keyAlgorithm, String signAlgorithm) {
         String content = "啊阿萨的浪费空间卢卡斯京东方立即释放的秦沛儒跑去哦i额u日破i确认破秋儿剖切啊撒旦解放拉萨觉得拉萨大家发的立法精神阿斯利康都是浪费大家了解拉萨酱豆腐跑去哦i微软破求而抛弃哦i恶如破弃如破i却皮肉iu钦佩日去陪日u强迫恶如脾气";
         System.out.println("原文: " + content);
         System.out.println("-----------------------------------------------------");
@@ -57,6 +62,7 @@ public class MRSATest {
 
         System.out.println("-----------------------------------------------------");
         System.out.println("-----------------------------------------------------");
+        return keyPair;
     }
 
     public static void main(String[] args) {
@@ -116,6 +122,26 @@ public class MRSATest {
                 + rsaKeyPairForClient.getPrivateKeyPem().length());
         System.out.println("client: " + Base64.getEncoder().encodeToString(rsaKeyPairForClient.getPublicKeyPem().getBytes(StandardCharsets.UTF_8)).length() + ", "
                 + Base64.getEncoder().encodeToString(rsaKeyPairForClient.getPrivateKeyPem().getBytes(StandardCharsets.UTF_8)).length());
+
+        test2();
     }
 
+    private static void test2() {
+        System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 前后端加解密测试");
+        MRSAKeyPair rsaKeyPair = test(MRSAHelper.DEFAULT_KEY_ALGORITHM, "SHA256withRSA");
+        Map<String, Object> keyMap = new HashMap<>();
+        keyMap.put("publicKey", rsaKeyPair.getPublicKeyBase64());
+        keyMap.put("publicKeyPem", rsaKeyPair.getPublicKeyPem());
+        keyMap.put("privateKey", rsaKeyPair.getPrivateKeyBase64());
+        keyMap.put("privateKeyPem", rsaKeyPair.getPrivateKeyPem());
+        // http://127.0.0.1:10015/demo/test-rsa.html
+        new MRestServer(10015)
+            .context("/demo")
+                .addDefaultClasspathResource()
+                .get("/key", (request, response) -> {
+                    response.write(MRestSerializer.objectToJsonBytes(keyMap));
+                })
+            .getRestServer()
+            .start();
+    }
 }
