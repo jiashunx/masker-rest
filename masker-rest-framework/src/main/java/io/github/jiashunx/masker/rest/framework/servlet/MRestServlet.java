@@ -30,8 +30,8 @@ public interface MRestServlet {
         return getServletAnnotation() != null;
     }
 
-    default Servlet getServletAnnotation() {
-        return getInstance().getClass().getAnnotation(Servlet.class);
+    default MServlet getServletAnnotation() {
+        return getInstance().getClass().getAnnotation(MServlet.class);
     }
 
 }

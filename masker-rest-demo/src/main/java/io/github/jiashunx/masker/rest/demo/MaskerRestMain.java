@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.*;
 import io.github.jiashunx.masker.rest.framework.exception.MRestJWTException;
-import io.github.jiashunx.masker.rest.framework.filter.Filter;
+import io.github.jiashunx.masker.rest.framework.filter.MFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.global.SharedObjects;
@@ -494,7 +494,7 @@ public class MaskerRestMain {
         }
     }
 
-    @Filter(order = 123)
+    @MFilter(order = 123)
     private static class Filter0 implements MRestFilter {
         @Override
         public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {
@@ -503,7 +503,7 @@ public class MaskerRestMain {
         }
     }
 
-    @Filter(order = -123)
+    @MFilter(order = -123)
     private static class Filter1 implements MRestFilter {
         @Override
         public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {

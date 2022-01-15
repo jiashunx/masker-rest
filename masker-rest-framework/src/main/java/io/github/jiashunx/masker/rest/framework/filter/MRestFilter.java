@@ -16,7 +16,7 @@ public interface MRestFilter {
     }
 
     default int order() {
-        Filter annotation = getFilterAnnotation();
+        MFilter annotation = getFilterAnnotation();
         if (annotation != null) {
             return annotation.order();
         }
@@ -38,8 +38,8 @@ public interface MRestFilter {
         return getFilterAnnotation() != null;
     }
 
-    default Filter getFilterAnnotation() {
-        return getInstance().getClass().getAnnotation(Filter.class);
+    default MFilter getFilterAnnotation() {
+        return getInstance().getClass().getAnnotation(MFilter.class);
     }
 
 }

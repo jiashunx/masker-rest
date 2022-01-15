@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Inherited
-public @interface Filter {
+public @interface MFilter {
 
     /**
      * filter顺序, 实际执行时filter执行顺序按此值大小从小到大顺序执行.

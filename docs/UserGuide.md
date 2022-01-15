@@ -267,7 +267,7 @@ public class Test {
             .getRestServer()
             .start();
     }
-    @Filter(order = 123)
+    @MFilter(order = 123)
     private static class Filter0 implements MRestFilter {
         @Override
         public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {
@@ -275,7 +275,7 @@ public class Test {
             filterChain.doFilter(restRequest, restResponse);
         }
     }
-    @Filter(order = -123)
+    @MFilter(order = -123)
     private static class Filter1 implements MRestFilter {
         @Override
         public void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain) {
