@@ -352,6 +352,22 @@ public final class IOUtils {
         }
     }
 
+    public static void close(Reader reader) {
+        if (reader != null) {
+            try {
+                reader.close();
+            } catch (IOException exception) {}
+        }
+    }
+
+    public static void close(Writer writer) {
+        if (writer != null) {
+            try {
+                writer.close();
+            } catch (IOException exception) {}
+        }
+    }
+
     public static void copy(InputStream inputStream, OutputStream outputStream) throws IOException {
         copy(inputStream, outputStream, true);
     }
