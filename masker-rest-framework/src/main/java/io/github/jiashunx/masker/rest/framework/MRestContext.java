@@ -40,8 +40,10 @@ public class MRestContext {
         this.contextPath = MRestUtils.formatContextPath(contextPath);
         // websocket-context初始化
         websocketContextMap.put(Constants.DEFAULT_WEBSOCKET_CONTEXT_PATH, new MWebsocketContext(this.restServer, this, Constants.DEFAULT_WEBSOCKET_CONTEXT_PATH));
-        // 添加框架提供的静态资源
+        // 添加框架提供的静态资源(其实也无需显式支持, webjars在META-INF/resources目录下)
         addClasspathResources("/masker-rest/static", new String[]{ "masker-rest/static/" });
+        // 添加webjars的支持
+        addClasspathResource("/webjars", "META-INF/resources/webjars/");
         this.staticResourceFinder = new StaticResourceFinder(this);
     }
 

@@ -40,6 +40,8 @@
 
 - feature: 添加jquery、jsencrypt、base64、jsrsasign等前端依赖至classpath静态资源路径
 
+- feature: 添加对webjar中静态资源的自动扫描及匹配处理，无需对webjar资源显式指定映射规则
+
 - optimizing: 优化异常类继承层次结构，剥离出顶级异常基类: MRuntimeException
 
 - optimizing: 优化及补充部分工具类公共代码
