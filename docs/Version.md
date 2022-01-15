@@ -1,7 +1,7 @@
 
 <h3 id="V">masker-rest版本清单</h3>
 
-- [V1.7.1(doing)](#V1.7.1)
+- [V1.7.1(released)](#V1.7.1)
 - [V1.7.0(released)](#V1.7.0)
 - [V1.6.8(released)](#V1.6.8)
 - [V1.6.7(released)](#V1.6.7)
@@ -32,7 +32,7 @@
 - [V1.0.0(released)](#V1.0.0)
 
 
-<h4 id="V1.7.1">V1.7.1(doing)</h4>
+<h4 id="V1.7.1">V1.7.1(released)</h4>
 
 - fixbug: 修正filter拦截url不能出现空格的缺陷
 

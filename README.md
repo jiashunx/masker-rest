@@ -14,7 +14,7 @@
    - Websocket Server Framework
       - 复用Http服务器端口发布Websocket服务（websocket服务可根据url进行请求分发）
 
-- 版本清单(最新版本: <b>1.7.0</b>): 
+- 版本清单(最新版本: <b>1.7.1</b>): 
 
    - 参见: [Version.md][0]
 
@@ -24,11 +24,13 @@
 
    - masker-rest-jjwt: 简易jwt实现
 
+   - masker-rest-rsa: 前后端RSA通讯实现
+
    - masker-rest-demo: 基于masker-rest-framework实现的http server样例代码
 
 - 使用文档: 
 
-   - 参见: [UserGuide][1]
+   - 参见: [UserGuide.md][1]
 
 [0]: ./docs/Version.md
 [1]: ./docs/UserGuide.md
