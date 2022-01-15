@@ -36,6 +36,14 @@
 
 - fixbug: 修正filter拦截url不能出现空格的缺陷
 
+- feature: 添加masker-rest-rsa工程，包含RSA前后端交互公共方法，用于RSA加解密及签名验证
+
+- feature: 添加jquery、jsencrypt、base64、jsrsasign等前端依赖至classpath静态资源路径
+
+- optimizing: 优化异常类继承层次结构，剥离出顶级异常基类: MRuntimeException
+
+- optimizing: 优化及补充部分工具类公共代码
+
 <h4 id="V1.7.0">V1.7.0(released)</h4>
 
 - fixbug: 请求url与context-path相同时应重置请求url为"/"
