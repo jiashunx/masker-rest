@@ -3,7 +3,7 @@ package io.github.jiashunx.masker.rest.framework.exception;
 /**
  * @author jiashunx
  */
-public class MRestServerException extends RuntimeException {
+public class MRestServerException extends MRestRuntimeException {
 
     public MRestServerException() {
         super();
