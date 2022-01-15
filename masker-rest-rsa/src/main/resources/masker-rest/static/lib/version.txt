@@ -1,0 +1,6 @@
+jsrsasign@10.5.1
+https://cdn.jsdelivr.net/npm/jsrsasign@10.5.1/lib/jsrsasign.min.js
+jsencrypt@3.2.1
+https://cdn.jsdelivr.net/npm/jsencrypt@3.2.1/bin/jsencrypt.min.js
+js-base64@3.7.2
+https://cdn.jsdelivr.net/npm/js-base64@3.7.2/base64.min.js
