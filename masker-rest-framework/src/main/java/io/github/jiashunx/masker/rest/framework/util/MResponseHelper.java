@@ -188,14 +188,12 @@ public class MResponseHelper {
 
     private static HttpHeaders setRespHeaders(HttpResponse response, MRestHeaders headers) {
         HttpHeaders httpHeaders = response.headers();
-        Map<String, Object> headers0 = new HashMap<>();
         if (headers != null) {
             List<MRestHeader> headerList = headers.getHeaders();
             headerList.forEach(header -> {
-                headers0.put(header.getKey(), header.getValue());
+                httpHeaders.add(header.getKey(), header.getValue());
             });
         }
-        headers0.forEach(httpHeaders::add);
         return httpHeaders;
     }
 
