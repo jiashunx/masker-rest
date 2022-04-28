@@ -47,6 +47,7 @@ public class MRestSerializer {
                     return super.getType();
                 }
             });
+            // 默认list obj: LinkedHashMap
             return transferObjList(objList, klass);
         } catch (Throwable throwable) {
             throw new MRestSerializeException(throwable);
@@ -61,6 +62,7 @@ public class MRestSerializer {
                     return super.getType();
                 }
             });
+            // 默认list obj: LinkedHashMap
             return transferObjList(objList, klass);
         } catch (Throwable throwable) {
             throw new MRestSerializeException(throwable);
