@@ -8,6 +8,7 @@ import io.github.jiashunx.masker.rest.framework.global.SharedObjects;
 
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author jiashunx
@@ -40,12 +41,13 @@ public class MRestSerializer {
 
     public static <T> List<T> jsonToList(String json, Class<T> klass) {
         try {
-            return SharedObjects.getObjectMapperFromThreadLocal().readValue(json, new TypeReference<List<T>>() {
+            List<T> objList = SharedObjects.getObjectMapperFromThreadLocal().readValue(json, new TypeReference<List<T>>() {
                 @Override
                 public Type getType() {
                     return super.getType();
                 }
             });
+            return transferObjList(objList, klass);
         } catch (Throwable throwable) {
             throw new MRestSerializeException(throwable);
         }
@@ -53,15 +55,28 @@ public class MRestSerializer {
 
     public static <T> List<T> jsonToList(byte[] bytes, Class<T> klass) {
         try {
-            return SharedObjects.getObjectMapperFromThreadLocal().readValue(bytes, new TypeReference<List<T>>() {
+            List<T> objList = SharedObjects.getObjectMapperFromThreadLocal().readValue(bytes, new TypeReference<List<T>>() {
                 @Override
                 public Type getType() {
                     return super.getType();
                 }
             });
+            return transferObjList(objList, klass);
         } catch (Throwable throwable) {
             throw new MRestSerializeException(throwable);
         }
+    }
+
+    public static <T> List<T> transferObjList(List<T> objList, Class<T> klass) {
+        if (objList == null || objList.isEmpty()) {
+            return objList;
+        }
+        return objList.stream().map(obj -> {
+            if (obj.getClass() == klass) {
+                return obj;
+            }
+            return jsonToObj(objectToJson(obj), klass);
+        }).collect(Collectors.toList());
     }
 
     public static String objectToJson(Object object) {
