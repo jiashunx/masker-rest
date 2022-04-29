@@ -126,9 +126,8 @@ public class FileUtils {
      * @param targetDir 解压目录
      */
     public static void unzip(File zipFile, File targetDir) throws MRestZipException {
-        try {
+        try (ZipFile zip = new ZipFile(zipFile)) {
             newDirectory(targetDir.getAbsolutePath());
-            ZipFile zip = new ZipFile(zipFile);
             for (Enumeration<? extends  ZipEntry> entries = zip.entries(); entries.hasMoreElements();) {
                 ZipEntry zipEntry = entries.nextElement();
                 String entryName = zipEntry.getName();
