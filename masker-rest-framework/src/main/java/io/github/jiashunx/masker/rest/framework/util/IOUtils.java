@@ -328,7 +328,11 @@ public final class IOUtils {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream(inputStream.available());) {
             copy(inputStream, outputStream);
             return outputStream.toByteArray();
-        } catch (Throwable throwable) {}
+        } catch (Throwable throwable) {
+            if (logger.isErrorEnabled()) {
+                logger.error("read bytes failed.", throwable);
+            }
+        }
         return null;
     }
 
@@ -340,7 +344,11 @@ public final class IOUtils {
         if (inputStream != null) {
             try {
                 inputStream.close();
-            } catch (IOException e) {}
+            } catch (IOException e) {
+                if (logger.isErrorEnabled()) {
+                    logger.error("close InputStream failed.", e);
+                }
+            }
         }
     }
 
@@ -348,7 +356,11 @@ public final class IOUtils {
         if (outputStream != null) {
             try {
                 outputStream.close();
-            } catch (IOException exception) {}
+            } catch (IOException exception) {
+                if (logger.isErrorEnabled()) {
+                    logger.error("close OutputStream failed.", exception);
+                }
+            }
         }
     }
 
@@ -356,7 +368,11 @@ public final class IOUtils {
         if (reader != null) {
             try {
                 reader.close();
-            } catch (IOException exception) {}
+            } catch (IOException exception) {
+                if (logger.isErrorEnabled()) {
+                    logger.error("close Reader failed.", exception);
+                }
+            }
         }
     }
 
@@ -364,7 +380,11 @@ public final class IOUtils {
         if (writer != null) {
             try {
                 writer.close();
-            } catch (IOException exception) {}
+            } catch (IOException exception) {
+                if (logger.isErrorEnabled()) {
+                    logger.error("close Writer failed.", exception);
+                }
+            }
         }
     }
 
