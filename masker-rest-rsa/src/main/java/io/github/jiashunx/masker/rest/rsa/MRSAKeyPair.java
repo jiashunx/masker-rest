@@ -89,5 +89,7 @@ public class MRSAKeyPair {
     public boolean defaultVerify(String encryptBase64, String signBase64) {
         return MRSAHelper.defaultVerify(encryptBase64, getPublicKey(), signBase64);
     }
-
+    public MRSAKeySize getKeySize() {
+        return keySize;
+    }
 }
