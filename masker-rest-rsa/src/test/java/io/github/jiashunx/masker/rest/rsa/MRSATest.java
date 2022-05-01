@@ -124,6 +124,18 @@ public class MRSATest {
                 + Base64.getEncoder().encodeToString(rsaKeyPairForClient.getPrivateKeyPem().getBytes(StandardCharsets.UTF_8)).length());
 
         test2();
+        test3();
+    }
+
+    private static void test3() {
+        System.out.println("=============================== Pem转换测试");
+        MRSAKeyPair keyPair = MRSAHelper.generateRSAKeyPair(2048, MRSAHelper.DEFAULT_KEY_ALGORITHM);
+        System.out.println("公钥\n" + keyPair.getPublicKeyBase64());
+        System.out.println("私钥\n" + keyPair.getPrivateKeyBase64());
+        System.out.println("公钥PEM\n" + keyPair.getPublicKeyPem());
+        System.out.println("私钥PEM\n" + keyPair.getPrivateKeyPem());
+        System.out.println("公钥PEM转换:\n" + MRSAHelper.getPublicKeyBase64(MRSAHelper.readPublicKeyFromPem(MRSAHelper.DEFAULT_KEY_ALGORITHM, keyPair.getPublicKeyPem())));
+        System.out.println("私钥PEM转换:\n" + MRSAHelper.getPrivateKeyBase64(MRSAHelper.readPrivateKeyFromPem(MRSAHelper.DEFAULT_KEY_ALGORITHM, keyPair.getPrivateKeyPem())));
     }
 
     private static void test2() {

@@ -2,10 +2,12 @@ package io.github.jiashunx.masker.rest.rsa;
 
 import io.github.jiashunx.masker.rest.rsa.exception.*;
 import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemReader;
 import org.bouncycastle.util.io.pem.PemWriter;
 
 import javax.crypto.Cipher;
 import java.io.ByteArrayOutputStream;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -31,6 +33,9 @@ public final class MRSAHelper {
      * 签名算法
      */
     public static final String DEFAULT_SIGNATURE_ALGORITHM = "MD5withRSA";
+
+    public static final String PEM_TYPE_PUBLIC_KEY = "PUBLIC KEY";
+    public static final String PEM_TYPE_PRIVATE_KEY = "PRIVATE KEY";
 
     public static MRSAKeyPair generateDefaultRSAKeyPair() {
         return generateRSAKeyPair(MRSAKeySize.$1024, DEFAULT_KEY_ALGORITHM);
@@ -91,6 +96,33 @@ public final class MRSAHelper {
         }
     }
 
+    public static PemObject readPemObject(String type, String keyPem) {
+        PemObject pemObject = readPemObject(keyPem);
+        if (pemObject != null) {
+            try {
+                if (pemObject.getType().equals(type)) {
+                    return pemObject;
+                }
+                throw new IllegalArgumentException(String.format("expected PemType: %s, actual PemType: %s", type, pemObject.getType()));
+            } catch (Throwable throwable) {
+                throw new MRSAKeyTransferException("read PemObject failed", throwable);
+            }
+        }
+        return null;
+    }
+
+    public static PemObject readPemObject(String keyPem) {
+        if (keyPem == null) {
+            return null;
+        }
+        try (StringReader stringReader = new StringReader(keyPem)) {
+            PemReader pemReader = new PemReader(stringReader);
+            return pemReader.readPemObject();
+        } catch (Throwable throwable) {
+            throw new MRSAKeyTransferException("read PemObject failed", throwable);
+        }
+    }
+
     public static String getPublicKeyBase64(KeyPair keyPair){
         if (keyPair == null) {
             return null;
@@ -113,7 +145,7 @@ public final class MRSAHelper {
     }
 
     public static String getPublicKeyPem(PublicKey publicKey) {
-        return getPublicKeyPem("PUBLIC KEY", publicKey);
+        return getPublicKeyPem(PEM_TYPE_PUBLIC_KEY, publicKey);
     }
 
     public static String getPublicKeyPem(String type, PublicKey publicKey) {
@@ -130,17 +162,37 @@ public final class MRSAHelper {
         }
     }
 
+    public static PublicKey readPublicKeyFromPem(String keyAlgorithm, String publicKeyPem) {
+        PemObject pemObject = readPublicKeyPemObject(publicKeyPem);
+        if (pemObject == null) {
+            return null;
+        }
+        return generatePublicKey(keyAlgorithm, pemObject.getContent());
+    }
+
+    public static PemObject readPublicKeyPemObject(String publicKeyPem) {
+        return readPemObject(PEM_TYPE_PUBLIC_KEY, publicKeyPem);
+    }
+
     public static PublicKey getPublicKey(String publicKeyBase64, String keyAlgorithm) {
         try {
             // 公钥Base64解码
             byte[] decodePublicKeyBytes = Base64.getDecoder().decode(publicKeyBase64);
+            return generatePublicKey(keyAlgorithm, decodePublicKeyBytes);
+        } catch (Throwable throwable) {
+            throw new MRSAKeyTransferException(String.format("generate RSA publicKey failed, publicKeyBase64=[%s]", publicKeyBase64), throwable);
+        }
+    }
+
+    public static PublicKey generatePublicKey(String keyAlgorithm, byte[] decodePublicKeyBytes) {
+        try {
             // 调用X509EncodedKeySpec对象,转换格式
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(decodePublicKeyBytes);
             // 调用密钥工厂
             KeyFactory keyFactory = KeyFactory.getInstance(keyAlgorithm);
             return keyFactory.generatePublic(keySpec);
         } catch (Throwable throwable) {
-            throw new MRSAKeyTransferException(String.format("generate RSA publicKey failed, publicKeyBase64=[%s]", publicKeyBase64), throwable);
+            throw new MRSAKeyTransferException(String.format("generate RSA publicKey failed, keyAlgorithm=[%s]", keyAlgorithm), throwable);
         }
     }
 
@@ -166,7 +218,7 @@ public final class MRSAHelper {
     }
 
     public static String getPrivateKeyPem(PrivateKey privateKey) {
-        return getPrivateKeyPem("PRIVATE KEY", privateKey);
+        return getPrivateKeyPem(PEM_TYPE_PRIVATE_KEY, privateKey);
     }
 
     public static String getPrivateKeyPem(String type, PrivateKey privateKey) {
@@ -183,17 +235,37 @@ public final class MRSAHelper {
         }
     }
 
+    public static PrivateKey readPrivateKeyFromPem(String keyAlgorithm, String privateKeyPem) {
+        PemObject pemObject = readPrivateKeyPemObject(privateKeyPem);
+        if (pemObject == null) {
+            return null;
+        }
+        return generatePrivateKey(keyAlgorithm, pemObject.getContent());
+    }
+
+    public static PemObject readPrivateKeyPemObject(String privateKeyPem) {
+        return readPemObject(PEM_TYPE_PRIVATE_KEY, privateKeyPem);
+    }
+
     public static PrivateKey getPrivateKey(String privateKeyBase64, String keyAlgorithm) {
         try {
             // 私钥Base64解码
             byte[] decodePrivateKeyBytes = Base64.getDecoder().decode(privateKeyBase64);
+            return generatePrivateKey(keyAlgorithm, decodePrivateKeyBytes);
+        } catch (Throwable throwable) {
+            throw new MRSAKeyTransferException(String.format("generate RSA privateKey failed, privateKeyBase64=[%s]", privateKeyBase64), throwable);
+        }
+    }
+
+    public static PrivateKey generatePrivateKey(String keyAlgorithm, byte[] decodePrivateKeyBytes) {
+        try {
             // 调用PKCS8EncodedKeySpec对象
             PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(decodePrivateKeyBytes);
             // 调用密钥工厂
             KeyFactory keyFactory = KeyFactory.getInstance(keyAlgorithm);
             return keyFactory.generatePrivate(keySpec);
         } catch (Throwable throwable) {
-            throw new MRSAKeyTransferException(String.format("generate RSA privateKey failed, privateKeyBase64=[%s]", privateKeyBase64), throwable);
+            throw new MRSAKeyTransferException(String.format("generate RSA privateKey failed, keyAlgorithm=[%s]", keyAlgorithm), throwable);
         }
     }
 
