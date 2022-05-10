@@ -1,6 +1,7 @@
 
 <h3 id="V">masker-rest版本清单</h3>
 
+- [V1.7.2(released)](#V1.7.2)
 - [V1.7.1.1(released)](#V1.7.1.1)
 - [V1.7.1(released)](#V1.7.1)
 - [V1.7.0(released)](#V1.7.0)
@@ -32,6 +33,15 @@
 - [V1.1.0(released)](#V1.1.0)
 - [V1.0.0(released)](#V1.0.0)
 
+<h4 id="V1.7.2">V1.7.2(released)</h4>
+
+- fixbug: 修正解压文件后未关闭输入流导致文件占用的缺陷
+
+- fixbug: json序列化为对象列表代码修正
+
+- feature: 增加对PEM格式密钥的解析处理
+
+- optimizing: 优化及补充部分工具类公共代码
 
 <h4 id="V1.7.1.1">V1.7.1.1(released)</h4>
 
