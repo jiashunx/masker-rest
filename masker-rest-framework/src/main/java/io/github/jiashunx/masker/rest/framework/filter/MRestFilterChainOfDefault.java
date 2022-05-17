@@ -16,8 +16,12 @@ public class MRestFilterChainOfDefault implements MRestFilterChain {
     private int index;
     private final int size;
 
+    public MRestFilterChainOfDefault(MRestFilter[] filterArr) {
+        this(null, filterArr);
+    }
+
     public MRestFilterChainOfDefault(MRestContext restContext, MRestFilter[] filterArr) {
-        this.restContext = Objects.requireNonNull(restContext);
+        this.restContext = restContext;
         this.filterArr = Objects.requireNonNull(filterArr);
         this.size = this.filterArr.length;
         this.index = 0;
