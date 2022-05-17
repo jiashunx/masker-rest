@@ -4,11 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
+import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.global.SharedObjects;
 import io.github.jiashunx.masker.rest.framework.model.*;
 import io.github.jiashunx.masker.rest.framework.servlet.*;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilter;
-import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
+import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChainOfDefault;
 import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.util.*;
@@ -602,7 +603,7 @@ public class MRestContext {
             lastServlet.service(request, response);
             filterChain.doFilter(request, response);
         });
-        return new MRestFilterChain(this, filterList.toArray(new MRestFilter[0]));
+        return new MRestFilterChainOfDefault(this, filterList.toArray(new MRestFilter[0]));
     }
 
     /**
