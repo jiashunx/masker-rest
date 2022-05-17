@@ -9,6 +9,10 @@ import io.github.jiashunx.masker.rest.framework.cons.Constants;
  */
 public interface MRestFilter {
 
+    default void init() {}
+
+    default void destroy() {}
+
     void doFilter(MRestRequest restRequest, MRestResponse restResponse, MRestFilterChain filterChain);
 
     default MRestFilter getInstance() {
