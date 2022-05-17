@@ -17,37 +17,37 @@ import java.util.*;
  */
 public class MRestRequest {
 
-    private MRestContext restContext;
-    private HttpRequest httpRequest;
+    protected MRestContext restContext;
+    protected HttpRequest httpRequest;
 
-    private Map<String, String> attributes = new HashMap<>();
+    protected Map<String, String> attributes = new HashMap<>();
 
-    private String protocolName;
-    private String protocolVersion;
-    private String clientAddress;
-    private int clientPort;
-    private String remoteAddress;
-    private int remotePort;
+    protected String protocolName;
+    protected String protocolVersion;
+    protected String clientAddress;
+    protected int clientPort;
+    protected String remoteAddress;
+    protected int remotePort;
 
-    private HttpMethod method;
-    private String contextPath;
+    protected HttpMethod method;
+    protected String contextPath;
     /**
      * 带context-path的url.
      */
-    private String originUrl;
+    protected String originUrl;
     /**
      * 不带context-path的url.
      */
-    private String url;
-    private String urlQuery;
-    private Map<String, String> parameters;
-    private Map<String, List<String>> originParameters;
-    private HttpHeaders headers;
-    private List<String> headerKeys;
-    private List<Cookie> cookies;
-    private Map<String, Cookie> cookieMap;
-    private byte[] bodyBytes;
-    private Map<String, String> placeholderMap = new LinkedHashMap<>();
+    protected String url;
+    protected String urlQuery;
+    protected Map<String, String> parameters;
+    protected Map<String, List<String>> originParameters;
+    protected HttpHeaders headers;
+    protected List<String> headerKeys;
+    protected List<Cookie> cookies;
+    protected Map<String, Cookie> cookieMap;
+    protected byte[] bodyBytes;
+    protected Map<String, String> placeholderMap = new LinkedHashMap<>();
 
     public MRestRequest() {}
 
