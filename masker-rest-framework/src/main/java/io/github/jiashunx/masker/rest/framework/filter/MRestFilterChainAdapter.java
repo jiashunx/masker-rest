@@ -26,7 +26,11 @@ public class MRestFilterChainAdapter extends MRestFilterChainOfDefault {
 
     @Override
     public synchronized void doFilter(MRestRequest restRequest, MRestResponse restResponse) {
-        super.doFilter(restRequest, restResponse);
+        if (index < filterArr.length) {
+            filterArr[index++].doFilter(restRequest, restResponse, this);
+            // 这里的return就很有灵性~
+            return;
+        }
         if (targetFilterChain != null) {
             targetFilterChain.doFilter(restRequest, restResponse);
         }

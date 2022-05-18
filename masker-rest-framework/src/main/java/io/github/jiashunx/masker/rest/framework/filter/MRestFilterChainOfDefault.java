@@ -11,10 +11,9 @@ import java.util.Objects;
  */
 public class MRestFilterChainOfDefault implements MRestFilterChain {
 
-    private final MRestContext restContext;
-    private final MRestFilter[] filterArr;
-    private int index;
-    private final int size;
+    protected final MRestContext restContext;
+    protected final MRestFilter[] filterArr;
+    protected int index;
 
     public MRestFilterChainOfDefault(MRestFilter[] filterArr) {
         this(null, filterArr);
@@ -23,25 +22,14 @@ public class MRestFilterChainOfDefault implements MRestFilterChain {
     public MRestFilterChainOfDefault(MRestContext restContext, MRestFilter[] filterArr) {
         this.restContext = restContext;
         this.filterArr = Objects.requireNonNull(filterArr);
-        this.size = this.filterArr.length;
         this.index = 0;
     }
 
     @Override
-    public void doFilter(MRestRequest restRequest, MRestResponse restResponse) {
-        MRestFilter filter = next();
-        if (filter != null) {
-            filter.doFilter(restRequest, restResponse, this);
+    public synchronized void doFilter(MRestRequest restRequest, MRestResponse restResponse) {
+        if (index < filterArr.length) {
+            filterArr[index++].doFilter(restRequest, restResponse, this);
         }
-    }
-
-    private MRestFilter next() {
-        MRestFilter filter = null;
-        if (index < size) {
-            filter = filterArr[index];
-            index++;
-        }
-        return filter;
     }
 
     public MRestContext getRestContext() {
