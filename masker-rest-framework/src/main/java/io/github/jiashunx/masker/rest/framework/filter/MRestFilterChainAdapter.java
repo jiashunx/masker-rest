@@ -11,15 +11,15 @@ public class MRestFilterChainAdapter extends MRestFilterChainOfDefault {
 
     private final MRestFilterChain targetFilterChain;
 
-    public MRestFilterChainAdapter(MRestFilter[] filterArr) {
-        this(filterArr, null);
+    public MRestFilterChainAdapter(MRestFilter... filterArr) {
+        this(null, filterArr);
     }
 
-    public MRestFilterChainAdapter(MRestFilter[] filterArr, MRestFilterChain targetFilterChain) {
-        this(null, filterArr, targetFilterChain);
+    public MRestFilterChainAdapter(MRestFilterChain targetFilterChain, MRestFilter... filterArr) {
+        this(targetFilterChain, null, filterArr);
     }
 
-    public MRestFilterChainAdapter(MRestContext restContext,  MRestFilter[] filterArr, MRestFilterChain targetFilterChain) {
+    public MRestFilterChainAdapter(MRestFilterChain targetFilterChain, MRestContext restContext, MRestFilter[] filterArr) {
         super(restContext, filterArr);
         this.targetFilterChain = targetFilterChain;
     }

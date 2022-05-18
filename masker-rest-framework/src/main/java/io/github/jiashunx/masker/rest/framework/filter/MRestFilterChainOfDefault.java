@@ -15,13 +15,16 @@ public class MRestFilterChainOfDefault implements MRestFilterChain {
     protected final MRestFilter[] filterArr;
     protected int index;
 
-    public MRestFilterChainOfDefault(MRestFilter[] filterArr) {
+    public MRestFilterChainOfDefault(MRestFilter... filterArr) {
         this(null, filterArr);
     }
 
-    public MRestFilterChainOfDefault(MRestContext restContext, MRestFilter[] filterArr) {
+    public MRestFilterChainOfDefault(MRestContext restContext, MRestFilter... filterArr) {
         this.restContext = restContext;
         this.filterArr = Objects.requireNonNull(filterArr);
+        if (this.filterArr.length == 0) {
+            throw new IllegalArgumentException("MRestFilter Array Can Not Be Empty");
+        }
         this.index = 0;
     }
 
