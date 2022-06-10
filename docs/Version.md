@@ -1,6 +1,7 @@
 
 <h3 id="V">masker-rest版本清单</h3>
 
+- [V2.0.0(released)](#2.0.0)
 - [V1.7.2(released)](#V1.7.2)
 - [V1.7.1.1(released)](#V1.7.1.1)
 - [V1.7.1(released)](#V1.7.1)
@@ -32,6 +33,14 @@
 - [V1.1.1(released)](#V1.1.1)
 - [V1.1.0(released)](#V1.1.0)
 - [V1.0.0(released)](#V1.0.0)
+
+<h4 id="V2.0.0">V2.0.0(released)</h4>
+
+- feature: 编译构建环境由JDK8升级至JDK11
+
+- optimizing: 增加MRestFilterChain接口
+
+- optimizing: 增加MRestFilterChainAdapter用于过滤器调用链自定义处理
 
 <h4 id="V1.7.2">V1.7.2(released)</h4>
 
