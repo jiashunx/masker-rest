@@ -182,7 +182,7 @@ public class MRestServer {
         }
     }
 
-    public synchronized void shutdown() {
+    public synchronized MRestServer shutdown() {
         if (!started) {
             throw new MRestServerCloseException(String.format("%s has not been initialized", getServerDesc()));
         }
@@ -200,13 +200,15 @@ public class MRestServer {
         }
         closed = true;
         serverChannel = null;
+        return this;
     }
 
     /**
      * 启动server
+     * @return MRestServer server实例
      * @throws MRestServerInitializeException MRestServerInitializeException
      */
-    public synchronized void start() throws MRestServerInitializeException {
+    public synchronized MRestServer start() throws MRestServerInitializeException {
         checkServerState();
         if (logger.isInfoEnabled()) {
             logger.info("{} start, Context: {}", getServerDesc(), getContextList());
@@ -248,6 +250,7 @@ public class MRestServer {
         } catch (Throwable throwable) {
             throw new MRestServerInitializeException(String.format("%s start failed", getServerDesc()), throwable);
         }
+        return this;
     }
 
 }

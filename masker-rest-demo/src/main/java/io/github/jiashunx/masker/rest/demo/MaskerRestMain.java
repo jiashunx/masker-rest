@@ -42,8 +42,7 @@ public class MaskerRestMain {
     private static final Logger logger = LoggerFactory.getLogger(MaskerRestMain.class);
 
     public static void main(String[] args) throws InterruptedException {
-        MRestServer autoClosedServer = new MRestServer().serverName("authclosed-server").listenPort(8090);
-        autoClosedServer.start();
+        MRestServer autoClosedServer = new MRestServer().serverName("authclosed-server").listenPort(8090).start();
         Thread autoClosedThread = new Thread(() -> {
             try {
                 Thread.sleep(10*1000L);
