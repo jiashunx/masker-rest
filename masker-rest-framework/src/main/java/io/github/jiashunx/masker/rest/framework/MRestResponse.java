@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -33,6 +34,11 @@ public class MRestResponse {
     private final MRestHeaders $headers = new MRestHeaders();
     private volatile FlushTask flushTask = null;
     private boolean $flushed = false;
+
+    /**
+     * 响应对象属性信息.
+     */
+    private Map<String, Object> attributes = new ConcurrentHashMap<>();
 
     public MRestResponse(ChannelHandlerContext ctx, MRestContext restContext) {
         this.$channelHandlerContext = Objects.requireNonNull(ctx);
@@ -145,6 +151,7 @@ public class MRestResponse {
             throw new MRestServerException("write method has already been invoked.");
         }
         flushTask = new FlushTask(status, bytes, headers);
+        setAttr("status", status);
         return this;
     }
 
@@ -201,6 +208,7 @@ public class MRestResponse {
             throw new MRestServerException("write method has already been invoked.");
         }
         flushTask = new FlushTask(downloadedFile, headers, callback);
+        setAttr("status", HttpResponseStatus.OK);
         return this;
     }
 
@@ -322,6 +330,23 @@ public class MRestResponse {
                 throw new MRestFlushException(throwable);
             }
         }
+    }
+
+    public MRestResponse setAttr(String key, Object value) {
+        attributes.put(key, value);
+        return this;
+    }
+
+    public Object getAttr(String key) {
+        return attributes.get(key);
+    }
+
+    public HttpResponseStatus getResponseStatus() {
+        HttpResponseStatus status = (HttpResponseStatus) getAttr("status");
+        if (status == null) {
+            status = HttpResponseStatus.OK;
+        }
+        return status;
     }
 
 }
