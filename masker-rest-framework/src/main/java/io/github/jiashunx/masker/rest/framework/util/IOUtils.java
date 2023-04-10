@@ -75,6 +75,8 @@ public final class IOUtils {
         InputStream inputStream = null;
         ByteArrayOutputStream outputStream = null;
         try {
+            // filePath若为文件夹而不是文件，此时读取的是该文件夹下的文件名列表（默认）
+            // notice: 该问题无法修复
             inputStream = classLoader.getResourceAsStream(filePath);
             outputStream = new ByteArrayOutputStream();
             copy(inputStream, outputStream);
@@ -238,6 +240,13 @@ public final class IOUtils {
         InputStream inputStream = null;
         ByteArrayOutputStream outputStream = null;
         try {
+            File file = new File(filePath);
+            if (!file.isFile()) {
+                if (logger.isWarnEnabled()) {
+                    logger.warn("load disk file [{}] failed, file is not a file", filePath);
+                }
+                return null;
+            }
             inputStream = new FileInputStream(filePath);
             outputStream = new ByteArrayOutputStream();
             copy(inputStream, outputStream);
