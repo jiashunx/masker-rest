@@ -107,6 +107,9 @@ public class StaticResourceFinder {
                 }
             }
         }
+        if (logger.isWarnEnabled()) {
+            logger.warn("{} locate classpath static resource: not found: [{}]", restContext.getContextDesc(), requestUrl);
+        }
         return null;
     }
 
@@ -142,6 +145,9 @@ public class StaticResourceFinder {
                     }
                 }
             }
+        }
+        if (logger.isWarnEnabled()) {
+            logger.warn("{} locate diskpath static resource: not found: [{}]", restContext.getContextDesc(), requestUrl);
         }
         return null;
     }

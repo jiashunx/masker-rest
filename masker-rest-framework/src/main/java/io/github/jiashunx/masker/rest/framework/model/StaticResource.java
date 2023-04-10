@@ -46,7 +46,7 @@ public class StaticResource {
     }
 
     public static StaticResource buildEmpty() {
-        return new StaticResource(StaticResourceType.CLASSPATH_FILE, "/xx.js", "/xx.js", new byte[0]);
+        return new StaticResource(StaticResourceType.CLASSPATH_FILE, "/$not-found.js", "/$not-found.js", new byte[0]);
     }
 
     public StaticResourceType getType() {
