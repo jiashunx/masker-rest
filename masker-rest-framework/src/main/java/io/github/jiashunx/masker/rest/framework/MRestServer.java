@@ -43,7 +43,11 @@ public class MRestServer {
     private int bossThreadNum = 0;
     private int workerThreadNum = 0;
     private boolean connectionKeepAlive;
-    private int httpContentMaxLength = Constants.HTTP_CONTENT_MAX_LENGTH;
+    /**
+     * http请求报文字节大小限制
+     */
+    private int httpContentMaxByteSize = Constants.HTTP_CONTENT_MAX_BYTE_SIZE;
+
     private final Map<String, MRestContext> contextMap = new ConcurrentHashMap<>();
 
     public MRestServer() {
@@ -122,16 +126,40 @@ public class MRestServer {
         return workerThreadNum;
     }
 
+    @Deprecated
     public MRestServer httpContentMaxLength(int httpContentMaxLength) {
-        if (httpContentMaxLength < 0) {
-            throw new IllegalArgumentException("httpContentMaxLength -> " + httpContentMaxLength);
+        return this.httpContentMaxByteSize(httpContentMaxLength);
+    }
+
+    @Deprecated
+    public int getHttpContentMaxLength() {
+        return this.getHttpContentMaxByteSize();
+    }
+
+    public MRestServer httpContentMaxByteSize(int httpContentMaxByteSize) {
+        if (httpContentMaxByteSize <= 0) {
+            throw new IllegalArgumentException("httpContentMaxByteSize must large than zero -> " + httpContentMaxByteSize);
         }
-        this.httpContentMaxLength = httpContentMaxLength;
+        this.httpContentMaxByteSize = httpContentMaxByteSize;
         return this;
     }
 
-    public int getHttpContentMaxLength() {
-        return this.httpContentMaxLength;
+    public MRestServer httpContentMaxKBSize(int httpContentMaxKBSize) {
+        if (httpContentMaxKBSize <= 0) {
+            throw new IllegalArgumentException("httpContentMaxKBSize must large than zero -> " + httpContentMaxKBSize);
+        }
+        return this.httpContentMaxByteSize(httpContentMaxKBSize * 1024);
+    }
+
+    public MRestServer httpContentMaxMBSize(int httpContentMaxMBSize) {
+        if (httpContentMaxMBSize <= 0) {
+            throw new IllegalArgumentException("httpContentMaxMBSize must large than zero -> " + httpContentMaxMBSize);
+        }
+        return this.httpContentMaxKBSize(httpContentMaxMBSize * 1024);
+    }
+
+    public int getHttpContentMaxByteSize() {
+        return this.httpContentMaxByteSize;
     }
 
     public MRestServer connectionKeepAlive(boolean connectionKeepAlive) {

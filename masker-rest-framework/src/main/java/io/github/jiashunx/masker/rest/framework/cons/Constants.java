@@ -5,8 +5,10 @@ package io.github.jiashunx.masker.rest.framework.cons;
  * @author jiashunx
  */
 public class Constants {
-
-    public static final int HTTP_CONTENT_MAX_LENGTH = 50*1024*1024;
+    /**
+     * 默认的http请求报文字节大小限制
+     */
+    public static final int HTTP_CONTENT_MAX_BYTE_SIZE = 50*1024*1024;
 
     public static final Character CHAR_PATH_SEP = '/';
     public static final String PATH_SEP = "/";

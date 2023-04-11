@@ -29,7 +29,7 @@ public class MRestServerChannelInitializer extends ChannelInitializer<SocketChan
         pipeline.addLast(new ChunkedWriteHandler());
         // 聚合Http请求或响应，否则会收到HttpMessage，HttpContent等对象
         // 使用此Handler后, 只会收到FullHttpRequest等对象
-        pipeline.addLast(new HttpObjectAggregator(restServer.getHttpContentMaxLength()));
+        pipeline.addLast(new HttpObjectAggregator(restServer.getHttpContentMaxByteSize()));
         pipeline.addLast(new HttpServerExpectContinueHandler());
         pipeline.addLast(new MRestServerChannelHandler(restServer));
     }

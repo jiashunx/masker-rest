@@ -311,6 +311,8 @@ public class MaskerRestMain {
         // 文件上传
         // 配套前端: static/upload.html
         new MRestServer(10009)
+            // 设置http请求报文最大150MB
+            .httpContentMaxMBSize(150)
             .context("/demo")
                 // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
                 .addDefaultClasspathResource()
