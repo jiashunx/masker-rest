@@ -42,11 +42,11 @@
           <archive>
             <manifestEntries>
               <Manifest-Version>1.0</Manifest-Version>
-              <Bundle-Name>masker-rest-jjwt</Bundle-Name>
-              <Bundle-SymbolicName>masker-rest-jjwt</Bundle-SymbolicName>
+              <Bundle-Name>${project.name}</Bundle-Name>
+              <Bundle-SymbolicName>${project.name}</Bundle-SymbolicName>
               <Bundle-Version>${project.version}</Bundle-Version>
               <Bundle-RequiredExecutionEnvironment>J2SE-${jdk.compiler.version}</Bundle-RequiredExecutionEnvironment>
-              <Bundle-Vendor>io.github.jiashunx</Bundle-Vendor>
+              <Bundle-Vendor>${project.groupId}</Bundle-Vendor>
               <Built-By>Administrator</Built-By>
             </manifestEntries>
           </archive>
@@ -60,11 +60,11 @@
           <archive>
             <manifestEntries>
               <Manifest-Version>1.0</Manifest-Version>
-              <Bundle-Name>masker-rest-jjwt</Bundle-Name>
-              <Bundle-SymbolicName>masker-rest-jjwt</Bundle-SymbolicName>
+              <Bundle-Name>${project.name}</Bundle-Name>
+              <Bundle-SymbolicName>${project.name}</Bundle-SymbolicName>
               <Bundle-Version>${project.version}</Bundle-Version>
               <Bundle-RequiredExecutionEnvironment>J2SE-${jdk.compiler.version}</Bundle-RequiredExecutionEnvironment>
-              <Bundle-Vendor>io.github.jiashunx</Bundle-Vendor>
+              <Bundle-Vendor>${project.groupId}</Bundle-Vendor>
               <Built-By>Administrator</Built-By>
             </manifestEntries>
           </archive>
