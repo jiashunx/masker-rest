@@ -1,40 +1,51 @@
 
 <h3 id="V">masker-rest版本清单</h3>
 
-- [V2.0.0(released)](#2.0.0)
-- [V1.7.2(released)](#V1.7.2)
-- [V1.7.1.1(released)](#V1.7.1.1)
-- [V1.7.1(released)](#V1.7.1)
-- [V1.7.0(released)](#V1.7.0)
-- [V1.6.8(released)](#V1.6.8)
-- [V1.6.7(released)](#V1.6.7)
-- [V1.6.6(released)](#V1.6.6)
-- [V1.6.5(released)](#V1.6.5)
-- [V1.6.4(released)](#V1.6.4)
-- [V1.6.3(released)](#V1.6.3)
-- [V1.6.2(released)](#V1.6.2)
-- [V1.6.1(released)](#V1.6.1)
-- [V1.6.0(released)](#V1.6.0)
-- [V1.5.0(released)](#V1.5.0)
-- [V1.4.10(released)](#V1.4.10)
-- [V1.4.9(released)](#V1.4.9)
-- [V1.4.8(released)](#V1.4.8)
-- [V1.4.7(released)](#V1.4.7)
-- [V1.4.6(released)](#V1.4.6)
-- [V1.4.5(released)](#V1.4.5)
-- [V1.4.4(released)](#V1.4.4)
-- [V1.4.3(released)](#V1.4.3)
-- [V1.4.2(released)](#V1.4.2)
-- [V1.4.1(released)](#V1.4.1)
-- [V1.4.0(released)](#V1.4.0)
-- [V1.3.0(released)](#V1.3.0)
-- [V1.2.1(released)](#V1.2.1)
-- [V1.2.0(released)](#V1.2.0)
-- [V1.1.1(released)](#V1.1.1)
-- [V1.1.0(released)](#V1.1.0)
-- [V1.0.0(released)](#V1.0.0)
+- [V2.1.0.RELEASE](#2.1.0)
+- [V2.0.0](#2.0.0)
+- [V1.7.2](#V1.7.2)
+- [V1.7.1.1](#V1.7.1.1)
+- [V1.7.1](#V1.7.1)
+- [V1.7.0](#V1.7.0)
+- [V1.6.8](#V1.6.8)
+- [V1.6.7](#V1.6.7)
+- [V1.6.6](#V1.6.6)
+- [V1.6.5](#V1.6.5)
+- [V1.6.4](#V1.6.4)
+- [V1.6.3](#V1.6.3)
+- [V1.6.2](#V1.6.2)
+- [V1.6.1](#V1.6.1)
+- [V1.6.0](#V1.6.0)
+- [V1.5.0](#V1.5.0)
+- [V1.4.10](#V1.4.10)
+- [V1.4.9](#V1.4.9)
+- [V1.4.8](#V1.4.8)
+- [V1.4.7](#V1.4.7)
+- [V1.4.6](#V1.4.6)
+- [V1.4.5](#V1.4.5)
+- [V1.4.4](#V1.4.4)
+- [V1.4.3](#V1.4.3)
+- [V1.4.2](#V1.4.2)
+- [V1.4.1](#V1.4.1)
+- [V1.4.0](#V1.4.0)
+- [V1.3.0](#V1.3.0)
+- [V1.2.1](#V1.2.1)
+- [V1.2.0](#V1.2.0)
+- [V1.1.1](#V1.1.1)
+- [V1.1.0](#V1.1.0)
+- [V1.0.0](#V1.0.0)
 
-<h4 id="V2.0.0">V2.0.0(released)</h4>
+<h4 id="V2.1.0">V2.1.0.RELEASE</h4>
+
+- fix: 增加相关API控制http请求报文体大小（支持设置byte、kb、mb等单位）
+
+- fix: 获取classpath资源内容数据时判断资源是否为文件（若为文件夹则列出所有文件）
+
+- refactor: 优化工程构件配置（通用build配置剥离至父工程）
+
+- refactor: 优化工程版本依赖控制（依赖版本由父pom定义）
+
+<h4 id="V2.0.0">V2.0.0</h4>
 
 - feature: 编译构建环境由JDK8升级至JDK11
 
@@ -42,7 +53,7 @@
 
 - optimizing: 增加MRestFilterChainAdapter用于过滤器调用链自定义处理
 
-<h4 id="V1.7.2">V1.7.2(released)</h4>
+<h4 id="V1.7.2">V1.7.2</h4>
 
 - fixbug: 修正解压文件后未关闭输入流导致文件占用的缺陷
 
@@ -52,11 +63,11 @@
 
 - optimizing: 优化及补充部分工具类公共代码
 
-<h4 id="V1.7.1.1">V1.7.1.1(released)</h4>
+<h4 id="V1.7.1.1">V1.7.1.1</h4>
 
 - fixbug: 修正header属性覆盖的缺陷（1.7.0引入）
 
-<h4 id="V1.7.1">V1.7.1(released)</h4>
+<h4 id="V1.7.1">V1.7.1</h4>
 
 - fixbug: 修正filter拦截url不能出现空格的缺陷
 
@@ -70,7 +81,7 @@
 
 - optimizing: 优化及补充部分工具类公共代码
 
-<h4 id="V1.7.0">V1.7.0(released)</h4>
+<h4 id="V1.7.0">V1.7.0</h4>
 
 - fixbug: 请求url与context-path相同时应重置请求url为"/"
 
@@ -88,11 +99,11 @@
 
 - optimizing: 文档结构及描述优化, 增加可读性
 
-<h4 id="V1.6.8">V1.6.8(released)</h4>
+<h4 id="V1.6.8">V1.6.8</h4>
 
 - fixbug: 文件压缩时对文件夹下文件压缩处理修正(仅关闭Entry输出流不关闭整个zip文件输出流)
 
-<h4 id="V1.6.7">V1.6.7(released)</h4>
+<h4 id="V1.6.7">V1.6.7</h4>
 
 - fixbug: 动态Servlet实例缓存实现代码修正
 
@@ -104,13 +115,13 @@
 
 - optimizing: 路径匹配与精确匹配（带占位符）情况兼容处理（根据url匹配度进行映射优先级选择）
 
-<h4 id="V1.6.6">V1.6.6(released)</h4>
+<h4 id="V1.6.6">V1.6.6</h4>
 
 - feature: servlet映射处理url支持占位符匹配与解析处理，可从MRestRquest对象中获取占位符对应path参数
 
 - feature: 添加 [MRestServletAdapter][8] 类用于servlet请求处理分发
 
-<h4 id="V1.6.5">V1.6.5(released)</h4>
+<h4 id="V1.6.5">V1.6.5</h4>
 
 - feature: context支持指定默认"/"请求重定向地址
 
@@ -122,7 +133,7 @@
 
 - feature：使用asm生成字节码（取代反射调用，提高执行效率，参见[ServletHandlerClassGenerator][7]）配合 [AbstractRestServlet][3] 实现servlet分发处理
 
-<h4 id="V1.6.4">V1.6.4(released)</h4>
+<h4 id="V1.6.4">V1.6.4</h4>
 
 - feature: 实现自定义Servlet的注册、分发及处理
 
@@ -130,7 +141,7 @@
 
 - optimizing: 原有的基于Filter的请求分发处理调整为使用Servlet实现（底层仍然使用Filter进行链式调用）
 
-<h4 id="V1.6.3">V1.6.3(released)</h4>
+<h4 id="V1.6.3">V1.6.3</h4>
 
 - feature: 静态资源Content-Type根据文件名与Content-Type的映射表进行取值及返回
 
@@ -148,11 +159,11 @@
 
 - fixbug: IOUtils中提供的数据流拷贝方法在执行完成执行数据流关闭操作（修正文件上传时无法删除临时文件的缺陷）
 
-<h4 id="V1.6.2">V1.6.2(released)</h4>
+<h4 id="V1.6.2">V1.6.2</h4>
 
 - fixbug: 修正文件上传处理代码中的文件拷贝逻辑
 
-<h4 id="V1.6.1">V1.6.1(released)</h4>
+<h4 id="V1.6.1">V1.6.1</h4>
 
 - feature: 静态资源访问支持自定义前缀
 
@@ -162,13 +173,13 @@
 
 - optimizing: rest server支持设置http content的最大值
 
-<h4 id="V1.6.0">V1.6.0(released)</h4>
+<h4 id="V1.6.0">V1.6.0</h4>
 
 - feature: 支持发布WebSocket服务及注册相应回调
 
 - feature: 基于自定义WebSocket服务，实现简易聊天室
 
-<h4 id="V1.5.0">V1.5.0(released)</h4>
+<h4 id="V1.5.0">V1.5.0</h4>
 
 - feature: 单个server支持发布多个context-path的服务
 
@@ -178,17 +189,17 @@
 
 - optimizing: 补充样例代码
 
-<h4 id="V1.4.10">V1.4.10(released)</h4>
+<h4 id="V1.4.10">V1.4.10</h4>
 
 - optimizing: 优化补充IOUtils工具类中相应方法.
 
-<h4 id="V1.4.9">V1.4.9(released)</h4>
+<h4 id="V1.4.9">V1.4.9</h4>
 
 - optimizing: 优化序列化相应代码
 
 - optimizing: 补充IOUtils工具类中写文件方法
 
-<h4 id="V1.4.8">V1.4.8(released)</h4>
+<h4 id="V1.4.8">V1.4.8</h4>
 
 - feature: 对于未指定 "/" 或 "/index.html" 路径映射的服务，输出默认masker-rest主页面
 
@@ -196,13 +207,13 @@
 
 - optimizing: 优化文件操作代码，增加运行时异常类：FileOperateException
 
-<h4 id="V1.4.7">V1.4.7(released)</h4>
+<h4 id="V1.4.7">V1.4.7</h4>
 
 - feature: 下载文件支持回调（文件下载完成时执行）
 
 - fixbug: 修正同一url映射处理对象分别进行映射时报冲突的缺陷
 
-<h4 id="V1.4.6">V1.4.6(released)</h4>
+<h4 id="V1.4.6">V1.4.6</h4>
 
 - feature: 添加默认的请求异常处理
 
@@ -212,25 +223,25 @@
 
 - optimizing: jwt处理取消抛出异常
 
-<h4 id="V1.4.5">V1.4.5(released)</h4>
+<h4 id="V1.4.5">V1.4.5</h4>
 
 - optimizing: 添加IOUtils工具类
 
 - optimizing: response补充write方法
 
-<h4 id="V1.4.4">V1.4.4(released)</h4>
+<h4 id="V1.4.4">V1.4.4</h4>
 
 - optimizing: jwt默认实现合并至framework工程
 
 - fixbug: 修正未指定context-path时对url的截取异常缺陷
 
-<h4 id="V1.4.3">V1.4.3(released)</h4>
+<h4 id="V1.4.3">V1.4.3</h4>
 
 - feature: 支持文件下载
 
 - optimizing: 调整server接收的请求body最大size为50MB
 
-<h4 id="V1.4.2">V1.4.2(released)</h4>
+<h4 id="V1.4.2">V1.4.2</h4>
 
 - feature: 支持文件上传(单文件or多文件)
 
@@ -238,17 +249,17 @@
 
 - fixbug: 修正各类handler的分发处理逻辑
 
-<h4 id="V1.4.1">V1.4.1(released)</h4>
+<h4 id="V1.4.1">V1.4.1</h4>
 
 - optimizing: jwt默认实现调整至独立的masker-rest-jwt工程
 
 - optimizing: 移除冗余maven依赖(commons-codec, commons-lang, commons-io)
 
-<h4 id="V1.4.0">V1.4.0(released)</h4>
+<h4 id="V1.4.0">V1.4.0</h4>
 
 - feature: 支持静态资源处理
 
-<h4 id="V1.3.0">V1.3.0(released)</h4>
+<h4 id="V1.3.0">V1.3.0</h4>
 
 - feature: request添加context-path字段
 
@@ -262,11 +273,11 @@
 
 - fixbug: 响应头设置Content-Type报NullPonterException问题解决
 
-<h4 id="V1.2.1">V1.2.1(released)</h4>
+<h4 id="V1.2.1">V1.2.1</h4>
 
 - feature：server支持自定义context-path
 
-<h4 id="V1.2.0">V1.2.0(released)</h4>
+<h4 id="V1.2.0">V1.2.0</h4>
 
 - feature：请求及响应支持对cookie的处理
 
@@ -282,17 +293,17 @@
 
 - optimizing：对http请求的响应统一添加server框架名称及版本信息
 
-<h4 id="V1.1.1">V1.1.1(released)</h4>
+<h4 id="V1.1.1">V1.1.1</h4>
 
 - fixbug：修正启动多个rest server时url映射冲突的错误
 
-<h4 id="V1.1.0">V1.1.0(released)</h4>
+<h4 id="V1.1.0">V1.1.0</h4>
 
 - feature：添加默认JWT服务端实现
 
 - fixbug：设置响应体write操作仅可执行一次
 
-<h4 id="V1.0.0">V1.0.0(released)</h4>
+<h4 id="V1.0.0">V1.0.0</h4>
 
 - feature：支持发布rest接口
 
