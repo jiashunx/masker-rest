@@ -3,7 +3,7 @@
   <parent>
     <groupId>io.github.jiashunx</groupId>
     <artifactId>masker-rest</artifactId>
-    <version>2.1.0.RELEASE</version>
+    <version>x.y.z-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>masker-rest-framework</artifactId>
