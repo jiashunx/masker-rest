@@ -43,14 +43,6 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.0</version>
-        <configuration>
-          <source>${jdk.compiler.version}</source>
-          <target>${jdk.compiler.version}</target>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <version>2.0.3.RELEASE</version>
@@ -63,64 +55,6 @@
         </executions>
         <configuration>
           <mainClass>io.github.jiashunx.masker.rest.demo.MaskerRestMain</mainClass>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>2.4</version>
-        <configuration>
-          <archive>
-            <manifestEntries>
-              <Manifest-Version>1.0</Manifest-Version>
-              <Bundle-Name>${project.name}</Bundle-Name>
-              <Bundle-SymbolicName>${project.name}</Bundle-SymbolicName>
-              <Bundle-Version>${project.version}</Bundle-Version>
-              <Bundle-RequiredExecutionEnvironment>J2SE-${jdk.compiler.version}</Bundle-RequiredExecutionEnvironment>
-              <Bundle-Vendor>${project.groupId}</Bundle-Vendor>
-              <Built-By>Administrator</Built-By>
-            </manifestEntries>
-          </archive>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>2.1.2</version>
-        <configuration>
-          <archive>
-            <manifestEntries>
-              <Manifest-Version>1.0</Manifest-Version>
-              <Bundle-Name>${project.name}</Bundle-Name>
-              <Bundle-SymbolicName>${project.name}</Bundle-SymbolicName>
-              <Bundle-Version>${project.version}</Bundle-Version>
-              <Bundle-RequiredExecutionEnvironment>J2SE-${jdk.compiler.version}</Bundle-RequiredExecutionEnvironment>
-              <Bundle-Vendor>${project.groupId}</Bundle-Vendor>
-              <Built-By>Administrator</Built-By>
-            </manifestEntries>
-          </archive>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.9.1</version>
-        <configuration>
-          <encoding>UTF-8</encoding>
-          <aggregate>true</aggregate>
-          <charset>UTF-8</charset>
-          <docencoding>UTF-8</docencoding>
-          <additionalparam>-Xdoclint:none</additionalparam>
-        </configuration>
-      </plugin>
-      <!-- 指定maven test编码 -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.21.0</version>
-        <configuration>
-          <forkMode>once</forkMode>
-          <argLine>-Dfile.encoding=UTF-8</argLine>
         </configuration>
       </plugin>
     </plugins>
