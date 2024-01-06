@@ -4,8 +4,9 @@
   <artifactId>masker-rest</artifactId>
   <name>masker-rest</name>
   <packaging>pom</packaging>
-  <version>x.y.z-SNAPSHOT</version>
+  <version>${revision}</version>
   <properties>
+    <revision>x.y.z-SNAPSHOT</revision>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <jdk.compiler.version>11</jdk.compiler.version>
@@ -104,6 +105,21 @@
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcpkix-jdk15on</artifactId>
         <version>1.56</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.jiashunx</groupId>
+        <artifactId>masker-rest-framework</artifactId>
+        <version>${revision}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.jiashunx</groupId>
+        <artifactId>masker-rest-jjwt</artifactId>
+        <version>${revision}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.github.jiashunx</groupId>
+        <artifactId>masker-rest-rsa</artifactId>
+        <version>${revision}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
