@@ -50,6 +50,8 @@ public class MRestServer {
 
     private final Map<String, MRestContext> contextMap = new ConcurrentHashMap<>();
 
+    private final Map<String, Object> globalObjects = new ConcurrentHashMap<>();
+
     public MRestServer() {
         this(MRestUtils.getDefaultServerPort(), MRestUtils.getDefaultServerName());
     }
@@ -279,6 +281,15 @@ public class MRestServer {
             throw new MRestServerInitializeException(String.format("%s start failed", getServerDesc()), throwable);
         }
         return this;
+    }
+
+    public MRestServer setGlobalObject(String key, Object object) {
+        globalObjects.put(key, object);
+        return this;
+    }
+
+    public Object getGlobalObject(String key) {
+        return globalObjects.get(key);
     }
 
 }

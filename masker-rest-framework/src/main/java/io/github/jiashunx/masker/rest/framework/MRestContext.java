@@ -837,4 +837,16 @@ public class MRestContext {
     public MWebsocketContext getWebsocketContext(String websocketUrl) {
         return websocketContextMap.get(MRestUtils.formatWebsocketContextPath(websocketUrl));
     }
+
+    private final Map<String, Object> globalObjects = new ConcurrentHashMap<>();
+
+    public MRestContext setGlobalObject(String key, Object object) {
+        globalObjects.put(key, object);
+        return this;
+    }
+
+    public Object getGlobalObject(String key) {
+        return globalObjects.get(key);
+    }
+
 }

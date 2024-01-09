@@ -4,7 +4,9 @@ import io.github.jiashunx.masker.rest.framework.MRestContext;
 import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
 
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author jiashunx
@@ -14,6 +16,7 @@ public class MRestServerThreadModel {
     private MRestContext restContext;
     private MRestRequest restRequest;
     private MRestResponse restResponse;
+    private final Map<String, Object> globalObjects = new ConcurrentHashMap<>();
 
     public MRestServerThreadModel assertNotNull() {
         Objects.requireNonNull(restContext);
@@ -44,5 +47,13 @@ public class MRestServerThreadModel {
 
     public void setRestResponse(MRestResponse restResponse) {
         this.restResponse = restResponse;
+    }
+
+    public void setGlobalObject(String key, Object object) {
+        globalObjects.put(key, object);
+    }
+
+    public Object getGlobalObject(String key) {
+        return globalObjects.get(key);
     }
 }

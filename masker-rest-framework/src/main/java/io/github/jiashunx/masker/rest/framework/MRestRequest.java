@@ -11,6 +11,7 @@ import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author jiashunx
@@ -48,6 +49,7 @@ public class MRestRequest {
     protected Map<String, Cookie> cookieMap;
     protected byte[] bodyBytes;
     protected Map<String, String> placeholderMap = new LinkedHashMap<>();
+    private final Map<String, Object> globalObjects = new ConcurrentHashMap<>();
 
     public MRestRequest() {}
 
@@ -392,5 +394,14 @@ public class MRestRequest {
             return new String[0];
         }
         return placeholderMap.keySet().toArray(new String[0]);
+    }
+
+    public MRestRequest setGlobalObject(String key, Object object) {
+        globalObjects.put(key, object);
+        return this;
+    }
+
+    public Object getGlobalObject(String key) {
+        return globalObjects.get(key);
     }
 }
