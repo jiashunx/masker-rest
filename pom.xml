@@ -4,9 +4,8 @@
   <artifactId>masker-rest</artifactId>
   <name>masker-rest</name>
   <packaging>pom</packaging>
-  <version>${revision}</version>
+  <version>x.y.z-SNAPSHOT</version>
   <properties>
-    <revision>x.y.z-SNAPSHOT</revision>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <jdk.compiler.version>11</jdk.compiler.version>
@@ -109,17 +108,17 @@
       <dependency>
         <groupId>io.github.jiashunx</groupId>
         <artifactId>masker-rest-framework</artifactId>
-        <version>${revision}</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>io.github.jiashunx</groupId>
         <artifactId>masker-rest-jjwt</artifactId>
-        <version>${revision}</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>io.github.jiashunx</groupId>
         <artifactId>masker-rest-rsa</artifactId>
-        <version>${revision}</version>
+        <version>${project.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
