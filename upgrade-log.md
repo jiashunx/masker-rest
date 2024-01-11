@@ -1,8 +1,9 @@
 
+### JDK8升级JDK11踩坑记录
 
 - 问题1、编译时报错：javax.activation不存在
 
-   - 问题分析：需额外添加javax.mail依赖
+   - 问题分析：需额外添加javax.activation依赖
 
    ```text
    <dependency>
@@ -87,10 +88,5 @@ java.lang.AssertionError
        <groupId>com.sun.xml.bind</groupId>
        <artifactId>jaxb-core</artifactId>
        <version>2.3.0</version>
-   </dependency>
-   <dependency>
-       <groupId>javax.activation</groupId>
-       <artifactId>activation</artifactId>
-       <version>1.1.1</version>
    </dependency>
    ```
