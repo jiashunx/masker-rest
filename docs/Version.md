@@ -1,6 +1,7 @@
 
 <h3 id="V">masker-rest版本清单</h3>
 
+- [V2.1.3.RELEASE](#2.1.3)
 - [V2.1.2.RELEASE](#2.1.2)
 - [V2.1.1.RELEASE](#2.1.1)
 - [V2.1.0.RELEASE](#2.1.0)
@@ -36,6 +37,12 @@
 - [V1.1.1](#V1.1.1)
 - [V1.1.0](#V1.1.0)
 - [V1.0.0](#V1.0.0)
+
+<h4 id="V2.1.3">V2.1.3.RELEASE</h4>
+
+- fix: Server默认添加context-path为"/"的Context实现
+
+- fix: Context实例初始化时移除添加默认WebsocketContext实例的处理（调整为在初始化Context时添加）
 
 <h4 id="V2.1.2">V2.1.2.RELEASE</h4>
 
