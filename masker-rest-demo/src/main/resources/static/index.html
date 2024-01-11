@@ -5,142 +5,30 @@
     <title>测试页面01</title>
 </head>
 <body>
-    <div>
-        <label>文件上传测试（基于FormData，单选）</label>
-        <br>
-        <input type="file" id="file-upload0" name="avatar">
-        <button type="button" id="btn-file-upload0">保存</button>
-    </div>
-    <div>
-        <label>文件上传测试（基于form表单，多选）</label>
-        <br>
-        <form id="file-upload-form1">
-            <input type="file" id="file" name="file-upload1" multiple="multiple">
-        </form>
-        <button type="button" id="btn-file-upload1">保存</button>
-    </div>
-    <div>
-        <label>文件下载测试（下载项目README.md文件）</label>
-        <br>
-        <button type="button" id="btn-download-test0">下载</button>
-    </div>
-    <div>
-        <label>文件下载测试（下载项目目录）</label>
-        <br>
-        <button type="button" id="btn-download-test1">下载</button>
-    </div>
-    <div>
-        <button type="button" id="btn-websocket-test">WebSocket测试</button>
-    </div>
-    <div>
-        <label>用户A</label>
-        <input id="usernameA" value="用户A" style="width: 100px;" />
-        <textarea id="textareaA" style="width: 200px; height: 200px;"></textarea>
-        <input id="inputA" style="width: 100px;">
-        <button id="submitA" type="button">用户A提交</button>
-    </div>
-    <div>
-        <label>用户B</label>
-        <input id="usernameB" value="用户B" style="width: 100px;" />
-        <textarea id="textareaB" style="width: 200px; height: 200px;"></textarea>
-        <input id="inputB" style="width: 100px;">
-        <button id="submitB" type="button">用户B提交</button>
-    </div>
-    <!-- 引入框架封装的websocket客户端javascript实现 -->
-    <script type="application/javascript" src="./masker-rest/static/websocket.js"></script>
-    <script>
-        console.log(WebSocketClient);
-    </script>
-    <script type="text/javascript" src="./webjars/webjar-jquery/3.5.1/dist/jquery.min.js"></script>
-    <script>
-        $("#btn-file-upload0").click(function () {
-            var files = $('#file-upload0').prop('files');
-            var formData = new FormData();
-            formData.append('avatar', files[0]);
-            $.ajax({
-                url: './fileupload/test0',
-                type: 'POST',
-                data: formData,
-                cache: false,
-                processData: false,
-                contentType: false
-            });
-        });
-        $("#btn-file-upload1").click(function () {
-            var formData = new FormData($("#file-upload-form1")[0]);
-            $.ajax({
-                url: './fileupload/test1',
-                type: 'POST',
-                data: formData,
-                cache: false,
-                processData: false,
-                contentType: false,
-                success: function (data) {
-                    console.log("upload files success.", data);
-                }
-            });
-        });
-        $("#btn-download-test0").click(function () {
-            var _win = window.open("about:blank");
-            _win.location.href = "./filedownload/test0";
-        });
-        $("#btn-download-test1").click(() => {
-            window.open("about:blank").location.href = "./filedownload/test1";
-        });
-        if (window.WebSocket) {
-            let _socket = new WebSocket("ws://localhost:21700/demo/demo000");
-            _socket.onmessage = function (ev) {
-                alert("receive from server: " + ev.data);
-            };
-            _socket.onopen = function (ev) {
-                console.log("connected to server");
-            };
-            _socket.onclose = function (ev) {
-                console.log("disconnected from server");
-            };
-            $("#btn-websocket-test").click(function () {
-                if (_socket.readyState === WebSocket.OPEN) {
-                    _socket.send("hahahhahahhhhhh");
-                } else {
-                    alert("WebSocket Connection is not ready.");
-                }
-            });
-        }
-        var WebsocketChatRoom = function (username, textarea, input, button) {
-            this.$username = $("#" + username);
-            this.$textarea = $("#" + textarea);
-            this.$input = $("#" + input);
-            this.$button = $("#" + button);
-            if (!window.WebSocket) {
-                throw new Error("browser do not support websocket");
-            }
-            this.websocktURL = "ws://" + window.location.host + "/demo/chatroom";
-            this.$websocket = new window.WebSocket(this.websocktURL);
-        }
-        WebsocketChatRoom.prototype = {
-            bindEvent: function () {
-                let _this = this;
-                _this.$websocket.onopen = function (ev) {
-                    console.log(_this.$username.val(), " connectted to websocket server, url: ", _this.websocktURL);
-                };
-                _this.$websocket.onclose = function (ev) {
-                    console.log(_this.$username.val(), " disconnected from websocekt server, url: ", _this.websocktURL);
-                };
-                _this.$websocket.onmessage = function (ev) {
-                    let msg = JSON.parse(ev.data);
-                    _this.$textarea.val(_this.$textarea.val() + "\n" + msg.username + ": " + msg.text);
-                };
-                _this.$button.click(function () {
-                    let text = JSON.stringify({
-                        username: _this.$username.val(),
-                        text: _this.$input.val()
-                    });
-                    _this.$websocket.send(text);
-                });
-            },
+<div>
+    <button type="button" id="btn-websocket-test">WebSocket测试</button>
+</div>
+<script type="application/javascript" src="./masker-rest/static/lib/jquery.min.js"></script>
+<script>
+    if (window.WebSocket) {
+        let _socket = new WebSocket("ws://" + window.location.host + "/demo/test-websocket");
+        _socket.onmessage = function (ev) {
+            alert("receive from server: " + ev.data);
         };
-        new WebsocketChatRoom("usernameA", "textareaA", "inputA", "submitA").bindEvent();
-        new WebsocketChatRoom("usernameB", "textareaB", "inputB", "submitB").bindEvent();
-    </script>
+        _socket.onopen = function (ev) {
+            console.log("connected to server");
+        };
+        _socket.onclose = function (ev) {
+            console.log("disconnected from server");
+        };
+        $("#btn-websocket-test").click(function () {
+            if (_socket.readyState === WebSocket.OPEN) {
+                _socket.send("hahahhahahhhhhh");
+            } else {
+                alert("WebSocket Connection is not ready.");
+            }
+        });
+    }
+</script>
 </body>
 </html>

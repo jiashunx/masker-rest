@@ -40,12 +40,11 @@
 
 <h4 id="0.3">0.3、框架引用</h4>
 
-目前框架最新版本: <i><mrf.version></i>为<i>1.6.8</i>
 ```text
    <dependency>
      <groupId>io.github.jiashunx</groupId>
      <artifactId>masker-rest-framework</artifactId>
-     <version>${mrf.version}</version>
+     <version>${lastest.version}</version>
    </dependency>
    ```
 
@@ -70,7 +69,10 @@ public class Test {
                     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                     return objectMapper;
                 })
-                .autoRefreshStaticResources(true)
+                // 允许静态资源缓存
+                .setStaticResourcesCacheEnabled(true)
+                // 缓存静态资源定时刷新
+                .setAutoRefreshStaticResources(true)
                 // 设置默认首页
                 .setIndexUrl("/index.html")
                 // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
@@ -107,8 +109,6 @@ public class Test {
     }
 }
 ```
-
-
 
 <h3 id="1">1、masker-rest发布Http服务</h3>
 
@@ -491,8 +491,7 @@ public class Test {
     </form>
     <button type="button" id="btn-file-upload1">保存</button>
 </div>
-<!--<script type="text/javascript" src="../../../webjars/webjar-jquery/3.5.1/dist/jquery.min.js"></script>-->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+<script type="application/javascript" src="./masker-rest/static/lib/jquery.min.js"></script>
 <script>
     $("#btn-file-upload0").click(function () {
         var files = $('#file-upload0').prop('files');
@@ -596,8 +595,7 @@ public class Test {
     <br>
     <button type="button" id="btn-download-test1">下载</button>
 </div>
-<!--<script type="text/javascript" src="../../../webjars/webjar-jquery/3.5.1/dist/jquery.min.js"></script>-->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+<script type="application/javascript" src="./masker-rest/static/lib/jquery.min.js"></script>
 <script>
     $("#btn-download-test0").click(function () {
         var _win = window.open("about:blank");
@@ -663,6 +661,8 @@ public class Test {
     public static void main(String[] args) {
         new MRestServer(10011)
             .context("/demo")
+                // 不允许静态资源缓存
+                .setStaticResourcesCacheEnabled(false)
                 // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
                 .addDefaultClasspathResource()
                 // "/test"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
@@ -685,6 +685,8 @@ public class Test {
     public static void main(String[] args) {
         new MRestServer(10012)
             .context("/demo")
+                // 不允许静态资源缓存
+                .setStaticResourcesCacheEnabled(false)
                 // "/"扫描磁盘路径: "/home/html"
                 .addDiskpathResource("/home/html")
                 // "/test"扫描磁盘路径: "/home/html"
@@ -714,8 +716,7 @@ public class Test {
 <div>
     <button type="button" id="btn-websocket-test">WebSocket测试</button>
 </div>
-<!--<script type="text/javascript" src="../../../webjars/webjar-jquery/3.5.1/dist/jquery.min.js"></script>-->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+<script type="application/javascript" src="./masker-rest/static/lib/jquery.min.js"></script>
 <script>
     if (window.WebSocket) {
         let _socket = new WebSocket("ws://" + window.location.host + "/demo/websocket-test");
@@ -800,12 +801,11 @@ public class Test {
     <button id="submitB" type="button">用户B提交</button>
 </div>
 <!-- 引入框架封装的websocket客户端javascript实现 -->
-<script type="application/javascript" src="../../../../../masker-rest-framework/src/main/resources/masker-rest/static/websocket.js"></script>
+<script type="application/javascript" src="./masker-rest/static/websocket.js"></script>
 <script>
     console.log(WebSocketClient);
 </script>
-<!--<script type="text/javascript" src="../../../webjars/webjar-jquery/3.5.1/dist/jquery.min.js"></script>-->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+<script type="application/javascript" src="./masker-rest/static/lib/jquery.min.js"></script>
 <script>
     var WebsocketChatRoom = function (username, textarea, input, button) {
         this.$username = $("#" + username);

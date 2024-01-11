@@ -393,6 +393,7 @@ public class MaskerRestMain {
         // 发布磁盘静态资源
         new MRestServer(10012)
             .context("/demo")
+                // 不允许静态资源缓存
                 .setStaticResourcesCacheEnabled(false)
                 // "/"扫描磁盘路径: "/home/html"
                 .addDiskpathResource("/home/html")

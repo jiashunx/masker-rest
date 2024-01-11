@@ -67,8 +67,7 @@ public class MRestServer {
     public MRestServer(int listenPort, String serverName) {
         listenPort(listenPort);
         serverName(serverName);
-        contextMap.put(Constants.DEFAULT_CONTEXT_PATH, new MRestContext(this, Constants.DEFAULT_CONTEXT_PATH));
-        this.startupTime = new SimpleDateFormat("yyyy-MM-dd HH:ss:mm.SSS").format(new Date());
+        this.startupTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
         this.identifier = UUID.randomUUID().toString().replace("-", "");
     }
 
@@ -222,7 +221,7 @@ public class MRestServer {
         try {
             serverChannel.close().addListener(future -> {
                 if (logger.isInfoEnabled()) {
-                    logger.info("{} close succeed", getServerDesc());
+                    logger.info("{} closed", getServerDesc());
                 }
             }).get();
         } catch (Throwable throwable) {
@@ -240,8 +239,11 @@ public class MRestServer {
      */
     public synchronized MRestServer start() throws MRestServerInitializeException {
         checkServerState();
+        if (getContextList().isEmpty()) {
+            contextMap.put(Constants.DEFAULT_CONTEXT_PATH, new MRestContext(this, Constants.DEFAULT_CONTEXT_PATH));
+        }
         if (logger.isInfoEnabled()) {
-            logger.info("{} start, Context: {}", getServerDesc(), getContextList());
+            logger.info("{} starting, Context: {}", getServerDesc(), getContextList());
         }
         try {
             contextMap.forEach((key, restContext) -> {
@@ -259,7 +261,7 @@ public class MRestServer {
                     .childHandler(new MRestServerChannelInitializer(this));
             serverChannel = bootstrap.bind(listenPort).sync().channel();
             if (logger.isInfoEnabled()) {
-                logger.info("{} start succeed", getServerDesc());
+                logger.info("{} started", getServerDesc());
             }
             AtomicReference<Channel> serverChannelRef = new AtomicReference<>(serverChannel);
             final Thread syncThread = new Thread(() -> {
