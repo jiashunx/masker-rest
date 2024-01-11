@@ -806,6 +806,24 @@ public class MRestContext {
         return staticResourcesCacheEnabled;
     }
 
+    // 已更新方法签名: setAutoRefreshStaticResources(boolean)
+    @Deprecated
+    public synchronized MRestContext autoRefreshStaticResources(boolean autoRefreshStaticResources) {
+        return autoRefreshStaticResources(autoRefreshStaticResources, DEFAULT_REFRESH_PERIOD);
+    }
+
+    // 已更新方法签名: setAutoRefreshStaticResources(boolean,long)
+    @Deprecated
+    public synchronized MRestContext autoRefreshStaticResources(boolean autoRefreshStaticResources, long autoRefreshStaticResourcesPeriod) {
+        if (autoRefreshStaticResourcesPeriod <= 0) {
+            throw new IllegalArgumentException();
+        }
+        restServer.checkServerState();
+        this.autoRefreshStaticResources = autoRefreshStaticResources;
+        this.autoRefreshStaticResourcesPeriod = autoRefreshStaticResourcesPeriod;
+        return this;
+    }
+
     public synchronized MRestContext setAutoRefreshStaticResources(boolean autoRefreshStaticResources) {
         return setAutoRefreshStaticResources(autoRefreshStaticResources, DEFAULT_REFRESH_PERIOD);
     }
