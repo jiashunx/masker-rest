@@ -40,12 +40,11 @@
 
 <h4 id="0.3">0.3、框架引用</h4>
 
-目前框架最新版本: <i><mrf.version></i>为<i>1.6.8</i>
 ```text
    <dependency>
      <groupId>io.github.jiashunx</groupId>
      <artifactId>masker-rest-framework</artifactId>
-     <version>${mrf.version}</version>
+     <version>${lastest.version}</version>
    </dependency>
    ```
 
@@ -70,7 +69,10 @@ public class Test {
                     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                     return objectMapper;
                 })
-                .autoRefreshStaticResources(true)
+                // 允许静态资源缓存
+                .setStaticResourcesCacheEnabled(true)
+                // 缓存静态资源定时刷新
+                .setAutoRefreshStaticResources(true)
                 // 设置默认首页
                 .setIndexUrl("/index.html")
                 // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
@@ -107,8 +109,6 @@ public class Test {
     }
 }
 ```
-
-
 
 <h3 id="1">1、masker-rest发布Http服务</h3>
 
