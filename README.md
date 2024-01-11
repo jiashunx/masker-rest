@@ -14,7 +14,7 @@
    - Websocket Server Framework
       - 复用Http服务器端口发布Websocket服务（websocket服务可根据url进行请求分发）
 
-- 版本清单(最新版本: <b>2.1.0.RELEASE</b>): 
+- 版本清单(最新版本: <b>2.1.1.RELEASE</b>): 
 
    - 参见: [Version.md][0]
 
@@ -30,6 +30,7 @@
 
 - 使用文档: 
 
+   - 运行环境: JDK11
    - 参见: [UserGuide.md][1]
 
 [0]: ./docs/Version.md

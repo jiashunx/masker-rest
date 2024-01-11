@@ -1,6 +1,7 @@
 
 <h3 id="V">masker-rest版本清单</h3>
 
+- [V2.1.1.RELEASE](#2.1.1)
 - [V2.1.0.RELEASE](#2.1.0)
 - [V2.0.0](#2.0.0)
 - [V1.7.2](#V1.7.2)
@@ -34,6 +35,18 @@
 - [V1.1.1](#V1.1.1)
 - [V1.1.0](#V1.1.0)
 - [V1.0.0](#V1.0.0)
+
+<h4 id="V2.1.1">V2.1.1.RELEASE</h4>
+
+- feature: Context增加标记以支持静态资源缓存（默认不缓存静态资源）
+
+- feature: Server,Context,Request,ThreadLocalModel等添加全局属性配置方法（用于设置及获取上下文服务实例）
+
+- fix: Context部分方法名调整（旧方法增加@Deprecated标记，同时修改实现为最新方法实现）
+
+- refactor: 优化工程版本依赖控制（父pom指定具体version）
+
+- docs: JDK11升级记录内容修正
 
 <h4 id="V2.1.0">V2.1.0.RELEASE</h4>
 
