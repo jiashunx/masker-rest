@@ -239,7 +239,7 @@ public class MRestServer {
      */
     public synchronized MRestServer start() throws MRestServerInitializeException {
         checkServerState();
-        if (getContextList().isEmpty()) {
+        if (getContext(Constants.DEFAULT_CONTEXT_PATH) == null) {
             contextMap.put(Constants.DEFAULT_CONTEXT_PATH, new MRestContext(this, Constants.DEFAULT_CONTEXT_PATH));
         }
         if (logger.isInfoEnabled()) {
