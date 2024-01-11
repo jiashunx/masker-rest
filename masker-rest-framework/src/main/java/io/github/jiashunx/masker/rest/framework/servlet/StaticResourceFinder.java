@@ -55,6 +55,14 @@ public class StaticResourceFinder {
 
     public StaticResource loadResource(String requestUrl0) {
         String requestUrl = MRestUtils.formatPath(requestUrl0);
+        // 若不支持静态资源缓存，则每次请求均执行静态资源查找处理
+        if (!this.restContext.isStaticResourcesCacheEnabled()) {
+            StaticResource staticResource = loadResourceFromClasspath(requestUrl);
+            if (staticResource == null) {
+                staticResource = loadResourceFromDiskpath(requestUrl);
+            }
+            return staticResource;
+        }
         StaticResource staticResource = StaticResourceMap.get(requestUrl);
         if (staticResource == null) {
             StaticResourceMapReadWriteLock.writeLock().lock();

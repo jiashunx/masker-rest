@@ -82,20 +82,22 @@ public class MRestContext {
             filterTask.doSomething();
         }
         // 静态资源处理
-        reloadResource();
-        if (isAutoRefreshStaticResources()) {
-            new Thread(() -> {
-                while (true) {
-                    try {
-                        Thread.sleep(getAutoRefreshStaticResourcesPeriod());
-                        reloadResource();
-                    } catch (Throwable throwable) {
-                        if (logger.isErrorEnabled()) {
-                            logger.error("reload static resource failed.", throwable);
+        if (isStaticResourcesCacheEnabled()) {
+            reloadResource();
+            if (isAutoRefreshStaticResources()) {
+                new Thread(() -> {
+                    while (true) {
+                        try {
+                            Thread.sleep(getAutoRefreshStaticResourcesPeriod());
+                            reloadResource();
+                        } catch (Throwable throwable) {
+                            if (logger.isErrorEnabled()) {
+                                logger.error("reload static resource failed.", throwable);
+                            }
                         }
                     }
-                }
-            }, "ResourceReload" + restServer.getListenPort() + "_" + getContextPath()).start();
+                }, "ResourceReload" + restServer.getListenPort() + "_" + getContextPath()).start();
+            }
         }
     }
 
@@ -778,15 +780,37 @@ public class MRestContext {
         return objectMapperSupplier;
     }
 
+    /**
+     * 是否允许静态资源缓存，默认false-不缓存（每次请求均重新查找静态资源），若为true则支持静态资源缓存
+     */
+    private volatile boolean staticResourcesCacheEnabled = false;
+    /**
+     * 静态资源缓存动态刷新，默认false-不刷新（静态资源找不到就是找不到了），若为true则支持静态资源缓存动态刷新
+     */
     private volatile boolean autoRefreshStaticResources = false;
+    /**
+     * 静态资源缓存动态刷新默认时间间隔（秒）
+     */
     private static final long DEFAULT_REFRESH_PERIOD = 60*1000L;
+    /**
+     * 静态资源缓存动态刷新时间间隔（秒）
+     */
     private volatile long autoRefreshStaticResourcesPeriod = DEFAULT_REFRESH_PERIOD;
 
-    public synchronized MRestContext autoRefreshStaticResources(boolean autoRefreshStaticResources) {
-        return autoRefreshStaticResources(autoRefreshStaticResources, DEFAULT_REFRESH_PERIOD);
+    public MRestContext setStaticResourcesCacheEnabled(boolean staticResourcesCacheEnabled) {
+        this.staticResourcesCacheEnabled = staticResourcesCacheEnabled;
+        return this;
     }
 
-    public synchronized MRestContext autoRefreshStaticResources(boolean autoRefreshStaticResources, long autoRefreshStaticResourcesPeriod) {
+    public boolean isStaticResourcesCacheEnabled() {
+        return staticResourcesCacheEnabled;
+    }
+
+    public synchronized MRestContext setAutoRefreshStaticResources(boolean autoRefreshStaticResources) {
+        return setAutoRefreshStaticResources(autoRefreshStaticResources, DEFAULT_REFRESH_PERIOD);
+    }
+
+    public synchronized MRestContext setAutoRefreshStaticResources(boolean autoRefreshStaticResources, long autoRefreshStaticResourcesPeriod) {
         if (autoRefreshStaticResourcesPeriod <= 0) {
             throw new IllegalArgumentException();
         }

@@ -69,7 +69,10 @@ public class MaskerRestMain {
                     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                     return objectMapper;
                 })
-                .autoRefreshStaticResources(true)
+                // 允许静态资源缓存
+                .setStaticResourcesCacheEnabled(true)
+                // 缓存静态资源定时刷新
+                .setAutoRefreshStaticResources(true)
                 // 设置默认首页
                 .setIndexUrl("/index.html")
                 // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
@@ -374,6 +377,8 @@ public class MaskerRestMain {
         // 发布classpath静态资源
         new MRestServer(10011)
             .context("/demo")
+                // 不允许静态资源缓存
+                .setStaticResourcesCacheEnabled(false)
                 // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
                 .addDefaultClasspathResource()
                 // "/test"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
@@ -388,6 +393,7 @@ public class MaskerRestMain {
         // 发布磁盘静态资源
         new MRestServer(10012)
             .context("/demo")
+                .setStaticResourcesCacheEnabled(false)
                 // "/"扫描磁盘路径: "/home/html"
                 .addDiskpathResource("/home/html")
                 // "/test"扫描磁盘路径: "/home/html"
