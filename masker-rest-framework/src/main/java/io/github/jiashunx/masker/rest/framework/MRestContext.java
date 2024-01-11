@@ -797,7 +797,8 @@ public class MRestContext {
      */
     private volatile long autoRefreshStaticResourcesPeriod = DEFAULT_REFRESH_PERIOD;
 
-    public MRestContext setStaticResourcesCacheEnabled(boolean staticResourcesCacheEnabled) {
+    public synchronized MRestContext setStaticResourcesCacheEnabled(boolean staticResourcesCacheEnabled) {
+        restServer.checkServerState();
         this.staticResourcesCacheEnabled = staticResourcesCacheEnabled;
         return this;
     }
