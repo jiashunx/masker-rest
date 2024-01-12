@@ -112,7 +112,7 @@ public class MWebsocketContext {
             }
             this.frameHandler = Objects.requireNonNull(websocketHandler);
             if (logger.isInfoEnabled()) {
-                logger.info("{} register WebSocketFrame handler success", getWebSocketContextDesc());
+                logger.info("{} register WebSocketFrame handler", getWebSocketContextDesc());
             }
         });
         return this;
@@ -129,7 +129,7 @@ public class MWebsocketContext {
             }
             this.textFrameHandler = Objects.requireNonNull(websocketHandler);
             if (logger.isInfoEnabled()) {
-                logger.info("{} register TextWebSocketFrame handler success", getWebSocketContextDesc());
+                logger.info("{} register TextWebSocketFrame handler", getWebSocketContextDesc());
             }
         });
         return this;
@@ -146,7 +146,7 @@ public class MWebsocketContext {
             }
             this.binaryFrameHandler = Objects.requireNonNull(websocketHandler);
             if (logger.isInfoEnabled()) {
-                logger.info("{} register BinaryWebSocketFrame handler success", getWebSocketContextDesc());
+                logger.info("{} register BinaryWebSocketFrame handler", getWebSocketContextDesc());
             }
         });
         return this;
@@ -166,7 +166,7 @@ public class MWebsocketContext {
             }
             this.continuationFrameHandler = Objects.requireNonNull(websocketHandler);
             if (logger.isInfoEnabled()) {
-                logger.info("{} register ContinuationWebSocketFrame handler success", getWebSocketContextDesc());
+                logger.info("{} register ContinuationWebSocketFrame handler", getWebSocketContextDesc());
             }
         });
         return this;

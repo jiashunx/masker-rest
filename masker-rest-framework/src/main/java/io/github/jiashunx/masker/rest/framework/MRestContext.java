@@ -238,7 +238,7 @@ public class MRestContext {
                 handlerMap.put(method, handler);
             }
             if (logger.isInfoEnabled()) {
-                logger.info("{} register url handler success, {}, {}", getContextDesc(), methods, url);
+                logger.info("{} register url handler: {} -> {}", getContextDesc(), methods, url);
             }
         });
         return this;
@@ -558,7 +558,7 @@ public class MRestContext {
             MRestServlet restServlet = Objects.requireNonNull(servlet);
             servletMap.put($urlPattern, new UrlMappingServlet(urlPatternModel, restServlet));
             if (logger.isInfoEnabled()) {
-                logger.info("{} register servlet success, {} -> {}", getContextDesc(), $urlPattern, restServlet.servletName());
+                logger.info("{} register servlet: {} -> {}", getContextDesc(), $urlPattern, restServlet.servletName());
             }
         });
         return this;
@@ -660,7 +660,7 @@ public class MRestContext {
             for (String urlPattern: urlPatterns) {
                 filterMap.computeIfAbsent(urlPattern, k -> new ArrayList<>()).add(restFilter);
                 if (logger.isInfoEnabled()) {
-                    logger.info("{} register filter success, {} -> {}", getContextDesc(), urlPattern, filter.filterName());
+                    logger.info("{} register filter: {} -> {}", getContextDesc(), urlPattern, filter.filterName());
                 }
             }
         });
@@ -701,7 +701,7 @@ public class MRestContext {
                 String path = UrlUtils.replaceWinSep(path0);
                 classpathResources.computeIfAbsent(prefixUrl, k -> new ArrayList<>()).add(path);
                 if (logger.isInfoEnabled()) {
-                    logger.info("{} add classpath resource, [{}] => [{}]", getContextDesc(), prefixUrl, path);
+                    logger.info("{} add classpath resource: [{}] -> [{}]", getContextDesc(), prefixUrl, path);
                 }
             }
         }
@@ -741,7 +741,7 @@ public class MRestContext {
                 String path = UrlUtils.replaceWinSep(path0);
                 diskpathResources.computeIfAbsent(prefixUrl, k -> new ArrayList<>()).add(path);
                 if (logger.isInfoEnabled()) {
-                    logger.info("{} add diskpath resource, [{}] => [{}]", getContextDesc(), prefixUrl, path);
+                    logger.info("{} add diskpath resource: [{}] -> [{}]", getContextDesc(), prefixUrl, path);
                 }
             }
         }
