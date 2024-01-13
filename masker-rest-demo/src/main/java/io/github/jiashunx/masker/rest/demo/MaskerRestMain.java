@@ -61,6 +61,9 @@ public class MaskerRestMain {
             .connectionKeepAlive(false)
             .workerThreadNum(NettyRuntime.availableProcessors() * 2)
             .bossThreadNum(1)
+            .callbackAfterStartup(() -> {
+                System.out.println("Server启动成功后的回调");
+            })
             // 默认context：context-path为"/"
             .context()
                 // 设置自定义的序列化处理对象
