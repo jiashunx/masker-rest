@@ -3,6 +3,7 @@ package io.github.jiashunx.masker.rest.framework;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerCloseException;
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
+import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
 import io.github.jiashunx.masker.rest.framework.type.MRestNettyThreadType;
 import io.github.jiashunx.masker.rest.framework.util.MRestThreadFactory;
@@ -51,6 +52,8 @@ public class MRestServer {
     private final Map<String, MRestContext> contextMap = new ConcurrentHashMap<>();
 
     private final Map<String, Object> globalObjects = new ConcurrentHashMap<>();
+
+    private VoidFunc callbackAfterStartup;
 
     public MRestServer() {
         this(MRestUtils.getDefaultServerPort(), MRestUtils.getDefaultServerName());
@@ -279,6 +282,15 @@ public class MRestServer {
             syncThread.setDaemon(true);
             syncThread.start();
             started = true;
+            if (this.callbackAfterStartup != null) {
+                try {
+                    this.callbackAfterStartup.doSomething();
+                } catch (Throwable throwable) {
+                    if (logger.isErrorEnabled()) {
+                        logger.error("callbackAfterStartup execute failed", throwable);
+                    }
+                }
+            }
         } catch (Throwable throwable) {
             throw new MRestServerInitializeException(String.format("%s start failed", getServerDesc()), throwable);
         }
@@ -292,6 +304,15 @@ public class MRestServer {
 
     public Object getGlobalObject(String key) {
         return globalObjects.get(key);
+    }
+
+    public MRestServer callbackAfterStartup(VoidFunc callbackAfterStartup) {
+        this.callbackAfterStartup = Objects.requireNonNull(callbackAfterStartup);
+        return this;
+    }
+
+    public VoidFunc getCallbackAfterStartup() {
+        return callbackAfterStartup;
     }
 
 }

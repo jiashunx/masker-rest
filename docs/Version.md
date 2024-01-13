@@ -1,6 +1,7 @@
 
 <h3 id="V">masker-rest版本清单</h3>
 
+- [V2.1.4.RELEASE](#2.1.4)
 - [V2.1.3.RELEASE](#2.1.3)
 - [V2.1.2.RELEASE](#2.1.2)
 - [V2.1.1.RELEASE](#2.1.1)
@@ -37,6 +38,12 @@
 - [V1.1.1](#V1.1.1)
 - [V1.1.0](#V1.1.0)
 - [V1.0.0](#V1.0.0)
+
+<h4 id="V2.1.4">V2.1.4.RELEASE</h4>
+
+- feat: Server支持添加启动成功后的自定义回调
+
+- refactor: 优化Server启动输出日志
 
 <h4 id="V2.1.3">V2.1.3.RELEASE</h4>
 
