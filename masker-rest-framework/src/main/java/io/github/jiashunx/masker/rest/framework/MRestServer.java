@@ -306,8 +306,8 @@ public class MRestServer {
         return globalObjects.get(key);
     }
 
-    public MRestServer setCallbackAfterStartup(VoidFunc callbackAfterStartup) {
-        this.callbackAfterStartup = callbackAfterStartup;
+    public MRestServer callbackAfterStartup(VoidFunc callbackAfterStartup) {
+        this.callbackAfterStartup = Objects.requireNonNull(callbackAfterStartup);
         return this;
     }
 
