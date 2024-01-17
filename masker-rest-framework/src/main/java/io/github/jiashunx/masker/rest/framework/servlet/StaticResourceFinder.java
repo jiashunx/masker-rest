@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -103,6 +104,21 @@ public class StaticResourceFinder {
                 try {
                     byte[] contentBytes = IOUtils.loadBytesFromClasspath(classpathResourcePath, IOUtils.class.getClassLoader(), false);
                     if (contentBytes != null) {
+                        // 若请求资源路径无后缀且文件大小小于等于256KB，则继续查找子文件，若找到子文件，则判定当前请求资源路径为文件夹
+                        if (classpathResourcePath.lastIndexOf(".") < 0 && contentBytes.length <= 256 * 1024) {
+                            String subFilePath = classpathResourcePath;
+                            if (!subFilePath.endsWith("/")) {
+                                subFilePath += "/";
+                            }
+                            subFilePath += new String(contentBytes, StandardCharsets.UTF_8).split("\n")[0];
+                            byte[] subFileBytes = IOUtils.loadBytesFromClasspath(subFilePath, IOUtils.class.getClassLoader(), false);
+                            if (subFileBytes != null) {
+                                if (logger.isWarnEnabled()) {
+                                    logger.info("{} locate classpath static resource directory: [{}] -> [{}], return: not found", restContext.getContextDesc(), requestUrl, classpathResourcePath);
+                                }
+                                return null;
+                            }
+                        }
                         if (logger.isInfoEnabled()) {
                             logger.info("{} locate classpath static resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, classpathResourcePath);
                         }
