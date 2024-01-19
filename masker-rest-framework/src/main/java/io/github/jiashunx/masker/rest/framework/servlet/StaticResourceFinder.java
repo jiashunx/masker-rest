@@ -132,10 +132,10 @@ public class StaticResourceFinder {
         String requestUrl = MRestUtils.formatPath(requestUrl0);
         List<String> diskpathResourcePrefixUrls = findPrefixUrls(requestUrl, restContext.getDiskpathResourcePrefixUrls());
         for (String prefixUrl: diskpathResourcePrefixUrls) {
-            // requestUrl: /webjars/webjar-jquery/3.5.1/dist/jquery.min.js
-            // prefixUrl: /webjars -> /app/xxx/dist/webjars/
-            // filePathSuffix: /webjar-jquery/3.5.1/dist/jquery.min.js
-            // classpathResourcePath = /app/xxx/dist/webjars/webjar-jquery/3.5.1/dist/jquery.min.js
+            // requestUrl: /test/js/jquery.min.js
+            // prefixUrl: /test -> /app/dist
+            // filePathSuffix: /js/jquery.min.js
+            // diskpathResourcePath = /app/dist/js/jquery.min.js
             String filePathSuffix = UrlUtils.removePrefixSep0(requestUrl.substring(prefixUrl.length()));
             List<String> diskpathResourcePaths = restContext.getDiskpathResourcePaths(prefixUrl);
             for (String diskpathResourcePath0: diskpathResourcePaths) {
