@@ -91,9 +91,7 @@ public class MRestJWTHelper {
                     .signWith(SignatureAlgorithm.HS256, secretKey)
                     .compact();
         } catch (Throwable throwable) {
-            if (logger.isErrorEnabled()) {
-                logger.error("create jwt token failed, claims: {}, headers: {}", claims, headers, throwable);
-            }
+            logger.error("create jwt token failed, claims: {}, headers: {}", claims, headers, throwable);
             return StringUtils.EMPTY;
         }
     }
@@ -124,9 +122,7 @@ public class MRestJWTHelper {
             int expireTimeSeconds = Integer.parseInt(claims.get(CLAIM_KEY_EXP).toString());
             return !(expireTimeSeconds*1000L >= currentTimeMillis && expireTimeSeconds - createTimeSeconds <= timeoutSeconds);
         } catch (Throwable throwable) {
-            if (logger.isErrorEnabled()) {
-                logger.error("verify jwt token [timeout] failed: {}", jwtToken, throwable);
-            }
+            logger.error("verify jwt token [timeout] failed: {}", jwtToken, throwable);
             return true;
         }
     }
@@ -149,9 +145,7 @@ public class MRestJWTHelper {
             // header, payload一致, 得到的signature肯定一致
             return token.split("\\.")[2].equals(newToken.split("\\.")[2]);
         } catch (Throwable throwable) {
-            if (logger.isErrorEnabled()) {
-                logger.error("verify jwt token [valid] failed: {}", jwtToken, throwable);
-            }
+            logger.error("verify jwt token [valid] failed: {}", jwtToken, throwable);
             return false;
         }
     }
@@ -164,9 +158,7 @@ public class MRestJWTHelper {
             Map<String, Object> headers = getTokenHeaders(jws);
             return newToken(claims, headers);
         } catch (Throwable throwable) {
-            if (logger.isErrorEnabled()) {
-                logger.error("update jwt token failed: {}", jwtToken, throwable);
-            }
+            logger.error("update jwt token failed: {}", jwtToken, throwable);
             return StringUtils.EMPTY;
         }
     }

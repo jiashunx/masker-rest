@@ -52,9 +52,7 @@ public final class IOUtils {
         try  {
             properties.load(inputStream);
         } catch (Throwable throwable) {
-            if (logger.isErrorEnabled()) {
-                logger.error("load properties from inputStream failed.", throwable);
-            }
+            logger.error("load properties from inputStream failed", throwable);
         } finally {
             if (autoClose) {
                 close(inputStream);
@@ -71,7 +69,7 @@ public final class IOUtils {
         return loadBytesFromClasspath(filePath, classLoader, true);
     }
 
-    public static byte[] loadBytesFromClasspath(String filePath, ClassLoader classLoader, boolean printErrLog) {
+    public static byte[] loadBytesFromClasspath(String filePath, ClassLoader classLoader, boolean printErrStack) {
         InputStream inputStream = null;
         ByteArrayOutputStream outputStream = null;
         try {
@@ -82,8 +80,10 @@ public final class IOUtils {
             copy(inputStream, outputStream);
             return outputStream.toByteArray();
         } catch (Throwable e) {
-            if (logger.isErrorEnabled() && printErrLog) {
+            if (printErrStack) {
                 logger.error("load classpath file [{}] failed, classloader [{}]", filePath, classLoader, e);
+            } else {
+                logger.error("load classpath file [{}] failed, classloader [{}], error reason: {}", filePath, classLoader, e.getMessage());
             }
         } finally {
             close(inputStream);
@@ -185,17 +185,19 @@ public final class IOUtils {
         return loadResourceFromDisk(filePath, true);
     }
 
-    public static DiskFileResource loadResourceFromDisk(String filePath, boolean printErrLog) {
+    public static DiskFileResource loadResourceFromDisk(String filePath, boolean printErrStack) {
         try {
             DiskFileResource diskFileResource = new DiskFileResource();
             diskFileResource.setFilePath(filePath);
             diskFileResource.setAbsoluteFilePath(new File(filePath).getAbsolutePath());
-            diskFileResource.setBytes(loadBytesFromDisk(filePath));
+            diskFileResource.setBytes(loadBytesFromDisk(filePath, printErrStack));
             diskFileResource.setContentType(new MimetypesFileTypeMap().getContentType(filePath));
             return diskFileResource;
         } catch (Throwable e) {
-            if (logger.isErrorEnabled() && printErrLog) {
-                logger.error("load disk file [{}] failed", filePath, e);
+            if (printErrStack) {
+                logger.error("load diskpath file [{}] failed", filePath, e);
+            } else {
+                logger.error("load diskpath file [{}] failed, error reason: {}", filePath, e.getMessage());
             }
         }
         return null;
@@ -236,15 +238,17 @@ public final class IOUtils {
         return loadBytesFromDisk(filePath, true);
     }
 
-    public static byte[] loadBytesFromDisk(String filePath, boolean printErrLog) {
+    public static byte[] loadBytesFromDisk(String filePath, boolean printErrStack) {
         InputStream inputStream = null;
         ByteArrayOutputStream outputStream = null;
         try {
             File file = new File(filePath);
+            if (!file.exists()) {
+                logger.warn("load diskpath file [{}] failed, it's not exists", filePath);
+                return null;
+            }
             if (!file.isFile()) {
-                if (logger.isWarnEnabled()) {
-                    logger.warn("load disk file [{}] failed, file is not a file", filePath);
-                }
+                logger.warn("load diskpath file [{}] failed, it's not a file", filePath);
                 return null;
             }
             inputStream = new FileInputStream(filePath);
@@ -253,8 +257,10 @@ public final class IOUtils {
             // String contentType = new MimetypesFileTypeMap().getContentType(filePath);
             return outputStream.toByteArray();
         } catch (Throwable e) {
-            if (logger.isErrorEnabled() && printErrLog) {
-                logger.error("load disk file [{}] failed", filePath, e);
+            if (printErrStack) {
+                logger.error("load diskpath file [{}] failed", filePath, e);
+            } else {
+                logger.error("load diskpath file [{}] failed, error reason: {}", filePath, e.getMessage());
             }
         } finally {
             close(inputStream);
@@ -338,9 +344,7 @@ public final class IOUtils {
             copy(inputStream, outputStream);
             return outputStream.toByteArray();
         } catch (Throwable throwable) {
-            if (logger.isErrorEnabled()) {
-                logger.error("read bytes failed.", throwable);
-            }
+            logger.error("read bytes failed", throwable);
         }
         return null;
     }
@@ -354,9 +358,7 @@ public final class IOUtils {
             try {
                 inputStream.close();
             } catch (IOException e) {
-                if (logger.isErrorEnabled()) {
-                    logger.error("close InputStream failed.", e);
-                }
+                logger.error("close InputStream failed", e);
             }
         }
     }
@@ -366,9 +368,7 @@ public final class IOUtils {
             try {
                 outputStream.close();
             } catch (IOException exception) {
-                if (logger.isErrorEnabled()) {
-                    logger.error("close OutputStream failed.", exception);
-                }
+                logger.error("close OutputStream failed", exception);
             }
         }
     }
@@ -378,9 +378,7 @@ public final class IOUtils {
             try {
                 reader.close();
             } catch (IOException exception) {
-                if (logger.isErrorEnabled()) {
-                    logger.error("close Reader failed.", exception);
-                }
+                logger.error("close Reader failed", exception);
             }
         }
     }
@@ -390,9 +388,7 @@ public final class IOUtils {
             try {
                 writer.close();
             } catch (IOException exception) {
-                if (logger.isErrorEnabled()) {
-                    logger.error("close Writer failed.", exception);
-                }
+                logger.error("close Writer failed", exception);
             }
         }
     }

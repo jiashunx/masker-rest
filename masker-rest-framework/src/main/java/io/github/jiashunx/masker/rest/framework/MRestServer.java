@@ -223,12 +223,10 @@ public class MRestServer {
         }
         try {
             serverChannel.close().addListener(future -> {
-                if (logger.isInfoEnabled()) {
-                    logger.info("{} closed", getServerDesc());
-                }
+                logger.info("{} closed", getServerDesc());
             }).get();
         } catch (Throwable throwable) {
-            throw new MRestServerCloseException(String.format("%s close failed.", getServerDesc()), throwable);
+            throw new MRestServerCloseException(String.format("%s close failed", getServerDesc()), throwable);
         }
         closed = true;
         serverChannel = null;
@@ -245,9 +243,7 @@ public class MRestServer {
         if (getContext(Constants.DEFAULT_CONTEXT_PATH) == null) {
             contextMap.put(Constants.DEFAULT_CONTEXT_PATH, new MRestContext(this, Constants.DEFAULT_CONTEXT_PATH));
         }
-        if (logger.isInfoEnabled()) {
-            logger.info("{} starting, Context: {}", getServerDesc(), getContextList());
-        }
+        logger.info("{} starting, Context: {}", getServerDesc(), getContextList());
         try {
             contextMap.forEach((key, restContext) -> {
                 restContext.init();
@@ -263,17 +259,13 @@ public class MRestServer {
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new MRestServerChannelInitializer(this));
             serverChannel = bootstrap.bind(listenPort).sync().channel();
-            if (logger.isInfoEnabled()) {
-                logger.info("{} started", getServerDesc());
-            }
+            logger.info("{} started", getServerDesc());
             AtomicReference<Channel> serverChannelRef = new AtomicReference<>(serverChannel);
             final Thread syncThread = new Thread(() -> {
                 try {
                     serverChannelRef.get().closeFuture().syncUninterruptibly();
                 } catch (Throwable throwable) {
-                    if (logger.isErrorEnabled()) {
-                        logger.error("{} channel close future synchronized failed", getServerDesc(), throwable);
-                    }
+                    logger.error("{} channel close future synchronized failed", getServerDesc(), throwable);
                 } finally {
                     serverChannelRef.set(null);
                 }
@@ -286,9 +278,7 @@ public class MRestServer {
                 try {
                     this.callbackAfterStartup.doSomething();
                 } catch (Throwable throwable) {
-                    if (logger.isErrorEnabled()) {
-                        logger.error("callbackAfterStartup execute failed", throwable);
-                    }
+                    logger.error("callbackAfterStartup execute failed", throwable);
                 }
             }
         } catch (Throwable throwable) {

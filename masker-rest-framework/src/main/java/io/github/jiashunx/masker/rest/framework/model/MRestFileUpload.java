@@ -46,23 +46,19 @@ public class MRestFileUpload {
                 // 创建临时文件.
                 String filePath = MRestUtils.getSystemTempDirPath() + "mr_" + UUID.randomUUID().toString();
                 tmpFile = FileUtils.newFile(filePath);
-                if (logger.isDebugEnabled()) {
-                    logger.debug("store temp file from memory, target: {}", tmpFile);
-                }
+                logger.info("store temp file from memory, target: {}", tmpFile);
                 IOUtils.write(fileUpload.get(), tmpFile);
             } else {
                 // 磁盘文件拷贝
                 File sourceFile = fileUpload.getFile();
                 String filePath = sourceFile.getAbsolutePath() + "_mr";
                 tmpFile = FileUtils.newFile(filePath);
-                if (logger.isDebugEnabled()) {
-                    logger.debug("store temp file, source: {}, target: {}", sourceFile, tmpFile);
-                }
+                logger.info("store temp file, source: {}, target: {}", sourceFile, tmpFile);
                 IOUtils.copy(sourceFile, tmpFile);
             }
             this.file = tmpFile;
         } catch (Throwable throwable) {
-            throw new MRestFileUploadException("create fileupload object failed.", throwable);
+            throw new MRestFileUploadException("create fileupload object failed", throwable);
         }
     }
 

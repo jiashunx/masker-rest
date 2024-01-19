@@ -114,12 +114,10 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
                     inactiveCallback.accept(websocketRequest, websocketResponse);
                 }
             }, throwable -> {
-                if (logger.isErrorEnabled()) {
-                    logger.error("inactive callback execute failed.", throwable);
-                }
+                logger.error("inactive callback execute failed", throwable);
             });
             websocketRequest.getHandshaker().close(ctx.channel(), (CloseWebSocketFrame) object.retain());
-//            ctx.channel().close();
+            // ctx.channel().close();
             return;
         }
         if (object instanceof TextWebSocketFrame) {
@@ -206,9 +204,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
                         activeCallback.accept(ctx, websocketRequest);
                     }
                 }, throwable -> {
-                    if (logger.isErrorEnabled()) {
-                        logger.error("active callback execute failed.", throwable);
-                    }
+                    logger.error("active callback execute failed", throwable);
                 });
             }
             return;
@@ -247,9 +243,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             }
             restResponse.flush();
         } catch (Throwable throwable) {
-            if (logger.isErrorEnabled()) {
-                logger.error("request handle failed, url: {}", requestUrl, throwable);
-            }
+            logger.error("request handle execute failed, url: {}", requestUrl, throwable);
             exception = handleException(ctx, restRequest, restResponse, throwable);
         } finally {
             restResponse.setFlushed(true);
@@ -367,9 +361,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         try {
             errHandler.accept(callbackVo);
         } catch (Exception e) {
-            if (logger.isErrorEnabled()) {
-                logger.error("ErrorHandler execute failed.", e);
-            }
+            logger.error("ErrorHandler execute failed", e);
             return e;
         }
         return null;

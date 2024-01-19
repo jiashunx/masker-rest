@@ -27,9 +27,7 @@ public class MimetypeUtils {
                 CONTENT_TYPE_MAP.put(String.valueOf(key), String.valueOf(value));
             });
         } catch (Throwable throwable) {
-            if (logger.isErrorEnabled()) {
-                logger.error("load content-type.json failed", throwable);
-            }
+            logger.error("load content-type.json failed", throwable);
         }
     }
 
@@ -49,9 +47,7 @@ public class MimetypeUtils {
             }
             return contentType;
         } catch (Throwable throwable) {
-            if (logger.isErrorEnabled()) {
-                logger.error("get resource content-type failed, fileName=" + fileName, throwable);
-            }
+            logger.error("get resource content-type failed, fileName=" + fileName, throwable);
         }
         return DEFAULT_CONTENT_TYPE_VALUE;
     }

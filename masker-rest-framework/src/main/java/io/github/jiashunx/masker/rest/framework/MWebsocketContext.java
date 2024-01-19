@@ -111,9 +111,7 @@ public class MWebsocketContext {
                 throw new IllegalArgumentException(String.format("%s has already bind BinaryWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             this.frameHandler = Objects.requireNonNull(websocketHandler);
-            if (logger.isInfoEnabled()) {
-                logger.info("{} register WebSocketFrame handler", getWebSocketContextDesc());
-            }
+            logger.info("{} register WebSocketFrame handler", getWebSocketContextDesc());
         });
         return this;
     }
@@ -128,9 +126,7 @@ public class MWebsocketContext {
                 throw new IllegalArgumentException(String.format("%s has already bind ContinuationWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             this.textFrameHandler = Objects.requireNonNull(websocketHandler);
-            if (logger.isInfoEnabled()) {
-                logger.info("{} register TextWebSocketFrame handler", getWebSocketContextDesc());
-            }
+            logger.info("{} register TextWebSocketFrame handler", getWebSocketContextDesc());
         });
         return this;
     }
@@ -145,9 +141,7 @@ public class MWebsocketContext {
                 throw new IllegalArgumentException(String.format("%s has already bind ContinuationWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             this.binaryFrameHandler = Objects.requireNonNull(websocketHandler);
-            if (logger.isInfoEnabled()) {
-                logger.info("{} register BinaryWebSocketFrame handler", getWebSocketContextDesc());
-            }
+            logger.info("{} register BinaryWebSocketFrame handler", getWebSocketContextDesc());
         });
         return this;
     }
@@ -165,9 +159,7 @@ public class MWebsocketContext {
                 throw new IllegalArgumentException(String.format("%s has already bind BinaryWebSocketFrame handler.", getWebSocketContextDesc()));
             }
             this.continuationFrameHandler = Objects.requireNonNull(websocketHandler);
-            if (logger.isInfoEnabled()) {
-                logger.info("{} register ContinuationWebSocketFrame handler", getWebSocketContextDesc());
-            }
+            logger.info("{} register ContinuationWebSocketFrame handler", getWebSocketContextDesc());
         });
         return this;
     }

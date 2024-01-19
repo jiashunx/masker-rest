@@ -113,26 +113,17 @@ public class StaticResourceFinder {
                             subFilePath += new String(contentBytes, StandardCharsets.UTF_8).split("\n")[0];
                             byte[] subFileBytes = IOUtils.loadBytesFromClasspath(subFilePath, IOUtils.class.getClassLoader(), false);
                             if (subFileBytes != null) {
-                                if (logger.isWarnEnabled()) {
-                                    logger.info("{} locate classpath static resource directory: [{}] -> [{}], return: not found", restContext.getContextDesc(), requestUrl, classpathResourcePath);
-                                }
+                                logger.warn("{} locate classpath resource: [{}] -> [{}], not found (it's a directory)", restContext.getContextDesc(), requestUrl, classpathResourcePath);
                                 return null;
                             }
                         }
-                        if (logger.isInfoEnabled()) {
-                            logger.info("{} locate classpath static resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, classpathResourcePath);
-                        }
+                        logger.info("{} locate classpath resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, classpathResourcePath);
                         return new StaticResource(StaticResourceType.CLASSPATH_FILE, classpathResourcePath, requestUrl, contentBytes);
                     }
                 } catch (Throwable throwable) {
-                    if (logger.isErrorEnabled()) {
-                        logger.error("{} locate classpath static resource failed: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, classpathResourcePath);
-                    }
+                    logger.error("{} locate classpath resource: [{}] -> [{}], error occured", restContext.getContextDesc(), requestUrl, classpathResourcePath);
                 }
             }
-        }
-        if (logger.isWarnEnabled()) {
-            logger.warn("{} locate classpath static resource: not found: [{}]", restContext.getContextDesc(), requestUrl);
         }
         return null;
     }
@@ -157,21 +148,14 @@ public class StaticResourceFinder {
                     if (path1.startsWith(path0) && path1.length() > path0.length()) {
                         byte[] contentBytes = IOUtils.loadBytesFromDisk(diskpathResourcePath, false);
                         if (contentBytes != null) {
-                            if (logger.isInfoEnabled()) {
-                                logger.info("{} locate diskpath static resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, diskpathResourcePath);
-                            }
+                            logger.info("{} locate diskpath resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, diskpathResourcePath);
                             return new StaticResource(StaticResourceType.DISK_FILE, diskpathResourcePath, requestUrl, contentBytes);
                         }
                     }
                 } catch (Throwable throwable) {
-                    if (logger.isErrorEnabled()) {
-                        logger.error("{} locate diskpath static resource failed: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, diskpathResourcePath);
-                    }
+                    logger.error("{} locate diskpath resource: [{}] -> [{}], error occured", restContext.getContextDesc(), requestUrl, diskpathResourcePath);
                 }
             }
-        }
-        if (logger.isWarnEnabled()) {
-            logger.warn("{} locate diskpath static resource: not found: [{}]", restContext.getContextDesc(), requestUrl);
         }
         return null;
     }

@@ -140,9 +140,7 @@ public class StringUtils {
             pw.close();
             sb.append(sw.toString());
         } catch (Exception ex) {
-            if (logger.isErrorEnabled()) {
-                logger.error("获取异常 {} 堆栈失败", e.hashCode(), ex);
-            }
+            logger.error("获取异常 {} 堆栈失败", e.hashCode(), ex);
         }
         String content = sb.toString().replaceAll(" ", " ");
         if (oneLine) {

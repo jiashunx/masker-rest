@@ -94,9 +94,7 @@ public class MRestContext {
                             Thread.sleep(getAutoRefreshStaticResourcesPeriod());
                             reloadResource();
                         } catch (Throwable throwable) {
-                            if (logger.isErrorEnabled()) {
-                                logger.error("reload static resource failed.", throwable);
-                            }
+                            logger.error("reload static resource failed", throwable);
                         }
                     }
                 }, "ResourceReload" + restServer.getListenPort() + "_" + getContextPath()).start();
@@ -120,13 +118,13 @@ public class MRestContext {
 
     /**
      * 指定url是否是已指定映射处理.
-     * @param requestURL requestURL
+     * @param requestUrl requestUrl
      * @param methods methods
      * @return boolean
      */
-    public boolean isMappingURL(String requestURL, HttpMethod... methods) {
-        if (urlMappingHandler.containsKey(requestURL)) {
-            Map<HttpMethod, MRestHandler> handlerMap = urlMappingHandler.get(requestURL);
+    public boolean isMappingURL(String requestUrl, HttpMethod... methods) {
+        if (urlMappingHandler.containsKey(requestUrl)) {
+            Map<HttpMethod, MRestHandler> handlerMap = urlMappingHandler.get(requestUrl);
             for (HttpMethod method: methods) {
                 if (handlerMap.get(method) != null) {
                     return true;
@@ -237,19 +235,21 @@ public class MRestContext {
             for (HttpMethod method: methods) {
                 handlerMap.put(method, handler);
             }
-            if (logger.isInfoEnabled()) {
-                logger.info("{} register url handler: {} -> {}", getContextDesc(), methods, url);
-            }
+            logger.info("{} register url handler: {} -> {}", getContextDesc(), methods, url);
         });
         return this;
     }
 
-    public MRestHandler getUrlMappingHandler(String requestURL, HttpMethod method) {
-        Map<HttpMethod, MRestHandler> handlerMap = urlMappingHandler.get(requestURL);
+    public MRestHandler getUrlMappingHandler(String requestUrl, HttpMethod method) {
+        MRestHandler handler = null;
+        Map<HttpMethod, MRestHandler> handlerMap = urlMappingHandler.get(requestUrl);
         if (handlerMap != null) {
-            return handlerMap.get(method);
+            handler = handlerMap.get(method);
         }
-        return null;
+        if (handler != null) {
+            logger.info("{} found url handler: [{}] -> [{}]", getContextDesc(), requestUrl, handler.getUrl());
+        }
+        return handler;
     }
 
     public <R> MRestContext get(String url, Supplier<R> handler) {
@@ -434,7 +434,7 @@ public class MRestContext {
      */
     private final List<VoidFunc> filterTaskList = new ArrayList<>();
 
-    public MRestServlet getServlet(String requestURL) {
+    public MRestServlet getServlet(String requestUrl) {
         List<UrlMappingServlet> mappingServletList = new ArrayList<>();
         // 扩展名匹配
         AtomicReference<UrlMappingServlet> extRef = new AtomicReference<>();
@@ -445,13 +445,13 @@ public class MRestContext {
         // 精确匹配 - 不带占位符
         AtomicReference<UrlMappingServlet> strictlyRef1 = new AtomicReference<>();
         servletMap.forEach((_up, urlMappingServlet) -> {
-            UrlMatchModel urlMatchModel = new UrlMatchModel(requestURL, _up);
+            UrlMatchModel urlMatchModel = new UrlMatchModel(requestUrl, _up);
             if (urlMatchModel.isMatched()) {
                 if (urlMatchModel.isPatternExt()) {
                     if (extRef.get() != null) {
                         throw new MRestMappingException(
                                 String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
-                                        , getContextDesc(), requestURL, extRef.get().getUrlPatternModel().getUrlPattern(), urlMatchModel.getUrlPattern()));
+                                        , getContextDesc(), requestUrl, extRef.get().getUrlPatternModel().getUrlPattern(), urlMatchModel.getUrlPattern()));
                     }
                     extRef.set(urlMappingServlet);
                 }
@@ -459,7 +459,7 @@ public class MRestContext {
                     if (pathMatchRef.get() != null) {
                         throw new MRestMappingException(
                                 String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
-                                        , getContextDesc(), requestURL, pathMatchRef.get().getUrlPatternModel().getUrlPattern(), urlMatchModel.getUrlPattern()));
+                                        , getContextDesc(), requestUrl, pathMatchRef.get().getUrlPatternModel().getUrlPattern(), urlMatchModel.getUrlPattern()));
                     }
                     pathMatchRef.set(urlMappingServlet);
                 }
@@ -468,7 +468,7 @@ public class MRestContext {
                         if (strictlyRef0.get() != null) {
                             throw new MRestMappingException(
                                     String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
-                                            , getContextDesc(), requestURL, strictlyRef0.get().getUrlPatternModel().getUrlPattern(), urlMatchModel.getUrlPattern()));
+                                            , getContextDesc(), requestUrl, strictlyRef0.get().getUrlPatternModel().getUrlPattern(), urlMatchModel.getUrlPattern()));
                         }
                         SharedObjects.getServerThreadModel().getRestRequest().addPlaceholderKv(urlMatchModel.getPlaceholderMap());
                         strictlyRef0.set(urlMappingServlet);
@@ -476,7 +476,7 @@ public class MRestContext {
                         if (strictlyRef1.get() != null) {
                             throw new MRestMappingException(
                                     String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
-                                            , getContextDesc(), requestURL, strictlyRef1.get().getUrlPatternModel().getUrlPattern(), urlMatchModel.getUrlPattern()));
+                                            , getContextDesc(), requestUrl, strictlyRef1.get().getUrlPatternModel().getUrlPattern(), urlMatchModel.getUrlPattern()));
                         }
                         strictlyRef1.set(urlMappingServlet);
                     }
@@ -490,12 +490,12 @@ public class MRestContext {
             UrlMappingServlet servlet0 = strictlyRef0.get();
             UrlMappingServlet servlet1 = pathMatchRef.get();
             // 路径匹配度
-            int count0 = servlet0.getUrlPatternModel().getActualPathMatchCount(requestURL);
-            int count1 = servlet1.getUrlPatternModel().getActualPathMatchCount(requestURL);
+            int count0 = servlet0.getUrlPatternModel().getActualPathMatchCount(requestUrl);
+            int count1 = servlet1.getUrlPatternModel().getActualPathMatchCount(requestUrl);
             if (count0 == count1) {
                 throw new MRestMappingException(
                         String.format("%s found more than one servlet mapping handler for url: %s, urlPattern: %s|%s"
-                                , getContextDesc(), requestURL, servlet0.getUrlPatternModel().getUrlPattern(), servlet1.getUrlPatternModel().getUrlPattern()));
+                                , getContextDesc(), requestUrl, servlet0.getUrlPatternModel().getUrlPattern(), servlet1.getUrlPatternModel().getUrlPattern()));
             }
             // 相同匹配模式 ((/*)|(\\S+)*)* 优先选择路径匹配度高的匹配模式
             mappingServletList.add(count0 > count1 ? servlet0 : servlet1);
@@ -513,7 +513,9 @@ public class MRestContext {
         if (mappingServletList.isEmpty()) {
             return null;
         }
-        return mappingServletList.get(0).getRestServlet();
+        MRestServlet servlet = mappingServletList.get(0).getRestServlet();
+        logger.info("{} found url servlet: [{}] -> [{}]", getContextDesc(), requestUrl, servlet.servletName());
+        return servlet;
     }
 
     public synchronized MRestContext servlet(MRestServlet... servletArr) {
@@ -557,18 +559,16 @@ public class MRestContext {
             }
             MRestServlet restServlet = Objects.requireNonNull(servlet);
             servletMap.put($urlPattern, new UrlMappingServlet(urlPatternModel, restServlet));
-            if (logger.isInfoEnabled()) {
-                logger.info("{} register servlet: {} -> {}", getContextDesc(), $urlPattern, restServlet.servletName());
-            }
+            logger.info("{} register servlet: {} -> {}", getContextDesc(), $urlPattern, restServlet.servletName());
         });
         return this;
     }
 
-    public MRestFilterChain getFilterChain(String requestURL) {
+    public MRestFilterChain getFilterChain(String requestUrl) {
         Set<MRestFilter> filterSet = new HashSet<>();
         filterMap.forEach((urlPattern, filterList) -> {
             String pattern = "^" + urlPattern.replace("*", "(\\S|\\s)*") + "$";
-            if (requestURL.matches(pattern)) {
+            if (requestUrl.matches(pattern)) {
                 filterSet.addAll(filterList);
             }
         });
@@ -579,7 +579,7 @@ public class MRestContext {
             int order1 = filter1.order();
             return order0 - order1;
         });
-        MRestServlet servlet = getServlet(requestURL);
+        MRestServlet servlet = getServlet(requestUrl);
         // servlet包装为filter执行
         if (servlet != null) {
             filterList.addLast(new MRestServletAdapter() {
@@ -659,9 +659,7 @@ public class MRestContext {
             }
             for (String urlPattern: urlPatterns) {
                 filterMap.computeIfAbsent(urlPattern, k -> new ArrayList<>()).add(restFilter);
-                if (logger.isInfoEnabled()) {
-                    logger.info("{} register filter: {} -> {}", getContextDesc(), urlPattern, filter.filterName());
-                }
+                logger.info("{} register filter: {} -> {}", getContextDesc(), urlPattern, filter.filterName());
             }
         });
         return this;
@@ -700,9 +698,7 @@ public class MRestContext {
                 }
                 String path = UrlUtils.replaceWinSep(path0);
                 classpathResources.computeIfAbsent(prefixUrl, k -> new ArrayList<>()).add(path);
-                if (logger.isInfoEnabled()) {
-                    logger.info("{} add classpath resource: [{}] -> [{}]", getContextDesc(), prefixUrl, path);
-                }
+                logger.info("{} add classpath resource: [{}] -> [{}]", getContextDesc(), prefixUrl, path);
             }
         }
         return this;
@@ -740,9 +736,7 @@ public class MRestContext {
                 }
                 String path = UrlUtils.replaceWinSep(path0);
                 diskpathResources.computeIfAbsent(prefixUrl, k -> new ArrayList<>()).add(path);
-                if (logger.isInfoEnabled()) {
-                    logger.info("{} add diskpath resource: [{}] -> [{}]", getContextDesc(), prefixUrl, path);
-                }
+                logger.info("{} add diskpath resource: [{}] -> [{}]", getContextDesc(), prefixUrl, path);
             }
         }
         return this;

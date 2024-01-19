@@ -43,11 +43,11 @@ WebSocketClient.prototype = {
     start: function () {
         let _this = this;
         if (!_this.isClientEnabled()) {
-            console.debug("ws client is not enabled, start method invoke failed.")
+            console.debug("ws client is not enabled, start method invoke failed")
             return;
         }
         if (_this.$clientState !== WebSocketClientState.INITIALIZE) {
-            console.debug("ws client is not in initialize state, start method invoke failed.")
+            console.debug("ws client is not in initialize state, start method invoke failed")
             return;
         }
         // 创建websocket对象
