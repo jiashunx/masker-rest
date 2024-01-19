@@ -82,8 +82,6 @@ public final class IOUtils {
         } catch (Throwable e) {
             if (printErrStack) {
                 logger.error("load classpath file [{}] failed, classloader [{}]", filePath, classLoader, e);
-            } else {
-                logger.debug("load classpath file [{}] failed, classloader [{}]", filePath, classLoader, e);
             }
         } finally {
             close(inputStream);
@@ -204,8 +202,6 @@ public final class IOUtils {
             diskFileResource = null;
             if (printErrStack) {
                 logger.error("load diskpath file [{}] failed", filePath, e);
-            } else {
-                logger.debug("load diskpath file [{}] failed", filePath, e);
             }
         }
         return diskFileResource;
@@ -251,11 +247,15 @@ public final class IOUtils {
         try {
             File file = new File(filePath);
             if (!file.exists()) {
-                logger.warn("load diskpath file [{}] failed, it's not exists", filePath);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("load diskpath file [{}] failed, it's not exists", filePath);
+                }
                 return null;
             }
             if (!file.isFile()) {
-                logger.warn("load diskpath file [{}] failed, it's not a file", filePath);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("load diskpath file [{}] failed, it's not a file", filePath);
+                }
                 return null;
             }
             inputStream = new FileInputStream(filePath);
@@ -266,8 +266,6 @@ public final class IOUtils {
         } catch (Throwable e) {
             if (printErrStack) {
                 logger.error("load diskpath file [{}] failed", filePath, e);
-            } else {
-                logger.debug("load diskpath file [{}] failed", filePath);
             }
         } finally {
             close(inputStream);
