@@ -58,9 +58,9 @@ public class MRestContext {
     }
 
     void initResources() {
-        // 添加框架提供的静态资源(其实也无需显式支持, webjars在META-INF/resources目录下)
-        addClasspathResources("/masker-rest/static", new String[]{ "masker-rest/static/" });
-        // 添加webjars的支持
+        // 添加框架提供的静态资源
+        addClasspathResources("/masker-rest", new String[]{ "masker-rest/static/" });
+        // 添加webjars的支持(其实也无需显式支持, webjars在META-INF/resources目录下)
         addClasspathResource("/webjars", "META-INF/resources/webjars/");
     }
 
