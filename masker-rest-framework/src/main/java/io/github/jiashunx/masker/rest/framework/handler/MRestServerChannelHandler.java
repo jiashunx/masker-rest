@@ -114,7 +114,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
                     inactiveCallback.accept(websocketRequest, websocketResponse);
                 }
             }, throwable -> {
-                logger.error("inactive callback execute failed", throwable);
+                logger.error("{} inactive callback execute failed", websocketContext.getWebSocketContextDesc(), throwable);
             });
             websocketRequest.getHandshaker().close(ctx.channel(), (CloseWebSocketFrame) object.retain());
             // ctx.channel().close();
@@ -204,7 +204,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
                         activeCallback.accept(ctx, websocketRequest);
                     }
                 }, throwable -> {
-                    logger.error("active callback execute failed", throwable);
+                    logger.error("{} active callback execute failed", websocketContext.getWebSocketContextDesc(), throwable);
                 });
             }
             return;
@@ -243,7 +243,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             }
             restResponse.flush();
         } catch (Throwable throwable) {
-            logger.error("request handle execute failed, url: {}", requestUrl, throwable);
+            logger.error("{} request handle execute failed, url: {}", restContext.getContextDesc(), requestUrl, throwable);
             exception = handleException(ctx, restRequest, restResponse, throwable);
         } finally {
             restResponse.setFlushed(true);
@@ -361,7 +361,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         try {
             errHandler.accept(callbackVo);
         } catch (Exception e) {
-            logger.error("ErrorHandler execute failed", e);
+            logger.error("{} ErrorHandler execute failed", request.getRestContext().getContextDesc(), e);
             return e;
         }
         return null;

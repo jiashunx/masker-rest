@@ -285,7 +285,7 @@ public class MRestServer {
                 try {
                     this.callbackAfterStartup.doSomething();
                 } catch (Throwable throwable) {
-                    logger.error("callbackAfterStartup execute failed", throwable);
+                    logger.error("{} callbackAfterStartup execute failed", getServerDesc(), throwable);
                 }
             }
         } catch (Throwable throwable) {

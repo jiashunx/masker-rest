@@ -113,11 +113,15 @@ public class StaticResourceFinder {
                             subFilePath += new String(contentBytes, StandardCharsets.UTF_8).split("\n")[0];
                             byte[] subFileBytes = IOUtils.loadBytesFromClasspath(subFilePath, IOUtils.class.getClassLoader(), false);
                             if (subFileBytes != null) {
-                                logger.warn("{} locate classpath resource: [{}] -> [{}], not found (it's a directory)", restContext.getContextDesc(), requestUrl, classpathResourcePath);
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("{} locate classpath resource: [{}] -> [{}], it's a directory", restContext.getContextDesc(), requestUrl, classpathResourcePath);
+                                }
                                 return null;
                             }
                         }
-                        logger.info("{} locate classpath resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, classpathResourcePath);
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("{} locate classpath resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, classpathResourcePath);
+                        }
                         return new StaticResource(StaticResourceType.CLASSPATH_FILE, classpathResourcePath, requestUrl, contentBytes);
                     }
                 } catch (Throwable throwable) {
@@ -148,7 +152,9 @@ public class StaticResourceFinder {
                     if (path1.startsWith(path0) && path1.length() > path0.length()) {
                         byte[] contentBytes = IOUtils.loadBytesFromDisk(diskpathResourcePath, false);
                         if (contentBytes != null) {
-                            logger.info("{} locate diskpath resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, diskpathResourcePath);
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("{} locate diskpath resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, diskpathResourcePath);
+                            }
                             return new StaticResource(StaticResourceType.DISK_FILE, diskpathResourcePath, requestUrl, contentBytes);
                         }
                     }

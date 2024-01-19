@@ -42,7 +42,9 @@ public class StaticResourceServlet implements MRestServlet {
         // 默认请求url处理
         if (Constants.ROOT_PATH.equals(requestUrl)) {
             if (restRequest.getMethod() == HttpMethod.GET) {
-                logger.info("{} redirect root url: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, redirectUrl);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("{} redirect root url: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, redirectUrl);
+                }
                 restResponse.redirect(redirectUrl);
             }
             return;
@@ -57,7 +59,9 @@ public class StaticResourceServlet implements MRestServlet {
         if (redirectUrl.equals(requestUrl) || Constants.INDEX_PATH.equals(requestUrl)) {
             // GET请求输出默认masker-rest主页面
             if (restRequest.getMethod() == HttpMethod.GET) {
-                logger.info("{} locate classpath resource: [{}], output default index", restContext.getContextDesc(), requestUrl);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("{} locate classpath resource: [{}], output default index", restContext.getContextDesc(), requestUrl);
+                }
                 writeStaticResource(restRequest, restResponse, DEFAULT_PAGE_BYTES, Constants.CONTENT_TYPE_TEXT_HTML);
             }
         }

@@ -97,7 +97,7 @@ public class MRestContext {
                             Thread.sleep(getAutoRefreshStaticResourcesPeriod());
                             reloadResource();
                         } catch (Throwable throwable) {
-                            logger.error("reload static resource failed", throwable);
+                            logger.error("{} reload static resource failed", getContextDesc(), throwable);
                         }
                     }
                 }, "ResourceReload" + restServer.getListenPort() + "_" + getContextPath()).start();
@@ -249,10 +249,12 @@ public class MRestContext {
         if (handlerMap != null) {
             handler = handlerMap.get(method);
         }
-        if (handler != null) {
-            logger.info("{} found url handler: [{}] -> [{}]", getContextDesc(), requestUrl, handler.getUrl());
-        } else {
-            logger.debug("{} no url handler found for url: [{}]", getContextDesc(), requestUrl);
+        if (logger.isDebugEnabled()) {
+            if (handler != null) {
+                logger.debug("{} found url handler: [{}] -> [{}]", getContextDesc(), requestUrl, handler.getUrl());
+            } else {
+                logger.debug("{} no url handler found for url: [{}]", getContextDesc(), requestUrl);
+            }
         }
         return handler;
     }
@@ -516,11 +518,15 @@ public class MRestContext {
             mappingServletList.add(extRef.get());
         }
         if (mappingServletList.isEmpty()) {
-            logger.debug("{} no servlet found for url: [{}]", getContextDesc(), requestUrl);
+            if (logger.isDebugEnabled()) {
+                logger.debug("{} no servlet found for url: [{}]", getContextDesc(), requestUrl);
+            }
             return null;
         }
         MRestServlet servlet = mappingServletList.get(0).getRestServlet();
-        logger.info("{} found url servlet: [{}] -> [{}]", getContextDesc(), requestUrl, servlet.servletName());
+        if (logger.isDebugEnabled()) {
+            logger.debug("{} found url servlet: [{}] -> [{}]", getContextDesc(), requestUrl, servlet.servletName());
+        }
         return servlet;
     }
 

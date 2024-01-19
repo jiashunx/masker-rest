@@ -15,7 +15,9 @@ public class LastServlet implements MRestServlet {
         if (restResponse.isWriteMethodInvoked()) {
             return;
         }
-        logger.warn("{} url not found: [{}]", restRequest.getRestContext().getContextDesc(), restRequest.getUrl());
+        if (logger.isDebugEnabled()) {
+            logger.debug("{} url not found: [{}]", restRequest.getRestContext().getContextDesc(), restRequest.getUrl());
+        }
         if (restRequest.getMethod() == HttpMethod.GET) {
             restResponse.writeStatusPage(HttpResponseStatus.NOT_FOUND);
         } else {
