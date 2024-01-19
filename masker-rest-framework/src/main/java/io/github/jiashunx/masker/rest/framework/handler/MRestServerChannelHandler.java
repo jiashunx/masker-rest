@@ -60,7 +60,12 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        super.exceptionCaught(ctx, cause);
+        // super.exceptionCaught(ctx, cause);
+        logger.error("error occured, error reason: {}", cause.getMessage());
+        Channel channel = ctx.channel();
+        if (channel.isActive()) {
+            ctx.close();
+        }
     }
 
     @Override
