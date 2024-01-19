@@ -39,10 +39,6 @@ public class MRestContext {
     public MRestContext(MRestServer restServer, String contextPath) {
         this.restServer = Objects.requireNonNull(restServer);
         this.contextPath = MRestUtils.formatContextPath(contextPath);
-        // 添加框架提供的静态资源(其实也无需显式支持, webjars在META-INF/resources目录下)
-        addClasspathResources("/masker-rest/static", new String[]{ "masker-rest/static/" });
-        // 添加webjars的支持
-        addClasspathResource("/webjars", "META-INF/resources/webjars/");
         this.staticResourceFinder = new StaticResourceFinder(this);
     }
 
@@ -59,6 +55,13 @@ public class MRestContext {
 
     public StaticResourceFinder getStaticResourceFinder() {
         return this.staticResourceFinder;
+    }
+
+    void initResources() {
+        // 添加框架提供的静态资源(其实也无需显式支持, webjars在META-INF/resources目录下)
+        addClasspathResources("/masker-rest/static", new String[]{ "masker-rest/static/" });
+        // 添加webjars的支持
+        addClasspathResource("/webjars", "META-INF/resources/webjars/");
     }
 
     void init() {
@@ -694,11 +697,14 @@ public class MRestContext {
             }
             for (String path0: pathArr) {
                 if (StringUtils.isEmpty(path0)) {
-                    throw new IllegalArgumentException("classpath resource path can't be empty.");
+                    throw new IllegalArgumentException("classpath resource target path can't be empty.");
                 }
-                String path = UrlUtils.replaceWinSep(path0);
-                classpathResources.computeIfAbsent(prefixUrl, k -> new ArrayList<>()).add(path);
-                logger.info("{} add classpath resource: [{}] -> [{}]", getContextDesc(), prefixUrl, path);
+                String path = UrlUtils.appendSuffixSep(UrlUtils.replaceWinSep(path0));
+                List<String> pathList = classpathResources.computeIfAbsent(prefixUrl, k -> new ArrayList<>());
+                if (!pathList.contains(path)) {
+                    pathList.add(path);
+                    logger.info("{} add classpath resource: [{}] -> [{}]", getContextDesc(), prefixUrl, path);
+                }
             }
         }
         return this;
@@ -728,15 +734,18 @@ public class MRestContext {
         getRestServer().checkServerState();
         if (pathArr != null) {
             if (StringUtils.isEmpty(prefixUrl)) {
-                throw new IllegalArgumentException("classpath resource prefixUrl can't be empty.");
+                throw new IllegalArgumentException("diskpath resource prefixUrl can't be empty.");
             }
             for (String path0: pathArr) {
                 if (StringUtils.isEmpty(path0)) {
-                    throw new IllegalArgumentException("classpath resource path can't be empty.");
+                    throw new IllegalArgumentException("diskpath resource target path can't be empty.");
                 }
-                String path = UrlUtils.replaceWinSep(path0);
-                diskpathResources.computeIfAbsent(prefixUrl, k -> new ArrayList<>()).add(path);
-                logger.info("{} add diskpath resource: [{}] -> [{}]", getContextDesc(), prefixUrl, path);
+                String path = UrlUtils.appendSuffixSep(UrlUtils.replaceWinSep(path0));
+                List<String> pathList = diskpathResources.computeIfAbsent(prefixUrl, k -> new ArrayList<>());
+                if (!pathList.contains(path)) {
+                    pathList.add(path);
+                    logger.info("{} add diskpath resource: [{}] -> [{}]", getContextDesc(), prefixUrl, path);
+                }
             }
         }
         return this;

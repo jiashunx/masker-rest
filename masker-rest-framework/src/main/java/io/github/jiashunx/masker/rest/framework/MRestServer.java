@@ -239,12 +239,19 @@ public class MRestServer {
      * @throws MRestServerInitializeException MRestServerInitializeException
      */
     public synchronized MRestServer start() throws MRestServerInitializeException {
-        checkServerState();
-        if (getContext(Constants.DEFAULT_CONTEXT_PATH) == null) {
-            contextMap.put(Constants.DEFAULT_CONTEXT_PATH, new MRestContext(this, Constants.DEFAULT_CONTEXT_PATH));
-        }
-        logger.info("{} starting, Context: {}", getServerDesc(), getContextList());
         try {
+            // 检查Server状态
+            checkServerState();
+            // 添加默认Context
+            if (getContext(Constants.DEFAULT_CONTEXT_PATH) == null) {
+                contextMap.put(Constants.DEFAULT_CONTEXT_PATH, new MRestContext(this, Constants.DEFAULT_CONTEXT_PATH));
+            }
+            // Context初始化资源
+            contextMap.forEach((key, restContext) -> {
+                restContext.initResources();
+            });
+            logger.info("{} starting, Context: {}", getServerDesc(), getContextList());
+            // Context初始化
             contextMap.forEach((key, restContext) -> {
                 restContext.init();
             });
