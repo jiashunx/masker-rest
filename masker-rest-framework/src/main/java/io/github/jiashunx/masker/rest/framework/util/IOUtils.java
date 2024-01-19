@@ -156,20 +156,24 @@ public final class IOUtils {
     }
 
     public static Map<String, DiskFileResource> loadResourceFromDiskDir(String dirPath) {
+        return loadResourceFromDiskDir(dirPath, true);
+    }
+
+    public static Map<String, DiskFileResource> loadResourceFromDiskDir(String dirPath, boolean printErrStack) {
         Map<String, DiskFileResource> resourceModelMap = new HashMap<>();
         File parentFile = new File(dirPath);
         String parentFilePath = parentFile.getAbsolutePath();
         if (parentFile.isFile()) {
-            resourceModelMap.put(parentFilePath, loadResourceFromDisk(parentFilePath));
+            resourceModelMap.put(parentFilePath, loadResourceFromDisk(parentFilePath, printErrStack));
         } else if (parentFile.isDirectory()) {
             File[] files = parentFile.listFiles();
             if (files != null && files.length > 0) {
                 for (File file: files) {
                     String filePath = file.getAbsolutePath();
                     if (file.isFile()) {
-                        resourceModelMap.put(filePath, loadResourceFromDisk(filePath));
+                        resourceModelMap.put(filePath, loadResourceFromDisk(filePath, printErrStack));
                     } else if (file.isDirectory()) {
-                        resourceModelMap.putAll(loadResourceFromDiskDir(filePath));
+                        resourceModelMap.putAll(loadResourceFromDiskDir(filePath, printErrStack));
                     }
                 }
             }
@@ -186,21 +190,25 @@ public final class IOUtils {
     }
 
     public static DiskFileResource loadResourceFromDisk(String filePath, boolean printErrStack) {
+        DiskFileResource diskFileResource = null;
         try {
-            DiskFileResource diskFileResource = new DiskFileResource();
-            diskFileResource.setFilePath(filePath);
-            diskFileResource.setAbsoluteFilePath(new File(filePath).getAbsolutePath());
-            diskFileResource.setBytes(loadBytesFromDisk(filePath, printErrStack));
-            diskFileResource.setContentType(new MimetypesFileTypeMap().getContentType(filePath));
-            return diskFileResource;
+            byte[] bytes = loadBytesFromDisk(filePath, printErrStack);
+            if (bytes != null) {
+                diskFileResource = new DiskFileResource();
+                diskFileResource.setFilePath(filePath);
+                diskFileResource.setAbsoluteFilePath(new File(filePath).getAbsolutePath());
+                diskFileResource.setBytes(bytes);
+                diskFileResource.setContentType(new MimetypesFileTypeMap().getContentType(filePath));
+            }
         } catch (Throwable e) {
+            diskFileResource = null;
             if (printErrStack) {
                 logger.error("load diskpath file [{}] failed", filePath, e);
             } else {
                 logger.error("load diskpath file [{}] failed, error reason: {}", filePath, e.getMessage());
             }
         }
-        return null;
+        return diskFileResource;
     }
 
     public static Map<String, byte[]> loadBytesFromDiskDir(File dir) {
