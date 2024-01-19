@@ -83,7 +83,7 @@ public final class IOUtils {
             if (printErrStack) {
                 logger.error("load classpath file [{}] failed, classloader [{}]", filePath, classLoader, e);
             } else {
-                logger.error("load classpath file [{}] failed, classloader [{}], error reason: {}", filePath, classLoader, e.getMessage());
+                logger.debug("load classpath file [{}] failed, classloader [{}]", filePath, classLoader, e);
             }
         } finally {
             close(inputStream);
@@ -205,7 +205,7 @@ public final class IOUtils {
             if (printErrStack) {
                 logger.error("load diskpath file [{}] failed", filePath, e);
             } else {
-                logger.error("load diskpath file [{}] failed, error reason: {}", filePath, e.getMessage());
+                logger.debug("load diskpath file [{}] failed", filePath, e);
             }
         }
         return diskFileResource;
@@ -235,7 +235,6 @@ public final class IOUtils {
             }
         }
         return resourceBytesMap;
-
     }
 
     public static byte[] loadBytesFromDisk(File file) {
@@ -268,7 +267,7 @@ public final class IOUtils {
             if (printErrStack) {
                 logger.error("load diskpath file [{}] failed", filePath, e);
             } else {
-                logger.error("load diskpath file [{}] failed, error reason: {}", filePath, e.getMessage());
+                logger.debug("load diskpath file [{}] failed", filePath);
             }
         } finally {
             close(inputStream);

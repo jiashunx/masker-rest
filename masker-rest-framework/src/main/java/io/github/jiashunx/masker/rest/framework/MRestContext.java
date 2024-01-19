@@ -251,6 +251,8 @@ public class MRestContext {
         }
         if (handler != null) {
             logger.info("{} found url handler: [{}] -> [{}]", getContextDesc(), requestUrl, handler.getUrl());
+        } else {
+            logger.debug("{} no url handler found for url: [{}]", getContextDesc(), requestUrl);
         }
         return handler;
     }
@@ -514,6 +516,7 @@ public class MRestContext {
             mappingServletList.add(extRef.get());
         }
         if (mappingServletList.isEmpty()) {
+            logger.debug("{} no servlet found for url: [{}]", getContextDesc(), requestUrl);
             return null;
         }
         MRestServlet servlet = mappingServletList.get(0).getRestServlet();
