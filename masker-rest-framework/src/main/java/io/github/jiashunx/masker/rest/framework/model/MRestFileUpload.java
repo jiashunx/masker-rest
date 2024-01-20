@@ -62,7 +62,7 @@ public class MRestFileUpload {
             }
             this.file = tmpFile;
         } catch (Throwable throwable) {
-            throw new MRestFileUploadException("create fileupload object failed.", throwable);
+            throw new MRestFileUploadException("create fileupload object failed", throwable);
         }
     }
 

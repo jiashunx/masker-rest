@@ -494,7 +494,7 @@ public class Test {
     </form>
     <button type="button" id="btn-file-upload1">保存</button>
 </div>
-<script type="application/javascript" src="./masker-rest/static/lib/jquery.min.js"></script>
+<script type="application/javascript" src="./masker-rest/lib/jquery@3.6.0/jquery.min.js"></script>
 <script>
     $("#btn-file-upload0").click(function () {
         var files = $('#file-upload0').prop('files');
@@ -554,7 +554,7 @@ public class Test {
                         fileUpload.copyFile(newFile);
                         logger.info("[upload one] copy file to path: {}", newFilePath);
                     } catch (Throwable throwable) {
-                        logger.error("[upload one] copy file to path {} failed.", newFilePath, throwable);
+                        logger.error("[upload one] copy file to path {} failed", newFilePath, throwable);
                     }
                 })
                 .fileupload("/fileupload/test1", (request, response) -> {
@@ -598,7 +598,7 @@ public class Test {
     <br>
     <button type="button" id="btn-download-test1">下载</button>
 </div>
-<script type="application/javascript" src="./masker-rest/static/lib/jquery.min.js"></script>
+<script type="application/javascript" src="./masker-rest/lib/jquery@3.6.0/jquery.min.js"></script>
 <script>
     $("#btn-download-test0").click(function () {
         var _win = window.open("about:blank");
@@ -719,7 +719,7 @@ public class Test {
 <div>
     <button type="button" id="btn-websocket-test">WebSocket测试</button>
 </div>
-<script type="application/javascript" src="./masker-rest/static/lib/jquery.min.js"></script>
+<script type="application/javascript" src="./masker-rest/lib/jquery@3.6.0/jquery.min.js"></script>
 <script>
     if (window.WebSocket) {
         let _socket = new WebSocket("ws://" + window.location.host + "/demo/websocket-test");
@@ -804,11 +804,11 @@ public class Test {
     <button id="submitB" type="button">用户B提交</button>
 </div>
 <!-- 引入框架封装的websocket客户端javascript实现 -->
-<script type="application/javascript" src="./masker-rest/static/websocket.js"></script>
+<script type="application/javascript" src="./masker-rest/websocket.js"></script>
 <script>
     console.log(WebSocketClient);
 </script>
-<script type="application/javascript" src="./masker-rest/static/lib/jquery.min.js"></script>
+<script type="application/javascript" src="./masker-rest/lib/jquery@3.6.0/jquery.min.js"></script>
 <script>
     var WebsocketChatRoom = function (username, textarea, input, button) {
         this.$username = $("#" + username);

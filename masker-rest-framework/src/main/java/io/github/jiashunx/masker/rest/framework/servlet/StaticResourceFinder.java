@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -103,20 +104,30 @@ public class StaticResourceFinder {
                 try {
                     byte[] contentBytes = IOUtils.loadBytesFromClasspath(classpathResourcePath, IOUtils.class.getClassLoader(), false);
                     if (contentBytes != null) {
-                        if (logger.isInfoEnabled()) {
-                            logger.info("{} locate classpath static resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, classpathResourcePath);
+                        // 若请求资源路径无后缀且文件大小小于等于256KB，则继续查找子文件，若找到子文件，则判定当前请求资源路径为文件夹
+                        if (classpathResourcePath.lastIndexOf(".") < 0 && contentBytes.length <= 256 * 1024) {
+                            String subFilePath = classpathResourcePath;
+                            if (!subFilePath.endsWith("/")) {
+                                subFilePath += "/";
+                            }
+                            subFilePath += new String(contentBytes, StandardCharsets.UTF_8).split("\n")[0];
+                            byte[] subFileBytes = IOUtils.loadBytesFromClasspath(subFilePath, IOUtils.class.getClassLoader(), false);
+                            if (subFileBytes != null) {
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("{} locate classpath resource: [{}] -> [{}], it's a directory", restContext.getContextDesc(), requestUrl, classpathResourcePath);
+                                }
+                                return null;
+                            }
+                        }
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("{} locate classpath resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, classpathResourcePath);
                         }
                         return new StaticResource(StaticResourceType.CLASSPATH_FILE, classpathResourcePath, requestUrl, contentBytes);
                     }
                 } catch (Throwable throwable) {
-                    if (logger.isErrorEnabled()) {
-                        logger.error("{} locate classpath static resource failed: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, classpathResourcePath);
-                    }
+                    logger.error("{} locate classpath resource: [{}] -> [{}], error occured", restContext.getContextDesc(), requestUrl, classpathResourcePath);
                 }
             }
-        }
-        if (logger.isWarnEnabled()) {
-            logger.warn("{} locate classpath static resource: not found: [{}]", restContext.getContextDesc(), requestUrl);
         }
         return null;
     }
@@ -125,10 +136,10 @@ public class StaticResourceFinder {
         String requestUrl = MRestUtils.formatPath(requestUrl0);
         List<String> diskpathResourcePrefixUrls = findPrefixUrls(requestUrl, restContext.getDiskpathResourcePrefixUrls());
         for (String prefixUrl: diskpathResourcePrefixUrls) {
-            // requestUrl: /webjars/webjar-jquery/3.5.1/dist/jquery.min.js
-            // prefixUrl: /webjars -> /app/xxx/dist/webjars/
-            // filePathSuffix: /webjar-jquery/3.5.1/dist/jquery.min.js
-            // classpathResourcePath = /app/xxx/dist/webjars/webjar-jquery/3.5.1/dist/jquery.min.js
+            // requestUrl: /test/js/jquery.min.js
+            // prefixUrl: /test -> /app/dist
+            // filePathSuffix: /js/jquery.min.js
+            // diskpathResourcePath = /app/dist/js/jquery.min.js
             String filePathSuffix = UrlUtils.removePrefixSep0(requestUrl.substring(prefixUrl.length()));
             List<String> diskpathResourcePaths = restContext.getDiskpathResourcePaths(prefixUrl);
             for (String diskpathResourcePath0: diskpathResourcePaths) {
@@ -141,21 +152,16 @@ public class StaticResourceFinder {
                     if (path1.startsWith(path0) && path1.length() > path0.length()) {
                         byte[] contentBytes = IOUtils.loadBytesFromDisk(diskpathResourcePath, false);
                         if (contentBytes != null) {
-                            if (logger.isInfoEnabled()) {
-                                logger.info("{} locate diskpath static resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, diskpathResourcePath);
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("{} locate diskpath resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, diskpathResourcePath);
                             }
                             return new StaticResource(StaticResourceType.DISK_FILE, diskpathResourcePath, requestUrl, contentBytes);
                         }
                     }
                 } catch (Throwable throwable) {
-                    if (logger.isErrorEnabled()) {
-                        logger.error("{} locate diskpath static resource failed: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, diskpathResourcePath);
-                    }
+                    logger.error("{} locate diskpath resource: [{}] -> [{}], error occured", restContext.getContextDesc(), requestUrl, diskpathResourcePath);
                 }
             }
-        }
-        if (logger.isWarnEnabled()) {
-            logger.warn("{} locate diskpath static resource: not found: [{}]", restContext.getContextDesc(), requestUrl);
         }
         return null;
     }

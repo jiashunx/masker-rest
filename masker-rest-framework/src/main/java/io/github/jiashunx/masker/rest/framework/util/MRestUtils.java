@@ -1,6 +1,5 @@
 package io.github.jiashunx.masker.rest.framework.util;
 
-import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerConfig;
 import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
@@ -33,10 +32,8 @@ public class MRestUtils {
                 throw new NullPointerException();
             }
         } catch (Throwable throwable) {
-            if (logger.isWarnEnabled()) {
-                logger.warn("get bundle version failed, error reason: {}", throwable.getMessage());
-                logger.warn("reset bundle version to: test");
-            }
+            logger.warn("get bundle version failed, error reason: {}", throwable.getMessage());
+            logger.warn("reset bundle version to: test");
             properties.put("version", "test");
         }
         frameworkName = "masker-rest";

@@ -52,9 +52,7 @@ public final class IOUtils {
         try  {
             properties.load(inputStream);
         } catch (Throwable throwable) {
-            if (logger.isErrorEnabled()) {
-                logger.error("load properties from inputStream failed.", throwable);
-            }
+            logger.error("load properties from inputStream failed", throwable);
         } finally {
             if (autoClose) {
                 close(inputStream);
@@ -71,7 +69,7 @@ public final class IOUtils {
         return loadBytesFromClasspath(filePath, classLoader, true);
     }
 
-    public static byte[] loadBytesFromClasspath(String filePath, ClassLoader classLoader, boolean printErrLog) {
+    public static byte[] loadBytesFromClasspath(String filePath, ClassLoader classLoader, boolean printErrStack) {
         InputStream inputStream = null;
         ByteArrayOutputStream outputStream = null;
         try {
@@ -82,7 +80,7 @@ public final class IOUtils {
             copy(inputStream, outputStream);
             return outputStream.toByteArray();
         } catch (Throwable e) {
-            if (logger.isErrorEnabled() && printErrLog) {
+            if (printErrStack) {
                 logger.error("load classpath file [{}] failed, classloader [{}]", filePath, classLoader, e);
             }
         } finally {
@@ -156,20 +154,24 @@ public final class IOUtils {
     }
 
     public static Map<String, DiskFileResource> loadResourceFromDiskDir(String dirPath) {
+        return loadResourceFromDiskDir(dirPath, true);
+    }
+
+    public static Map<String, DiskFileResource> loadResourceFromDiskDir(String dirPath, boolean printErrStack) {
         Map<String, DiskFileResource> resourceModelMap = new HashMap<>();
         File parentFile = new File(dirPath);
         String parentFilePath = parentFile.getAbsolutePath();
         if (parentFile.isFile()) {
-            resourceModelMap.put(parentFilePath, loadResourceFromDisk(parentFilePath));
+            resourceModelMap.put(parentFilePath, loadResourceFromDisk(parentFilePath, printErrStack));
         } else if (parentFile.isDirectory()) {
             File[] files = parentFile.listFiles();
             if (files != null && files.length > 0) {
                 for (File file: files) {
                     String filePath = file.getAbsolutePath();
                     if (file.isFile()) {
-                        resourceModelMap.put(filePath, loadResourceFromDisk(filePath));
+                        resourceModelMap.put(filePath, loadResourceFromDisk(filePath, printErrStack));
                     } else if (file.isDirectory()) {
-                        resourceModelMap.putAll(loadResourceFromDiskDir(filePath));
+                        resourceModelMap.putAll(loadResourceFromDiskDir(filePath, printErrStack));
                     }
                 }
             }
@@ -185,20 +187,24 @@ public final class IOUtils {
         return loadResourceFromDisk(filePath, true);
     }
 
-    public static DiskFileResource loadResourceFromDisk(String filePath, boolean printErrLog) {
+    public static DiskFileResource loadResourceFromDisk(String filePath, boolean printErrStack) {
+        DiskFileResource diskFileResource = null;
         try {
-            DiskFileResource diskFileResource = new DiskFileResource();
-            diskFileResource.setFilePath(filePath);
-            diskFileResource.setAbsoluteFilePath(new File(filePath).getAbsolutePath());
-            diskFileResource.setBytes(loadBytesFromDisk(filePath));
-            diskFileResource.setContentType(new MimetypesFileTypeMap().getContentType(filePath));
-            return diskFileResource;
+            byte[] bytes = loadBytesFromDisk(filePath, printErrStack);
+            if (bytes != null) {
+                diskFileResource = new DiskFileResource();
+                diskFileResource.setFilePath(filePath);
+                diskFileResource.setAbsoluteFilePath(new File(filePath).getAbsolutePath());
+                diskFileResource.setBytes(bytes);
+                diskFileResource.setContentType(new MimetypesFileTypeMap().getContentType(filePath));
+            }
         } catch (Throwable e) {
-            if (logger.isErrorEnabled() && printErrLog) {
-                logger.error("load disk file [{}] failed", filePath, e);
+            diskFileResource = null;
+            if (printErrStack) {
+                logger.error("load diskpath file [{}] failed", filePath, e);
             }
         }
-        return null;
+        return diskFileResource;
     }
 
     public static Map<String, byte[]> loadBytesFromDiskDir(File dir) {
@@ -225,7 +231,6 @@ public final class IOUtils {
             }
         }
         return resourceBytesMap;
-
     }
 
     public static byte[] loadBytesFromDisk(File file) {
@@ -236,14 +241,20 @@ public final class IOUtils {
         return loadBytesFromDisk(filePath, true);
     }
 
-    public static byte[] loadBytesFromDisk(String filePath, boolean printErrLog) {
+    public static byte[] loadBytesFromDisk(String filePath, boolean printErrStack) {
         InputStream inputStream = null;
         ByteArrayOutputStream outputStream = null;
         try {
             File file = new File(filePath);
+            if (!file.exists()) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("load diskpath file [{}] failed, it's not exists", filePath);
+                }
+                return null;
+            }
             if (!file.isFile()) {
-                if (logger.isWarnEnabled()) {
-                    logger.warn("load disk file [{}] failed, file is not a file", filePath);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("load diskpath file [{}] failed, it's not a file", filePath);
                 }
                 return null;
             }
@@ -253,8 +264,8 @@ public final class IOUtils {
             // String contentType = new MimetypesFileTypeMap().getContentType(filePath);
             return outputStream.toByteArray();
         } catch (Throwable e) {
-            if (logger.isErrorEnabled() && printErrLog) {
-                logger.error("load disk file [{}] failed", filePath, e);
+            if (printErrStack) {
+                logger.error("load diskpath file [{}] failed", filePath, e);
             }
         } finally {
             close(inputStream);
@@ -338,9 +349,7 @@ public final class IOUtils {
             copy(inputStream, outputStream);
             return outputStream.toByteArray();
         } catch (Throwable throwable) {
-            if (logger.isErrorEnabled()) {
-                logger.error("read bytes failed.", throwable);
-            }
+            logger.error("read bytes failed", throwable);
         }
         return null;
     }
@@ -354,9 +363,7 @@ public final class IOUtils {
             try {
                 inputStream.close();
             } catch (IOException e) {
-                if (logger.isErrorEnabled()) {
-                    logger.error("close InputStream failed.", e);
-                }
+                logger.error("close InputStream failed", e);
             }
         }
     }
@@ -366,9 +373,7 @@ public final class IOUtils {
             try {
                 outputStream.close();
             } catch (IOException exception) {
-                if (logger.isErrorEnabled()) {
-                    logger.error("close OutputStream failed.", exception);
-                }
+                logger.error("close OutputStream failed", exception);
             }
         }
     }
@@ -378,9 +383,7 @@ public final class IOUtils {
             try {
                 reader.close();
             } catch (IOException exception) {
-                if (logger.isErrorEnabled()) {
-                    logger.error("close Reader failed.", exception);
-                }
+                logger.error("close Reader failed", exception);
             }
         }
     }
@@ -390,9 +393,7 @@ public final class IOUtils {
             try {
                 writer.close();
             } catch (IOException exception) {
-                if (logger.isErrorEnabled()) {
-                    logger.error("close Writer failed.", exception);
-                }
+                logger.error("close Writer failed", exception);
             }
         }
     }

@@ -332,7 +332,7 @@ public class MaskerRestMain {
                         fileUpload.copyFile(newFile);
                         logger.info("[upload one] copy file to path: {}", newFilePath);
                     } catch (Throwable throwable) {
-                        logger.error("[upload one] copy file to path {} failed.", newFilePath, throwable);
+                        logger.error("[upload one] copy file to path {} failed", newFilePath, throwable);
                     }
                 })
                 .fileupload("/fileupload/test1", (request, response) -> {

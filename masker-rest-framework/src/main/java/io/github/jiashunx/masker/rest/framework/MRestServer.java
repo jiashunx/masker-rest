@@ -5,6 +5,7 @@ import io.github.jiashunx.masker.rest.framework.exception.MRestServerCloseExcept
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
 import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
+import io.github.jiashunx.masker.rest.framework.model.MRestServerConfig;
 import io.github.jiashunx.masker.rest.framework.type.MRestNettyThreadType;
 import io.github.jiashunx.masker.rest.framework.util.MRestThreadFactory;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
@@ -41,13 +42,13 @@ public class MRestServer {
 
     private int listenPort;
     private String serverName;
-    private int bossThreadNum = 0;
-    private int workerThreadNum = 0;
+    private int bossThreadNum;
+    private int workerThreadNum;
     private boolean connectionKeepAlive;
     /**
      * http请求报文字节大小限制
      */
-    private int httpContentMaxByteSize = Constants.HTTP_CONTENT_MAX_BYTE_SIZE;
+    private int httpContentMaxByteSize;
 
     private final Map<String, MRestContext> contextMap = new ConcurrentHashMap<>();
 
@@ -70,6 +71,11 @@ public class MRestServer {
     public MRestServer(int listenPort, String serverName) {
         listenPort(listenPort);
         serverName(serverName);
+        MRestServerConfig defaultServerConfig = MRestUtils.getDefaultServerConfig();
+        bossThreadNum(defaultServerConfig.getBossThreadNum());
+        workerThreadNum(defaultServerConfig.getWorkerThreadNum());
+        connectionKeepAlive(defaultServerConfig.isConnectionKeepAlive());
+        httpContentMaxMBSize(defaultServerConfig.getHttpContentMaxMBSize());
         this.startupTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
         this.identifier = UUID.randomUUID().toString().replace("-", "");
     }
@@ -107,7 +113,7 @@ public class MRestServer {
     }
 
     public MRestServer bossThreadNum(int bossThreadNum) {
-        if (bossThreadNum < 0) {
+        if (bossThreadNum <= 0) {
             throw new IllegalArgumentException("bossThreadNum -> " + bossThreadNum);
         }
         this.bossThreadNum = bossThreadNum;
@@ -119,7 +125,7 @@ public class MRestServer {
     }
 
     public MRestServer workerThreadNum(int workerThreadNum) {
-        if (workerThreadNum < 0) {
+        if (workerThreadNum <= 0) {
             throw new IllegalArgumentException("workThreadNum -> " + workerThreadNum);
         }
         this.workerThreadNum = workerThreadNum;
@@ -223,12 +229,10 @@ public class MRestServer {
         }
         try {
             serverChannel.close().addListener(future -> {
-                if (logger.isInfoEnabled()) {
-                    logger.info("{} closed", getServerDesc());
-                }
+                logger.info("{} closed", getServerDesc());
             }).get();
         } catch (Throwable throwable) {
-            throw new MRestServerCloseException(String.format("%s close failed.", getServerDesc()), throwable);
+            throw new MRestServerCloseException(String.format("%s close failed", getServerDesc()), throwable);
         }
         closed = true;
         serverChannel = null;
@@ -241,14 +245,19 @@ public class MRestServer {
      * @throws MRestServerInitializeException MRestServerInitializeException
      */
     public synchronized MRestServer start() throws MRestServerInitializeException {
-        checkServerState();
-        if (getContext(Constants.DEFAULT_CONTEXT_PATH) == null) {
-            contextMap.put(Constants.DEFAULT_CONTEXT_PATH, new MRestContext(this, Constants.DEFAULT_CONTEXT_PATH));
-        }
-        if (logger.isInfoEnabled()) {
-            logger.info("{} starting, Context: {}", getServerDesc(), getContextList());
-        }
         try {
+            // 检查Server状态
+            checkServerState();
+            // 添加默认Context
+            if (getContext(Constants.DEFAULT_CONTEXT_PATH) == null) {
+                contextMap.put(Constants.DEFAULT_CONTEXT_PATH, new MRestContext(this, Constants.DEFAULT_CONTEXT_PATH));
+            }
+            // Context初始化资源
+            contextMap.forEach((key, restContext) -> {
+                restContext.initResources();
+            });
+            logger.info("{} starting, Context: {}", getServerDesc(), getContextList());
+            // Context初始化
             contextMap.forEach((key, restContext) -> {
                 restContext.init();
             });
@@ -256,24 +265,20 @@ public class MRestServer {
             EventLoopGroup workerGroup = new NioEventLoopGroup(workerThreadNum, new MRestThreadFactory(MRestNettyThreadType.WORKER, listenPort));
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.option(ChannelOption.SO_BACKLOG, 1024);
-            bootstrap.option(ChannelOption.TCP_NODELAY, true);
-            bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
+            bootstrap.childOption(ChannelOption.TCP_NODELAY, true);
+            bootstrap.childOption(ChannelOption.SO_KEEPALIVE, true);
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new MRestServerChannelInitializer(this));
             serverChannel = bootstrap.bind(listenPort).sync().channel();
-            if (logger.isInfoEnabled()) {
-                logger.info("{} started", getServerDesc());
-            }
+            logger.info("{} started", getServerDesc());
             AtomicReference<Channel> serverChannelRef = new AtomicReference<>(serverChannel);
             final Thread syncThread = new Thread(() -> {
                 try {
                     serverChannelRef.get().closeFuture().syncUninterruptibly();
                 } catch (Throwable throwable) {
-                    if (logger.isErrorEnabled()) {
-                        logger.error("{} channel close future synchronized failed", getServerDesc(), throwable);
-                    }
+                    logger.error("{} channel close future synchronized failed", getServerDesc(), throwable);
                 } finally {
                     serverChannelRef.set(null);
                 }
@@ -286,9 +291,7 @@ public class MRestServer {
                 try {
                     this.callbackAfterStartup.doSomething();
                 } catch (Throwable throwable) {
-                    if (logger.isErrorEnabled()) {
-                        logger.error("callbackAfterStartup execute failed", throwable);
-                    }
+                    logger.error("{} callbackAfterStartup execute failed", getServerDesc(), throwable);
                 }
             }
         } catch (Throwable throwable) {

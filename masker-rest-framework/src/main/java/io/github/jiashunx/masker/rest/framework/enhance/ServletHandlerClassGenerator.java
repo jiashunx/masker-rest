@@ -36,7 +36,7 @@ public class ServletHandlerClassGenerator implements Opcodes {
         try {
             return generateClass0(servletClass, methodName, handlerType);
         } catch (Throwable throwable) {
-            throw new MRestMappingException("generate mapping handler class failed.", throwable);
+            throw new MRestMappingException("generate mapping handler class failed", throwable);
         }
     }
 
