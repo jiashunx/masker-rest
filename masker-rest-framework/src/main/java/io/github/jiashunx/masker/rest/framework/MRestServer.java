@@ -5,6 +5,7 @@ import io.github.jiashunx.masker.rest.framework.exception.MRestServerCloseExcept
 import io.github.jiashunx.masker.rest.framework.exception.MRestServerInitializeException;
 import io.github.jiashunx.masker.rest.framework.function.VoidFunc;
 import io.github.jiashunx.masker.rest.framework.handler.*;
+import io.github.jiashunx.masker.rest.framework.model.MRestServerConfig;
 import io.github.jiashunx.masker.rest.framework.type.MRestNettyThreadType;
 import io.github.jiashunx.masker.rest.framework.util.MRestThreadFactory;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
@@ -41,13 +42,13 @@ public class MRestServer {
 
     private int listenPort;
     private String serverName;
-    private int bossThreadNum = 0;
-    private int workerThreadNum = 0;
+    private int bossThreadNum;
+    private int workerThreadNum;
     private boolean connectionKeepAlive;
     /**
      * http请求报文字节大小限制
      */
-    private int httpContentMaxByteSize = Constants.HTTP_CONTENT_MAX_BYTE_SIZE;
+    private int httpContentMaxByteSize;
 
     private final Map<String, MRestContext> contextMap = new ConcurrentHashMap<>();
 
@@ -70,6 +71,11 @@ public class MRestServer {
     public MRestServer(int listenPort, String serverName) {
         listenPort(listenPort);
         serverName(serverName);
+        MRestServerConfig defaultServerConfig = MRestUtils.getDefaultServerConfig();
+        bossThreadNum(defaultServerConfig.getBossThreadNum());
+        workerThreadNum(defaultServerConfig.getWorkerThreadNum());
+        connectionKeepAlive(defaultServerConfig.isConnectionKeepAlive());
+        httpContentMaxMBSize(defaultServerConfig.getHttpContentMaxMBSize());
         this.startupTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
         this.identifier = UUID.randomUUID().toString().replace("-", "");
     }
@@ -107,7 +113,7 @@ public class MRestServer {
     }
 
     public MRestServer bossThreadNum(int bossThreadNum) {
-        if (bossThreadNum < 0) {
+        if (bossThreadNum <= 0) {
             throw new IllegalArgumentException("bossThreadNum -> " + bossThreadNum);
         }
         this.bossThreadNum = bossThreadNum;
@@ -119,7 +125,7 @@ public class MRestServer {
     }
 
     public MRestServer workerThreadNum(int workerThreadNum) {
-        if (workerThreadNum < 0) {
+        if (workerThreadNum <= 0) {
             throw new IllegalArgumentException("workThreadNum -> " + workerThreadNum);
         }
         this.workerThreadNum = workerThreadNum;

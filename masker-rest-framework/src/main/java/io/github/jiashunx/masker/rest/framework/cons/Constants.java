@@ -8,6 +8,7 @@ public class Constants {
     /**
      * 默认的http请求报文字节大小限制
      */
+    @Deprecated
     public static final int HTTP_CONTENT_MAX_BYTE_SIZE = 50*1024*1024;
 
     public static final Character CHAR_PATH_SEP = '/';

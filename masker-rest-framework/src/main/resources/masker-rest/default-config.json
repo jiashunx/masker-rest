@@ -1,6 +1,10 @@
 {
   "serverPort": 8080,
   "serverName": "mrest-server",
+  "bossThreadNum": 1,
+  "workerThreadNum": 2,
+  "connectionKeepAlive": false,
+  "httpContentMaxMBSize": 50,
   "classpathResources": [
     "META-INF/resources/",
     "resources/",
