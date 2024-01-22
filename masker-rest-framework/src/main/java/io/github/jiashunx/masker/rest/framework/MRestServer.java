@@ -54,7 +54,7 @@ public class MRestServer {
 
     private final Map<String, Object> globalObjects = new ConcurrentHashMap<>();
 
-    private VoidFunc callbackAfterStartup;
+    private final List<VoidFunc> callbackAfterStartups = new ArrayList<>();
 
     public MRestServer() {
         this(MRestUtils.getDefaultServerPort(), MRestUtils.getDefaultServerName());
@@ -287,11 +287,16 @@ public class MRestServer {
             syncThread.setDaemon(true);
             syncThread.start();
             started = true;
-            if (this.callbackAfterStartup != null) {
-                try {
-                    this.callbackAfterStartup.doSomething();
-                } catch (Throwable throwable) {
-                    logger.error("{} callbackAfterStartup execute failed", getServerDesc(), throwable);
+            if (!this.callbackAfterStartups.isEmpty()) {
+                for (int index = 0, size = this.callbackAfterStartups.size(); index < size; index++) {
+                    VoidFunc callbackAfterStartup = this.callbackAfterStartups.get(index);
+                    if (callbackAfterStartup != null) {
+                        try {
+                            callbackAfterStartup.doSomething();
+                        } catch (Throwable throwable) {
+                            logger.error("{} callbackAfterStartup execute failed, index=[{}]", getServerDesc(), index, throwable);
+                        }
+                    }
                 }
             }
         } catch (Throwable throwable) {
@@ -309,13 +314,13 @@ public class MRestServer {
         return globalObjects.get(key);
     }
 
-    public MRestServer callbackAfterStartup(VoidFunc callbackAfterStartup) {
-        this.callbackAfterStartup = Objects.requireNonNull(callbackAfterStartup);
+    public MRestServer callbackAfterStartup(VoidFunc... callbackAfterStartupArr) {
+        this.callbackAfterStartups.addAll(Arrays.asList(callbackAfterStartupArr));
         return this;
     }
 
-    public VoidFunc getCallbackAfterStartup() {
-        return callbackAfterStartup;
+    public List<VoidFunc> getCallbackAfterStartups() {
+        return callbackAfterStartups;
     }
 
 }
