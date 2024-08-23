@@ -240,6 +240,7 @@ public class MRestResponse {
         return this;
     }
 
+    @Deprecated
     public Object getHeader(String key) {
         return this.$headers.get(key);
     }

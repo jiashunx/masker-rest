@@ -81,6 +81,7 @@ public class MRestHeaders {
         return addAll(mapToHeaders(headers));
     }
 
+    @Deprecated
     public Object get(String key) {
         List<Object> values = getAll(key);
         if (values == null || values.isEmpty()) {
