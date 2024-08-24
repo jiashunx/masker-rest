@@ -332,6 +332,8 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             if (byteSize >= 0) {
                 bodyBytes = new byte[byteSize];
                 httpRequest.content().readBytes(bodyBytes, 0, byteSize);
+            } else {
+                bodyBytes = new byte[0];
             }
             restRequest.setBodyBytes(bodyBytes);
         }
