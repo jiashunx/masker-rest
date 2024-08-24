@@ -307,18 +307,6 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         }
         restRequest.setUrl(url);
         restRequest.setUrlQuery(queryStringDecoder.rawQuery());
-
-        Map<String, List<String>> originParameters = queryStringDecoder.parameters();
-        restRequest.setOriginParameters(originParameters);
-        Map<String, String> parameters = new HashMap<>();
-        originParameters.forEach((key, value) -> {
-            String mergedVal = "";
-            if (value != null && !value.isEmpty()) {
-                mergedVal = value.get(value.size() - 1);
-            }
-            parameters.put(key, mergedVal);
-        });
-        restRequest.setParameters(parameters);
         restRequest.setMethod(httpRequest.method());
         restRequest.setHeaders(httpRequest.headers());
         // 处理文件上传特定逻辑.
@@ -347,6 +335,35 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             }
             restRequest.setBodyBytes(bodyBytes);
         }
+        // 参数解析
+        Map<String, List<String>> originParameters = queryStringDecoder.parameters();
+        restRequest.setOriginParameters(originParameters);
+        Map<String, String> parameters = new HashMap<>();
+        originParameters.forEach((key, value) -> {
+            String mergedVal = "";
+            if (value != null && !value.isEmpty()) {
+                mergedVal = value.get(value.size() - 1);
+            }
+            parameters.put(key, mergedVal);
+        });
+        String contentType = httpRequest.headers().get(Constants.HTTP_HEADER_CONTENT_TYPE);
+        if (Constants.CONTENT_TYPE_X_WWW_FORM_URLENCODED.equals(contentType)) {
+            String content = new String(restRequest.getBodyBytes(), StandardCharsets.UTF_8);
+            if (StringUtils.isNotEmpty(content)) {
+                String[] kvArr = new String(restRequest.getBodyBytes(), StandardCharsets.UTF_8).split("&");
+                for (String kv: kvArr) {
+                    int i = kv.indexOf("=");
+                    String k = kv;
+                    String v = "";
+                    if (i >= 0 && i < kv.length() - 1) {
+                        k = kv.substring(0, i);
+                        v = kv.substring(i + 1);
+                    }
+                    parameters.put(k, v);
+                }
+            }
+        }
+        restRequest.setParameters(parameters);
         return restRequest;
     }
 
