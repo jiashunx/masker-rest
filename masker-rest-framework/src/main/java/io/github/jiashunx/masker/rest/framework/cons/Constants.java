@@ -44,6 +44,7 @@ public class Constants {
     public static final String HTTP_HEADER_SERVER_STARTUP_TIME = "Server-Startup-Time";
     public static final String HTTP_HEADER_SERVER_IDENTIFIER = "Server-Identifier";
 
+    public static final String CONTENT_TYPE_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
     public static final String CONTENT_TYPE_MULTIPART_FORMDATA = "multipart/form-data";
     public static final String CONTENT_TYPE_APPLICATION_JSON = "application/json";
     public static final String CONTENT_TYPE_TEXT_PLAIN = "text/plain";
