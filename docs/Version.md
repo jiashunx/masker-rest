@@ -1,6 +1,7 @@
 
 <h3 id="V">masker-rest版本清单</h3>
 
+- [V2.2.2.RELEASE](#2.2.2)
 - [V2.2.1.RELEASE](#2.2.1)
 - [V2.2.0.RELEASE](#2.2.0)
 - [V2.1.4.RELEASE](#2.1.4)
@@ -40,6 +41,14 @@
 - [V1.1.1](#V1.1.1)
 - [V1.1.0](#V1.1.0)
 - [V1.0.0](#V1.0.0)
+
+<h4 id="V2.2.2">V2.2.2.RELEASE</h4>
+
+- fix: 修正application/x-www-form-urlencoded请求报文解析处理
+
+- refactor: http请求报文解析优化
+
+- refactor: 请求报错日志输出完整方法调用栈
 
 <h4 id="V2.2.1">V2.2.1.RELEASE</h4>
 
