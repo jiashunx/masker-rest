@@ -18,9 +18,13 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.ssl.ClientAuth;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,6 +53,16 @@ public class MRestServer {
      * http请求报文字节大小限制
      */
     private int httpContentMaxByteSize;
+
+    /**
+     * 是否开启Https
+     */
+    private boolean sslEnabled;
+
+    /**
+     * SSL配置
+     */
+    private SslContext sslContext;
 
     private final Map<String, MRestContext> contextMap = new ConcurrentHashMap<>();
 
@@ -172,6 +186,23 @@ public class MRestServer {
         return this.httpContentMaxByteSize;
     }
 
+    public MRestServer sslEnabled(boolean sslEnabled) {
+        this.sslEnabled = sslEnabled;
+        return this;
+    }
+
+    public boolean isSslEnabled() {
+        return this.sslEnabled;
+    }
+
+    public SslContext getSslContext() {
+        return sslContext;
+    }
+
+    public void setSslContext(SslContext sslContext) {
+        this.sslContext = sslContext;
+    }
+
     public MRestServer connectionKeepAlive(boolean connectionKeepAlive) {
         this.connectionKeepAlive = connectionKeepAlive;
         return this;
@@ -267,10 +298,21 @@ public class MRestServer {
             bootstrap.option(ChannelOption.SO_BACKLOG, 1024);
             bootstrap.childOption(ChannelOption.TCP_NODELAY, true);
             bootstrap.childOption(ChannelOption.SO_KEEPALIVE, true);
+            SslContext sslContext = null;
+            if (this.isSslEnabled() || this.sslContext != null) {
+                sslContext = this.sslContext;
+                if (sslContext == null) {
+                    try (InputStream serverCert = MRestServer.class.getClassLoader().getResourceAsStream("masker-rest/ssl/server.crt");
+                         InputStream serverKey = MRestServer.class.getClassLoader().getResourceAsStream("masker-rest/ssl/server_pkcs8.key");
+                         InputStream caCert = MRestServer.class.getClassLoader().getResourceAsStream("masker-rest/ssl/ca.crt");) {
+                        sslContext = SslContextBuilder.forServer(serverCert, serverKey).trustManager(caCert).clientAuth(ClientAuth.REQUIRE).build();
+                    }
+                }
+            }
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
-                    .childHandler(new MRestServerChannelInitializer(this));
+                    .childHandler(new MRestServerChannelInitializer(this, sslContext));
             serverChannel = bootstrap.bind(listenPort).sync().channel();
             logger.info("{} started", getServerDesc());
             AtomicReference<Channel> serverChannelRef = new AtomicReference<>(serverChannel);
