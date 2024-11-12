@@ -457,6 +457,27 @@ public class MaskerRestMain {
             .getRestServer()
             .start();
 
+        // 发布HTTPS服务: https://127.0.0.1:10015/demo/get-html
+        new MRestServer(10015)
+                .sslEnabled(true)
+                .context("/demo")
+                // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
+                .addDefaultClasspathResource("/")
+                .addClasspathResource("/html/dist", "dist/")
+                .addDiskpathResource("/html/dist", "/root/html/")
+                .get("/get-html", request -> {
+                    return "<html><body>this is a html page !</body></html>";
+                }, MRestHeaderBuilder.Build("Content-Type", "text/html"))
+                .post(("/post-form"), request -> {
+                    logger.info("post, form data: {}", request.parseBodyToObj(Vo.class));
+                    return new HashMap<String, Object>();
+                })
+                .servlet("/servlet/{name}", (request, response) -> {
+                    response.writeString("/servlet/{name}" + request.getPathVariable("name"));
+                })
+                .getRestServer()
+                .start();
+
         // 异常测试
         new MRestServer(21701)
                 .context()
