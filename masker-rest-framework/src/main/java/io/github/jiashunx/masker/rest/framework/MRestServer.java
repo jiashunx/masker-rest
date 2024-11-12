@@ -251,6 +251,24 @@ public class MRestServer {
         }
     }
 
+    private synchronized void initSslContext() throws MRestServerInitializeException {
+        if (this.isSslEnabled() || this.sslContext != null) {
+            SslContext sslContext = this.sslContext;
+            if (sslContext == null) {
+                logger.info("{} 未指定SslContext, 加载默认SSL配置", getServerDesc());
+                try (InputStream serverCert = MRestServer.class.getClassLoader().getResourceAsStream("masker-rest/ssl/server.crt");
+                     InputStream serverKey = MRestServer.class.getClassLoader().getResourceAsStream("masker-rest/ssl/server_pkcs8.key");
+                     InputStream caCert = MRestServer.class.getClassLoader().getResourceAsStream("masker-rest/ssl/ca.crt");) {
+                    sslContext = SslContextBuilder.forServer(serverCert, serverKey).trustManager(caCert).clientAuth(ClientAuth.REQUIRE).build();
+                } catch (Throwable throwable) {
+                    throw new MRestServerInitializeException("SslContext initialize failed", throwable);
+                }
+            }
+            this.sslEnabled = true;
+            this.sslContext = sslContext;
+        }
+    }
+
     public synchronized MRestServer shutdown() {
         if (!started) {
             throw new MRestServerCloseException(String.format("%s has not been initialized", getServerDesc()));
@@ -279,6 +297,8 @@ public class MRestServer {
         try {
             // 检查Server状态
             checkServerState();
+            // 初始化SslContext
+            initSslContext();
             // 添加默认Context
             if (getContext(Constants.DEFAULT_CONTEXT_PATH) == null) {
                 contextMap.put(Constants.DEFAULT_CONTEXT_PATH, new MRestContext(this, Constants.DEFAULT_CONTEXT_PATH));
@@ -298,21 +318,10 @@ public class MRestServer {
             bootstrap.option(ChannelOption.SO_BACKLOG, 1024);
             bootstrap.childOption(ChannelOption.TCP_NODELAY, true);
             bootstrap.childOption(ChannelOption.SO_KEEPALIVE, true);
-            SslContext sslContext = null;
-            if (this.isSslEnabled() || this.sslContext != null) {
-                sslContext = this.sslContext;
-                if (sslContext == null) {
-                    try (InputStream serverCert = MRestServer.class.getClassLoader().getResourceAsStream("masker-rest/ssl/server.crt");
-                         InputStream serverKey = MRestServer.class.getClassLoader().getResourceAsStream("masker-rest/ssl/server_pkcs8.key");
-                         InputStream caCert = MRestServer.class.getClassLoader().getResourceAsStream("masker-rest/ssl/ca.crt");) {
-                        sslContext = SslContextBuilder.forServer(serverCert, serverKey).trustManager(caCert).clientAuth(ClientAuth.REQUIRE).build();
-                    }
-                }
-            }
             bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
-                    .childHandler(new MRestServerChannelInitializer(this, sslContext));
+                    .childHandler(new MRestServerChannelInitializer(this));
             serverChannel = bootstrap.bind(listenPort).sync().channel();
             logger.info("{} started", getServerDesc());
             AtomicReference<Channel> serverChannelRef = new AtomicReference<>(serverChannel);

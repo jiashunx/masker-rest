@@ -20,21 +20,15 @@ public class MRestServerChannelInitializer extends ChannelInitializer<SocketChan
 
     private final MRestServer restServer;
 
-    private final SslContext sslContext;
-
     public MRestServerChannelInitializer(MRestServer restServer) {
-        this(restServer, null);
-    }
-
-    public MRestServerChannelInitializer(MRestServer restServer, SslContext sslContext) {
         this.restServer = Objects.requireNonNull(restServer);
-        this.sslContext = sslContext;
     }
 
     @Override
     protected void initChannel(SocketChannel socketChannel) throws Exception {
         ChannelPipeline pipeline = socketChannel.pipeline();
-        if (this.sslContext != null) {
+        if (this.restServer.isSslEnabled()) {
+            SslContext sslContext = this.restServer.getSslContext();
             pipeline.addFirst("ssl", new SslHandler(sslContext.newEngine(socketChannel.alloc())));
         }
         pipeline.addLast(new HttpServerCodec());
