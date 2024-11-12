@@ -7,10 +7,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.HttpServerExpectContinueHandler;
-import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 
+import javax.net.ssl.SSLEngine;
 import java.util.Objects;
 
 /**
@@ -28,8 +28,10 @@ public class MRestServerChannelInitializer extends ChannelInitializer<SocketChan
     protected void initChannel(SocketChannel socketChannel) throws Exception {
         ChannelPipeline pipeline = socketChannel.pipeline();
         if (this.restServer.isSslEnabled()) {
-            SslContext sslContext = this.restServer.getSslContext();
-            pipeline.addFirst("ssl", new SslHandler(sslContext.newEngine(socketChannel.alloc())));
+            SSLEngine sslEngine = this.restServer.getSslContext().newEngine(socketChannel.alloc());
+            sslEngine.setUseClientMode(false);
+            sslEngine.setNeedClientAuth(this.restServer.isSslNeedClientAuth());
+            pipeline.addFirst("ssl", new SslHandler(sslEngine));
         }
         pipeline.addLast(new HttpServerCodec());
         pipeline.addLast(new ChunkedWriteHandler());

@@ -18,13 +18,12 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.SelfSignedCertificate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,6 +62,11 @@ public class MRestServer {
      * SSL配置
      */
     private SslContext sslContext;
+
+    /**
+     * SSL是否开启客户端验证
+     */
+    private boolean sslNeedClientAuth;
 
     private final Map<String, MRestContext> contextMap = new ConcurrentHashMap<>();
 
@@ -199,8 +203,18 @@ public class MRestServer {
         return sslContext;
     }
 
-    public void setSslContext(SslContext sslContext) {
+    public MRestServer sslContext(SslContext sslContext) {
         this.sslContext = sslContext;
+        return this;
+    }
+
+    public boolean isSslNeedClientAuth() {
+        return sslNeedClientAuth;
+    }
+
+    public MRestServer sslNeedClientAuth(boolean sslNeedClientAuth) {
+        this.sslNeedClientAuth = sslNeedClientAuth;
+        return this;
     }
 
     public MRestServer connectionKeepAlive(boolean connectionKeepAlive) {
@@ -256,10 +270,9 @@ public class MRestServer {
             SslContext sslContext = this.sslContext;
             if (sslContext == null) {
                 logger.info("{} 未指定SslContext, 加载默认SSL配置", getServerDesc());
-                try (InputStream serverCert = MRestServer.class.getClassLoader().getResourceAsStream("masker-rest/ssl/server.crt");
-                     InputStream serverKey = MRestServer.class.getClassLoader().getResourceAsStream("masker-rest/ssl/server_pkcs8.key");
-                     InputStream caCert = MRestServer.class.getClassLoader().getResourceAsStream("masker-rest/ssl/ca.crt");) {
-                    sslContext = SslContextBuilder.forServer(serverCert, serverKey).trustManager(caCert).clientAuth(ClientAuth.REQUIRE).build();
+                try {
+                    SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
+                    sslContext = SslContextBuilder.forServer(selfSignedCertificate.certificate(), selfSignedCertificate.privateKey()).build();
                 } catch (Throwable throwable) {
                     throw new MRestServerInitializeException("SslContext initialize failed", throwable);
                 }
