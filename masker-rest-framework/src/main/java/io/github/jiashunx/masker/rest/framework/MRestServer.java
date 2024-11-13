@@ -320,7 +320,7 @@ public class MRestServer {
             contextMap.forEach((key, restContext) -> {
                 restContext.initResources();
             });
-            logger.info("{} starting, Context: {}", getServerDesc(), getContextList());
+            logger.info("{} Context List: {}", getServerDesc(), getContextList());
             // Context初始化
             contextMap.forEach((key, restContext) -> {
                 restContext.init();
@@ -336,7 +336,7 @@ public class MRestServer {
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new MRestServerChannelInitializer(this));
             serverChannel = bootstrap.bind(listenPort).sync().channel();
-            logger.info("{} started", getServerDesc());
+            logger.info("{} started on port {} (http{})", getServerDesc(), getListenPort(), isSslEnabled() ? "s" : "");
             AtomicReference<Channel> serverChannelRef = new AtomicReference<>(serverChannel);
             final Thread syncThread = new Thread(() -> {
                 try {
