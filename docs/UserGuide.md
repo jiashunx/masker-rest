@@ -4,7 +4,7 @@
     - [0.1、版本清单](#0.2)
     - [0.3、框架引用](#0.3)
     - [0.4、框架样例](#0.4)
-- [1、masker-rest发布Http服务](#1)
+- [1、masker-rest发布Http(s)服务](#1)
     - [1.1、发布Rest服务](#1.1)
         - [1.1.1、Get请求处理](#1.1.1)
         - [1.1.2、Post请求处理](#1.1.2)
@@ -21,6 +21,7 @@
         - [1.2.1、静态资源绑定](#1.2.1)
         - [1.2.2、classpath静态资源](#1.2.2)
         - [1.2.3、磁盘静态资源](#1.2.3)
+    - [1.3、发布Https服务](#1.3)
 - [2、masker-rest发布WebSocket服务](#2)
     - [2.1、发布WebSocket服务](#2.1)
     - [2.2、WebSocket实现简易聊天室](#2.2)
@@ -113,7 +114,7 @@ public class Test {
 }
 ```
 
-<h3 id="1">1、masker-rest发布Http服务</h3>
+<h3 id="1">1、masker-rest发布Http(s)服务</h3>
 
 <h4 id="1.1">1.1、发布Rest服务</h4>
 
@@ -700,7 +701,35 @@ public class Test {
 }
 ```
 
+<h4 id="1.3">1.3、发布Https服务</h4>
 
+```java
+public class Test {
+    private static final Logger logger = LoggerFactory.getLogger(Test.class);
+    public static void main(String[] args) {
+        new MRestServer(10015)
+            .sslEnabled(true)
+            .context("/demo")
+                // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
+                .addDefaultClasspathResource("/")
+                .addClasspathResource("/html/dist", "dist/")
+                .addDiskpathResource("/html/dist", "/root/html/")
+                // https://127.0.0.1:10015/demo/get-html
+                .get("/get-html", request -> {
+                    return "<html><body>this is a html page !</body></html>";
+                }, MRestHeaderBuilder.Build("Content-Type", "text/html"))
+                .post(("/post-form"), request -> {
+                    logger.info("post, form data: {}", request.parseBodyToObj(Vo.class));
+                    return new HashMap<String, Object>();
+                })
+                .servlet("/servlet/{name}", (request, response) -> {
+                    response.writeString("/servlet/{name}" + request.getPathVariable("name"));
+                })
+            .getRestServer()
+            .start();
+    }
+}
+```
 
 <h3 id="2">2、masker-rest发布WebSocket服务</h3>
 

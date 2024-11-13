@@ -325,6 +325,19 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
                 }
             }
             decoder.destroy();
+            // HttpPostMultipartRequestDecoder decoder = new HttpPostMultipartRequestDecoder(httpRequest);
+            // List<InterfaceHttpData> httpDataList = decoder.getBodyHttpDatas();
+            // for (InterfaceHttpData httpData : httpDataList) {
+            //     if (httpData.getHttpDataType() == InterfaceHttpData.HttpDataType.Attribute) {
+            //         Attribute attribute = (Attribute) httpData;
+            //         fileUploadRequest.addAttribute(attribute);
+            //     }
+            //     if (httpData.getHttpDataType() == InterfaceHttpData.HttpDataType.FileUpload) {
+            //         FileUpload fileUpload = (FileUpload) httpData;
+            //         fileUploadRequest.addFileUploadObj(fileUpload);
+            //     }
+            // }
+            // decoder.destroy();
             restRequest = fileUploadRequest;
         } else {
             byte[] bodyBytes = null;

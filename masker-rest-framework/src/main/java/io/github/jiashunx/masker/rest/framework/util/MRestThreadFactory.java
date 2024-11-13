@@ -18,7 +18,7 @@ public class MRestThreadFactory implements ThreadFactory {
     public MRestThreadFactory(MRestNettyThreadType threadType, int listenPort) {
         SecurityManager s = System.getSecurityManager();
         this.threadGroup = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-        this.namePrefix = String.format("restpool-%s-%d-thread-", threadType.name(), listenPort);
+        this.namePrefix = String.format("%s-%d-Thread-", threadType.name(), listenPort);
     }
 
     @Override

@@ -18,6 +18,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.SelfSignedCertificate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +52,21 @@ public class MRestServer {
      * http请求报文字节大小限制
      */
     private int httpContentMaxByteSize;
+
+    /**
+     * 是否开启Https
+     */
+    private boolean sslEnabled;
+
+    /**
+     * SSL配置
+     */
+    private SslContext sslContext;
+
+    /**
+     * SSL是否开启客户端验证
+     */
+    private boolean sslNeedClientAuth;
 
     private final Map<String, MRestContext> contextMap = new ConcurrentHashMap<>();
 
@@ -172,6 +190,33 @@ public class MRestServer {
         return this.httpContentMaxByteSize;
     }
 
+    public MRestServer sslEnabled(boolean sslEnabled) {
+        this.sslEnabled = sslEnabled;
+        return this;
+    }
+
+    public boolean isSslEnabled() {
+        return this.sslEnabled;
+    }
+
+    public SslContext getSslContext() {
+        return sslContext;
+    }
+
+    public MRestServer sslContext(SslContext sslContext) {
+        this.sslContext = sslContext;
+        return this;
+    }
+
+    public boolean isSslNeedClientAuth() {
+        return sslNeedClientAuth;
+    }
+
+    public MRestServer sslNeedClientAuth(boolean sslNeedClientAuth) {
+        this.sslNeedClientAuth = sslNeedClientAuth;
+        return this;
+    }
+
     public MRestServer connectionKeepAlive(boolean connectionKeepAlive) {
         this.connectionKeepAlive = connectionKeepAlive;
         return this;
@@ -220,6 +265,23 @@ public class MRestServer {
         }
     }
 
+    private synchronized void initSslContext() throws MRestServerInitializeException {
+        if (this.isSslEnabled() || this.sslContext != null) {
+            SslContext sslContext = this.sslContext;
+            if (sslContext == null) {
+                logger.info("{} 未指定SslContext, 加载默认SSL配置", getServerDesc());
+                try {
+                    SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
+                    sslContext = SslContextBuilder.forServer(selfSignedCertificate.certificate(), selfSignedCertificate.privateKey()).build();
+                } catch (Throwable throwable) {
+                    throw new MRestServerInitializeException("SslContext initialize failed", throwable);
+                }
+            }
+            this.sslEnabled = true;
+            this.sslContext = sslContext;
+        }
+    }
+
     public synchronized MRestServer shutdown() {
         if (!started) {
             throw new MRestServerCloseException(String.format("%s has not been initialized", getServerDesc()));
@@ -248,6 +310,8 @@ public class MRestServer {
         try {
             // 检查Server状态
             checkServerState();
+            // 初始化SslContext
+            initSslContext();
             // 添加默认Context
             if (getContext(Constants.DEFAULT_CONTEXT_PATH) == null) {
                 contextMap.put(Constants.DEFAULT_CONTEXT_PATH, new MRestContext(this, Constants.DEFAULT_CONTEXT_PATH));
@@ -256,7 +320,7 @@ public class MRestServer {
             contextMap.forEach((key, restContext) -> {
                 restContext.initResources();
             });
-            logger.info("{} starting, Context: {}", getServerDesc(), getContextList());
+            logger.info("{} Context List: {}", getServerDesc(), getContextList());
             // Context初始化
             contextMap.forEach((key, restContext) -> {
                 restContext.init();
@@ -272,7 +336,7 @@ public class MRestServer {
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new MRestServerChannelInitializer(this));
             serverChannel = bootstrap.bind(listenPort).sync().channel();
-            logger.info("{} started", getServerDesc());
+            logger.info("{} started on port {} (http{})", getServerDesc(), getListenPort(), isSslEnabled() ? "s" : "");
             AtomicReference<Channel> serverChannelRef = new AtomicReference<>(serverChannel);
             final Thread syncThread = new Thread(() -> {
                 try {
