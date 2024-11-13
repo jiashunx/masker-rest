@@ -1,6 +1,7 @@
 
 <h3 id="">masker-rest版本清单</h3>
 
+- [20241113 - 2.3.0.RELEASE](#2.3.0.RELEASE)
 - [20240824 - 2.2.2.RELEASE](#2.2.2.RELEASE)
 - [20240823 - 2.2.1.RELEASE](#2.2.1.RELEASE)
 - [20240120 - 2.2.0.RELEASE](#2.2.0.RELEASE)
@@ -41,6 +42,16 @@
 - [20201115 - 1.1.1](#1.1.1)
 - [20201115 - 1.1.0](#1.1.0)
 - [20201115 - 1.0.0](#1.0.0)
+
+<h4 id="2.3.0.RELEASE">20241113 - 2.3.0.RELEASE</h4>
+
+- feat: 支持发布https服务（使用Netty自带的证书工具生成数字证书）
+
+- refactor: 优化http处理线程池线程名称
+
+- refactor: 调整版本发布日志
+
+- refactor: 调整Server启动输出日志
 
 <h4 id="2.2.2.RELEASE">20240824 - 2.2.2.RELEASE</h4>
 
