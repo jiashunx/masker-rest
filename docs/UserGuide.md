@@ -195,10 +195,10 @@ public class Test {
                     response.write(HttpResponseStatus.OK);
                 }, HttpMethod.PUT)
                 .mapping("/put_delete", (request, response) -> {
-                    response.write(new HashMap<>());
+                    response.write(HttpResponseStatus.OK);
                 }, HttpMethod.PUT, HttpMethod.DELETE)
                 .mapping("/空格测试 1 2", (request, response) -> {
-                    response.write("空格测试成功");
+                    response.writeString("空格测试成功");
                 }, HttpMethod.GET)
                 .filter("/*", (request, response, filterChain) -> {
                     System.out.println("拦截到url: " + request.getUrl());
@@ -626,14 +626,14 @@ public class Test {
                 .addDefaultClasspathResource()
                 .filedownload("/filedownload/test0", (request, response) -> {
                     String filePath = MRestUtils.getUserDirPath() + "README.md";
-                    response.write(new File(filePath));
+                    response.writeFile(new File(filePath));
                     // 也可使用jquery+form表单提交post请求来实现文件下载.
                 })
                 .get("/filedownload/test1", (request, response) -> {
                     String targetFilePath = MRestUtils.getSystemTempDirPath() + "SFS" + File.separator + System.currentTimeMillis() + File.separator + System.nanoTime() + ".zip";
                     File targetFile = new File(targetFilePath);
                     FileUtils.zip(new File(MRestUtils.getUserDirPath()).listFiles(), targetFile);
-                    response.write(targetFile, f -> {
+                    response.writeFile(targetFile, f -> {
                         try {
                             File parent = f.getParentFile();
                             f.delete();
