@@ -54,7 +54,7 @@ public class MaskerRestMain {
         autoClosedThread.start();
         autoClosedThread.join();
 
-        // 样例
+        // 样例: http://127.0.0.1:8081/index.html
         new MRestServer()
             .listenPort(8081)
             .serverName("demo")
@@ -314,8 +314,7 @@ public class MaskerRestMain {
             .getRestServer()
             .start();
 
-        // 文件上传
-        // 配套前端: static/upload.html
+        // 文件上传: http://127.0.0.1:10009/demo/upload.html
         new MRestServer(10009)
             // 设置http请求报文最大150MB
             .httpContentMaxMBSize(150)
@@ -349,8 +348,7 @@ public class MaskerRestMain {
             .getRestServer()
             .start();
 
-        // 文件下载
-        // 配套前端: static/download.html
+        // 文件下载: http://127.0.0.1:10010/demo/download.html
         new MRestServer(10010)
             .context("/demo")
                 // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
@@ -405,8 +403,7 @@ public class MaskerRestMain {
             .getRestServer()
             .start();
 
-        // 发布websocket服务
-        // 配套前端: static/websocket.html
+        // 发布websocket服务: http://127.0.0.1:10013/demo/websocket.html
         new MRestServer(10013)
             .context("/demo")
                 // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
@@ -427,8 +424,7 @@ public class MaskerRestMain {
             .getRestServer()
             .start();
 
-        // websocket实现简易聊天室
-        // 配套前端: static/chatroom.html
+        // websocket实现简易聊天室: http://127.0.0.1:10014/demo/chatroom.html
         Map<String, Channel> chatRoomChannelMap = new ConcurrentHashMap<>();
         new MRestServer(10014)
             .context("/demo")

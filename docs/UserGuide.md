@@ -55,7 +55,7 @@
 public class Test {
     private static final Logger logger = LoggerFactory.getLogger(Test.class);
     public static void main(String[] args) {
-        // 默认端口8080
+        // http://127.0.0.1:8081/index.html
         new MRestServer()
             .listenPort(8081)
             .serverName("demo")
@@ -540,7 +540,7 @@ public class Test {
 public class Test {
     private static final Logger logger = LoggerFactory.getLogger(Test.class);
     public static void main(String[] args) {
-        // 配套前端: static/upload.html
+        // http://127.0.0.1:10009/demo/upload.html
         new MRestServer(10009)
             .context("/demo")
                 // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
@@ -619,7 +619,7 @@ public class Test {
 public class Test {
     private static final Logger logger = LoggerFactory.getLogger(Test.class);
     public static void main(String[] args) {
-        // 配套前端: static/download.html
+        // http://127.0.0.1:10010/demo/download.html
         new MRestServer(10010)
             .context("/demo")
                 // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
@@ -780,7 +780,7 @@ public class Test {
 public class Test {
     private static final Logger logger = LoggerFactory.getLogger(Test.class);
     public static void main(String[] args) {
-        // 配套前端: static/websocket.html
+        // http://127.0.0.1:10013/demo/websocket.html
         new MRestServer(10013)
             .context("/demo")
                 // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
@@ -885,7 +885,7 @@ public class Test {
 public class Test {
     private static final Logger logger = LoggerFactory.getLogger(Test.class);
     public static void main(String[] args) {
-        // 配套前端: static/chatroom.html
+        // http://127.0.0.1:10014/demo/chatroom.html
         Map<String, Channel> chatRoomChannelMap = new ConcurrentHashMap<>();
         new MRestServer(10014)
             .context("/demo")

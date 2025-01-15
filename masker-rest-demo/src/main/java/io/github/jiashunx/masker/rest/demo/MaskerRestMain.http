@@ -1,0 +1,136 @@
+
+@DEMO8081  = http://127.0.0.1:8081
+
+### DEMO8081:/index.html
+GET {{DEMO8081}}/index.html
+
+### DEMO8081:/get-html
+GET {{DEMO8081}}/get-html
+
+### DEMO8081:/post-form
+POST {{DEMO8081}}/post-form
+
+{
+  "username": "Jack"
+}
+
+### DEMO8081:/servlet/{name}
+GET {{DEMO8081}}/servlet/jiashunx
+
+### DEMO10000:/demo/get-NoParam-NoRet
+GET http://127.0.0.1:10000/demo/get-NoParam-NoRet
+
+### DEMO10000:/demo/get-ParamReq-NoRet
+GET http://127.0.0.1:10000/demo/get-ParamReq-NoRet?k=v
+
+### DEMO10000:/demo/get-html
+GET http://127.0.0.1:10000/demo/get-html
+
+### DEMO10000:/demo/get-text
+GET http://127.0.0.1:10000/demo/get-text
+
+### DEMO10000:/demo/get-ParamReqResp-NoRet
+GET http://127.0.0.1:10000/demo/get-ParamReqResp-NoRet
+
+### DEMO10001:/demo/post-form
+POST http://127.0.0.1:10001/demo/post-form
+Content-Type: application/json
+
+{
+  "username": "Rose"
+}
+
+### DEMO10002:/demo/put
+PUT http://127.0.0.1:10002/demo/put
+
+### DEMO10002:/demo/put_delete
+DELETE http://127.0.0.1:10002/demo/put_delete
+
+### DEMO10002:/demo/空格测试 1 2
+DELETE http://127.0.0.1:10002/demo/空格测试 1 2
+
+### DEMO10002:/demo/空格测试%201%202
+DELETE http://127.0.0.1:10002/demo/空格测试%201%202
+
+### DEMO10003:/demo/get-redirect.html
+GET http://127.0.0.1:10003/demo/get-redirect.html
+
+### DEMO10003:/demo/get-redirect-target.html
+GET http://127.0.0.1:10003/demo/get-redirect-target.html
+
+### DEMO10004:/demo/post-forward
+POST http://127.0.0.1:10004/demo/post-forward
+
+### DEMO10004:/demo/post-forward-target
+POST http://127.0.0.1:10004/demo/post-forward-target
+
+### DEMO10005:/demo/filter-test/get0
+GET http://127.0.0.1:10005/demo/filter-test/get0
+
+### DEMO10006:/demo/servlet/t
+GET http://127.0.0.1:10006/demo/servlet/t
+
+### DEMO10006:/demo/servlet/test
+GET http://127.0.0.1:10006/demo/servlet/test
+
+### DEMO10006:/demo/servlet/tt
+GET http://127.0.0.1:10006/demo/servlet/tt
+
+### DEMO10006:/demo/servlet/m/{abc}
+POST http://127.0.0.1:10006/demo/servlet/m/123
+
+### DEMO10006:/demo/servlet/m/xxx
+POST http://127.0.0.1:10006/demo/servlet/m/xxx
+
+### DEMO10006:/demo/servlet/n/{xx}
+POST http://127.0.0.1:10006/demo/servlet/n/123
+
+### DEMO10006:/demo/servlet0/method0
+PUT http://127.0.0.1:10006/demo/servlet0/method0
+
+### DEMO10006:/demo/servlet0/method1
+GET http://127.0.0.1:10006/demo/servlet0/method1
+
+### DEMO10006:/demo/servlet0/method2
+POST http://127.0.0.1:10006/demo/servlet0/method2
+
+### DEMO10006:/demo/servlet1/method0
+GET http://127.0.0.1:10006/demo/servlet1/method0
+
+### DEMO10006:/demo/servlet2/0/{m}/{n}
+GET http://127.0.0.1:10006/demo/servlet2/0/abc/xyz
+
+### DEMO10006:/demo/servlet2/1/{m}
+GET http://127.0.0.1:10006/demo/servlet2/1/xyz
+
+### DEMO10007:/demo/cookie/set-cookie
+GET http://127.0.0.1:10007/demo/cookie/set-cookie
+
+### DEMO10007:/demo/cookie/get-cookie
+GET http://127.0.0.1:10007/demo/cookie/get-cookie
+Set-Cookie: abc=xyz
+Set-Cookie: 123=567
+
+### DEMO10008:/demo/jwt/login
+POST http://127.0.0.1:10008/demo/jwt/login
+Content-Type: application/json
+
+{
+  "username": "admin"
+}
+
+### DEMO10008:/demo/jwt/*,带token
+POST http://127.0.0.1:10008/demo/jwt/xxx
+Set-Cookie: mmm-jwt-token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3MzY5MjU3MjUsImlhdCI6MTczNjkyNTEyNX0.h7FbjK4Z7VOL8qki1BSi8ngdUS1lct0zw9WivXKTu8k
+
+### DEMO10008:/demo/jwt/*,不带token
+POST http://127.0.0.1:10008/demo/jwt/xxx
+
+### DEMO10015:/demo/get-html (https)
+GET https://127.0.0.1:10015/demo/get-html
+
+### DEMO21701:/index0.html
+GET http://127.0.0.1:21701/index0.html
+
+### DEMO21701:/err
+GET http://127.0.0.1:21701/err
