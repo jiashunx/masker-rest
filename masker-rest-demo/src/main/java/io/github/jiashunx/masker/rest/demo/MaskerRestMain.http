@@ -8,7 +8,7 @@ GET {{DEMO8081}}/index.html
 GET {{DEMO8081}}/get-html
 
 ### DEMO8081:/post-form
-POST {{DEMO8081}}/post-form
+POST {{DEMO8081}}/post-form?key=value
 
 {
   "username": "Jack"
