@@ -4,11 +4,12 @@
   <artifactId>masker-rest</artifactId>
   <name>masker-rest</name>
   <packaging>pom</packaging>
-  <version>x.y.z-SNAPSHOT</version>
+  <version>1.8.0-SNAPSHOT</version>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <jdk.compiler.version>11</jdk.compiler.version>
+    <jdk.compiler.version>8</jdk.compiler.version>
+    <revision>1.8.0-SNAPSHOT</revision>
   </properties>
   <dependencies>
     <dependency>
@@ -108,17 +109,17 @@
       <dependency>
         <groupId>io.github.jiashunx</groupId>
         <artifactId>masker-rest-framework</artifactId>
-        <version>${project.version}</version>
+        <version>${revision}</version>
       </dependency>
       <dependency>
         <groupId>io.github.jiashunx</groupId>
         <artifactId>masker-rest-jjwt</artifactId>
-        <version>${project.version}</version>
+        <version>${revision}</version>
       </dependency>
       <dependency>
         <groupId>io.github.jiashunx</groupId>
         <artifactId>masker-rest-rsa</artifactId>
-        <version>${project.version}</version>
+        <version>${revision}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -151,7 +152,7 @@
     <module>masker-rest-framework</module>
     <module>masker-rest-jjwt</module>
     <module>masker-rest-rsa</module>
-    <!--<module>masker-rest-demo</module>-->
+    <module>masker-rest-demo</module>
   </modules>
   <build>
     <plugins>
