@@ -16,8 +16,8 @@ public class MRestThreadFactory implements ThreadFactory {
     private final AtomicInteger threadNumber = new AtomicInteger(1);
 
     public MRestThreadFactory(MRestNettyThreadType threadType, int listenPort) {
-        SecurityManager s = System.getSecurityManager();
-        this.threadGroup = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
+        // 不依赖已废弃的SecurityManager(JDK17+移除), 直接使用当前线程组.
+        this.threadGroup = Thread.currentThread().getThreadGroup();
         this.namePrefix = String.format("%s-%d-Thread-", threadType.name(), listenPort);
     }
 

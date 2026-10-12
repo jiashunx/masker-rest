@@ -286,11 +286,20 @@ public class MRestServer {
             SslContext sslContext = this.sslContext;
             if (sslContext == null) {
                 logger.info("{} 未指定SslContext, 加载默认SSL配置", getServerDesc());
+                SelfSignedCertificate selfSignedCertificate = null;
                 try {
-                    SelfSignedCertificate selfSignedCertificate = new SelfSignedCertificate();
+                    selfSignedCertificate = new SelfSignedCertificate();
                     sslContext = SslContextBuilder.forServer(selfSignedCertificate.certificate(), selfSignedCertificate.privateKey()).build();
                 } catch (Throwable throwable) {
-                    throw new MRestServerInitializeException("SslContext initialize failed", throwable);
+                    throw new MRestServerInitializeException(
+                            "Self-signed SslContext initialize failed. On JDK16+ the internal certificate generator is strongly encapsulated; "
+                                    + "please provide an explicit SslContext, or add org.bouncycastle:bcpkix-jdk18on to the runtime classpath.",
+                            throwable);
+                } finally {
+                    // 证书文件已在SslContext中加载, 删除临时自签证书文件.
+                    if (selfSignedCertificate != null) {
+                        selfSignedCertificate.delete();
+                    }
                 }
             }
             this.sslEnabled = true;

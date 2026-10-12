@@ -25,4 +25,16 @@ public class MRestServerTest {
         }
     }
 
+    @Test
+    public void test_sslStartAndGracefulShutdown() throws Exception {
+        int port;
+        try (ServerSocket socket = new ServerSocket(0)) {
+            port = socket.getLocalPort();
+        }
+        MRestServer server = new MRestServer(port, "ut-ssl-server").sslEnabled(true);
+        server.start();
+        assertTrue(server.isSslEnabled());
+        server.shutdown();
+    }
+
 }
