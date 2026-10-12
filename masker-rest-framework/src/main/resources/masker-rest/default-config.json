@@ -5,6 +5,10 @@
   "workerThreadNum": 2,
   "connectionKeepAlive": false,
   "httpContentMaxMBSize": 50,
+  "multipartMaxFileCount": 1000,
+  "httpIdleTimeoutSeconds": 0,
+  "fingerprintHeadersEnabled": true,
+  "businessThreadNum": 0,
   "classpathResources": [
     "META-INF/resources/",
     "resources/",

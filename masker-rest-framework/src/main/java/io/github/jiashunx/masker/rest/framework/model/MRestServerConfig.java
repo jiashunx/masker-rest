@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.framework.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,7 +14,31 @@ public class MRestServerConfig {
     private int workerThreadNum;
     private boolean connectionKeepAlive;
     private int httpContentMaxMBSize;
+    private int multipartMaxFileCount;
+    private int httpIdleTimeoutSeconds;
+    private boolean fingerprintHeadersEnabled;
+    private int businessThreadNum;
     private List<String> classpathResources;
+
+    public MRestServerConfig() {}
+
+    /**
+     * 拷贝构造, 用于对外返回默认配置副本, 避免调用方修改全局默认配置.
+     * @param other 源配置
+     */
+    public MRestServerConfig(MRestServerConfig other) {
+        this.serverPort = other.serverPort;
+        this.serverName = other.serverName;
+        this.bossThreadNum = other.bossThreadNum;
+        this.workerThreadNum = other.workerThreadNum;
+        this.connectionKeepAlive = other.connectionKeepAlive;
+        this.httpContentMaxMBSize = other.httpContentMaxMBSize;
+        this.multipartMaxFileCount = other.multipartMaxFileCount;
+        this.httpIdleTimeoutSeconds = other.httpIdleTimeoutSeconds;
+        this.fingerprintHeadersEnabled = other.fingerprintHeadersEnabled;
+        this.businessThreadNum = other.businessThreadNum;
+        this.classpathResources = other.classpathResources == null ? null : new ArrayList<>(other.classpathResources);
+    }
 
     public int getServerPort() {
         return serverPort;
@@ -61,6 +86,38 @@ public class MRestServerConfig {
 
     public void setHttpContentMaxMBSize(int httpContentMaxMBSize) {
         this.httpContentMaxMBSize = httpContentMaxMBSize;
+    }
+
+    public int getMultipartMaxFileCount() {
+        return multipartMaxFileCount;
+    }
+
+    public void setMultipartMaxFileCount(int multipartMaxFileCount) {
+        this.multipartMaxFileCount = multipartMaxFileCount;
+    }
+
+    public int getHttpIdleTimeoutSeconds() {
+        return httpIdleTimeoutSeconds;
+    }
+
+    public void setHttpIdleTimeoutSeconds(int httpIdleTimeoutSeconds) {
+        this.httpIdleTimeoutSeconds = httpIdleTimeoutSeconds;
+    }
+
+    public boolean isFingerprintHeadersEnabled() {
+        return fingerprintHeadersEnabled;
+    }
+
+    public void setFingerprintHeadersEnabled(boolean fingerprintHeadersEnabled) {
+        this.fingerprintHeadersEnabled = fingerprintHeadersEnabled;
+    }
+
+    public int getBusinessThreadNum() {
+        return businessThreadNum;
+    }
+
+    public void setBusinessThreadNum(int businessThreadNum) {
+        this.businessThreadNum = businessThreadNum;
     }
 
     public List<String> getClasspathResources() {

@@ -165,4 +165,34 @@ public class UrlUtils {
         return url;
     }
 
+    /**
+     * 判断请求路径是否命中指定路径前缀, 需满足路径边界(避免 /abc 命中前缀 /a).
+     * @param requestPath 请求路径
+     * @param prefixPath 前缀路径
+     * @return boolean
+     */
+    public static boolean isPathPrefixMatch(String requestPath, String prefixPath) {
+        String path = nullToEmpty(requestPath);
+        String prefix = nullToEmpty(prefixPath);
+        return path.equals(prefix) || path.startsWith(prefix + Constants.PATH_SEP);
+    }
+
+    /**
+     * 判断路径中是否包含父级目录段(".."), 用于防止路径穿越.
+     * @param path0 路径
+     * @return boolean
+     */
+    public static boolean containsParentDirSegment(String path0) {
+        String path = nullToEmpty(path0);
+        if (path.isEmpty()) {
+            return false;
+        }
+        for (String segment: path.split(Constants.PATH_SEP)) {
+            if ("..".equals(segment)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

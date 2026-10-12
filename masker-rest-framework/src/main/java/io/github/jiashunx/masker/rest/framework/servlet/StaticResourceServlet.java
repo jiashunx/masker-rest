@@ -5,6 +5,7 @@ import io.github.jiashunx.masker.rest.framework.MRestRequest;
 import io.github.jiashunx.masker.rest.framework.MRestResponse;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
 import io.github.jiashunx.masker.rest.framework.model.StaticResource;
+import io.github.jiashunx.masker.rest.framework.type.StaticResourceType;
 import io.github.jiashunx.masker.rest.framework.util.IOUtils;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
@@ -13,7 +14,9 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class StaticResourceServlet implements MRestServlet {
 
@@ -68,11 +71,34 @@ public class StaticResourceServlet implements MRestServlet {
     }
 
     private void writeStaticResource(MRestRequest restRequest, MRestResponse restResponse, StaticResource staticResource) {
+        if (staticResource.getType() == StaticResourceType.DISK_FILE && restRequest.getMethod() == HttpMethod.GET) {
+            File file = new File(staticResource.getUri());
+            if (file.isFile()) {
+                // 磁盘文件流式输出(避免整体读入堆内存), 基于文件长度/修改时间生成ETag.
+                String etag = "\"" + file.length() + "-" + file.lastModified() + "\"";
+                restResponse.setHeader(Constants.HTTP_HEADER_ETAG, etag);
+                String ifNoneMatch = restRequest.getHeader(Constants.HTTP_HEADER_IF_NONE_MATCH);
+                if (ifNoneMatch != null && ifNoneMatch.contains(etag)) {
+                    restResponse.write(HttpResponseStatus.NOT_MODIFIED);
+                    return;
+                }
+                restResponse.writeStaticFile(file, staticResource.getContentType());
+                return;
+            }
+        }
         writeStaticResource(restRequest, restResponse, staticResource.getContentBytes(), staticResource.getContentType());
     }
 
     private void writeStaticResource(MRestRequest restRequest, MRestResponse restResponse, byte[] bytes, String contentType) {
         if (restRequest.getMethod() == HttpMethod.GET) {
+            // 基于内容的弱ETag, 支持条件请求(If-None-Match)返回304.
+            String etag = "\"" + Integer.toHexString(Arrays.hashCode(bytes)) + "-" + bytes.length + "\"";
+            restResponse.setHeader(Constants.HTTP_HEADER_ETAG, etag);
+            String ifNoneMatch = restRequest.getHeader(Constants.HTTP_HEADER_IF_NONE_MATCH);
+            if (ifNoneMatch != null && ifNoneMatch.contains(etag)) {
+                restResponse.write(HttpResponseStatus.NOT_MODIFIED);
+                return;
+            }
             restResponse.setHeader(Constants.HTTP_HEADER_CONTENT_TYPE, contentType);
             restResponse.write(bytes);
         } else {

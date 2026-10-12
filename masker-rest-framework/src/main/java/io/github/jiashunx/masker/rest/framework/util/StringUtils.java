@@ -142,7 +142,7 @@ public class StringUtils {
         } catch (Exception ex) {
             logger.error("获取异常 {} 堆栈失败", e.hashCode(), ex);
         }
-        String content = sb.toString().replaceAll(" ", " ");
+        String content = sb.toString();
         if (oneLine) {
             content = contentToLine(content);
         }

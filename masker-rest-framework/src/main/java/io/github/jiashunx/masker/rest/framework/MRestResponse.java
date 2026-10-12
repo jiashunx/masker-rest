@@ -28,12 +28,17 @@ import java.util.function.Consumer;
  */
 public class MRestResponse {
 
+    /**
+     * forward最大递归深度.
+     */
+    private static final int MAX_FORWARD_DEPTH = 10;
+
     private final ChannelHandlerContext $channelHandlerContext;
     private MRestServer restServer;
     private final MRestContext restContext;
     private final MRestHeaders $headers = new MRestHeaders();
     private volatile FlushTask flushTask = null;
-    private boolean $flushed = false;
+    private volatile boolean $flushed = false;
 
     /**
      * 响应对象属性信息.
@@ -72,6 +77,21 @@ public class MRestResponse {
     }
 
     public MRestResponse forward(String targetURL, MRestRequest request) {
+        // 防止forward无限递归.
+        String depthKey = "mrest.forward.depth";
+        int depth = 0;
+        Object depthObj = request.getAttribute(depthKey);
+        if (depthObj != null) {
+            try {
+                depth = Integer.parseInt(String.valueOf(depthObj));
+            } catch (NumberFormatException ignore) {
+                // ignore.
+            }
+        }
+        if (depth >= MAX_FORWARD_DEPTH) {
+            throw new MRestServerException("forward depth exceeds limit: " + MAX_FORWARD_DEPTH);
+        }
+        request.setAttribute(depthKey, String.valueOf(depth + 1));
         request.setUrl(targetURL);
         MRestFilterChain filterChain = getRestContext().getFilterChain(targetURL);
         filterChain.doFilter(request, this);
@@ -219,6 +239,25 @@ public class MRestResponse {
         return writeFile(downloadedFile, new HashMap<>());
     }
 
+    /**
+     * 以静态资源方式流式输出文件(不设置Content-Disposition).
+     * @param file 文件
+     * @param contentType Content-Type
+     * @return MRestResponse
+     */
+    public MRestResponse writeStaticFile(File file, String contentType) {
+        return writeStaticFile(file, new MRestHeaders(MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, contentType)));
+    }
+
+    public synchronized MRestResponse writeStaticFile(File file, MRestHeaders headers) {
+        if (isWriteMethodInvoked()) {
+            throw new MRestServerException("write method has already been invoked.");
+        }
+        flushTask = new FlushTask(HttpResponseStatus.OK, file, headers, null, false);
+        setAttr("status", HttpResponseStatus.OK);
+        return this;
+    }
+
     public MRestResponse writeFile(File downloadedFile, Consumer<File> callback) {
         return writeFile(downloadedFile, new HashMap<>(), callback);
     }
@@ -263,7 +302,7 @@ public class MRestResponse {
         if (isWriteMethodInvoked()) {
             throw new MRestServerException("write method has already been invoked.");
         }
-        flushTask = new FlushTask(downloadedFile, headers, callback);
+        flushTask = new FlushTask(status, downloadedFile, headers, callback);
         setAttr("status", status);
         return this;
     }
@@ -281,13 +320,21 @@ public class MRestResponse {
         return this;
     }
 
+    /**
+     * 设置响应头, 单值语义: 同key已存在的值会被替换, 不会产生重复header.
+     */
     public MRestResponse setHeader(String key, Object value) {
-        this.$headers.add(key, value);
+        this.$headers.set(key, value);
         return this;
     }
 
+    /**
+     * 设置响应头, 单值语义: 同key已存在的值会被替换, 不会产生重复header.
+     */
     public MRestResponse setHeader(Map<String, Object> headers) {
-        this.$headers.add(headers);
+        if (headers != null) {
+            headers.forEach((key, value) -> this.$headers.set(key, value));
+        }
         return this;
     }
 
@@ -340,7 +387,9 @@ public class MRestResponse {
      * @param cookie io.netty.handler.codec.http.cookie.DefaultCookie.
      */
     public MRestResponse setCookie(Cookie cookie) {
-        return setHeader(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+        // Set-Cookie为多值header, 使用追加语义.
+        this.$headers.add(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+        return this;
     }
 
     public synchronized MRestResponse flush() {
@@ -362,24 +411,34 @@ public class MRestResponse {
         MRestHeaders headers;
         File downloadedFile;
         boolean isDownloadFile = false;
+        boolean attachment = true;
         Consumer<File> downloadCallback;
         FlushTask(HttpResponseStatus status, byte[] bytes, MRestHeaders headers) {
             this.status = Objects.requireNonNull(status);
             this.bytes = bytes;
             this.headers = headers == null ? new MRestHeaders() : headers;
         }
-        FlushTask(File downloadedFile, MRestHeaders headers, Consumer<File> downloadCallback) {
+        FlushTask(HttpResponseStatus status, File downloadedFile, MRestHeaders headers, Consumer<File> downloadCallback) {
+            this(status, downloadedFile, headers, downloadCallback, true);
+        }
+        FlushTask(HttpResponseStatus status, File downloadedFile, MRestHeaders headers, Consumer<File> downloadCallback, boolean attachment) {
+            this.status = Objects.requireNonNull(status);
             this.isDownloadFile = true;
             this.downloadedFile = Objects.requireNonNull(downloadedFile);
             this.headers = headers == null ? new MRestHeaders() : headers;
             this.downloadCallback = downloadCallback;
+            this.attachment = attachment;
         }
         void execute() {
             try {
                 MRestHeaders headers = $headers.copy();
-                headers.addAll(this.headers);
+                headers.merge(this.headers);
                 if (isDownloadFile) {
-                    MResponseHelper.write($channelHandlerContext, downloadedFile, headers, downloadCallback);
+                    if (attachment) {
+                        MResponseHelper.write($channelHandlerContext, status, downloadedFile, headers, downloadCallback);
+                    } else {
+                        MResponseHelper.writeStaticFile($channelHandlerContext, status, downloadedFile, headers, downloadCallback);
+                    }
                 } else {
                     MResponseHelper.write($channelHandlerContext, status, bytes, headers);
                 }

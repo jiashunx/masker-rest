@@ -3,6 +3,7 @@ package io.github.jiashunx.masker.rest.framework.servlet;
 import io.github.jiashunx.masker.rest.framework.MRestContext;
 import io.github.jiashunx.masker.rest.framework.model.StaticResource;
 import io.github.jiashunx.masker.rest.framework.type.StaticResourceType;
+import io.github.jiashunx.masker.rest.framework.util.FileUtils;
 import io.github.jiashunx.masker.rest.framework.util.IOUtils;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.UrlUtils;
@@ -12,10 +13,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -26,14 +27,19 @@ public class StaticResourceFinder {
     private static final Logger logger = LoggerFactory.getLogger(StaticResourceFinder.class);
 
     /**
-     * 未定位到的静态资源(非静态对象).
+     * 静态资源缓存最大条目数, 超出后按LRU淘汰.
      */
-    private final StaticResource NotFoundStaticResource = StaticResource.buildEmpty();
+    private final int staticResourceCacheMaxSize = 4096;
 
     /**
-     * 静态资源缓存Map(非静态对象)
+     * 静态资源缓存Map(非静态对象, 有界LRU, 由读写锁保护)
      */
-    private final Map<String, StaticResource> StaticResourceMap = new ConcurrentHashMap<>();
+    private final Map<String, StaticResource> StaticResourceMap = new LinkedHashMap<String, StaticResource>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, StaticResource> eldest) {
+            return size() > staticResourceCacheMaxSize;
+        }
+    };
     /**
      * 静态资源缓存Map(读写锁)
      */
@@ -56,6 +62,10 @@ public class StaticResourceFinder {
 
     public StaticResource loadResource(String requestUrl0) {
         String requestUrl = MRestUtils.formatPath(requestUrl0);
+        // 拒绝包含父级目录段("..")的请求路径, 防止 classpath/磁盘静态资源路径穿越.
+        if (UrlUtils.containsParentDirSegment(requestUrl)) {
+            return null;
+        }
         // 若不支持静态资源缓存，则每次请求均执行静态资源查找处理
         if (!this.restContext.isStaticResourcesCacheEnabled()) {
             StaticResource staticResource = loadResourceFromClasspath(requestUrl);
@@ -64,7 +74,13 @@ public class StaticResourceFinder {
             }
             return staticResource;
         }
-        StaticResource staticResource = StaticResourceMap.get(requestUrl);
+        StaticResource staticResource;
+        StaticResourceMapReadWriteLock.readLock().lock();
+        try {
+            staticResource = StaticResourceMap.get(requestUrl);
+        } finally {
+            StaticResourceMapReadWriteLock.readLock().unlock();
+        }
         if (staticResource == null) {
             StaticResourceMapReadWriteLock.writeLock().lock();
             try {
@@ -74,17 +90,14 @@ public class StaticResourceFinder {
                     if (staticResource == null) {
                         staticResource = loadResourceFromDiskpath(requestUrl);
                     }
-                    if (staticResource == null) {
-                        staticResource = NotFoundStaticResource;
+                    // 仅缓存命中的资源, 不缓存未命中结果, 避免随机URL洪泛导致缓存无界增长(LRU上限保护).
+                    if (staticResource != null) {
+                        StaticResourceMap.put(requestUrl, staticResource);
                     }
-                    StaticResourceMap.put(requestUrl, staticResource);
                 }
             } finally {
                 StaticResourceMapReadWriteLock.writeLock().unlock();
             }
-        }
-        if (staticResource == NotFoundStaticResource) {
-            return null;
         }
         return staticResource;
     }
@@ -145,17 +158,15 @@ public class StaticResourceFinder {
             for (String diskpathResourcePath0: diskpathResourcePaths) {
                 String diskpathResourcePath = UrlUtils.appendSuffixSep(UrlUtils.replaceWinSep(diskpathResourcePath0)) + filePathSuffix;
                 try {
-                    // 磁盘文件路径合法性检查
-                    String path0 = UrlUtils.replaceWinSep(new File(diskpathResourcePath0).getAbsolutePath());
-                    String path1 = UrlUtils.replaceWinSep(new File(diskpathResourcePath).getAbsolutePath());
-                    // 文件路径不可为文件目录父级目录.
-                    if (path1.startsWith(path0) && path1.length() > path0.length()) {
-                        byte[] contentBytes = IOUtils.loadBytesFromDisk(diskpathResourcePath, false);
-                        if (contentBytes != null) {
+                    // 磁盘文件路径合法性检查: 目标文件必须位于配置根目录之下(canonical 路径 + 路径段比较), 防止 ../ 路径穿越.
+                    if (FileUtils.isUnderDirectory(new File(diskpathResourcePath0), new File(diskpathResourcePath))) {
+                        File diskFile = new File(diskpathResourcePath);
+                        if (diskFile.isFile()) {
                             if (logger.isDebugEnabled()) {
                                 logger.debug("{} locate diskpath resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, diskpathResourcePath);
                             }
-                            return new StaticResource(StaticResourceType.DISK_FILE, diskpathResourcePath, requestUrl, contentBytes);
+                            // 磁盘文件仅记录文件路径, 由静态资源Servlet流式输出, 避免整体读入堆内存.
+                            return new StaticResource(StaticResourceType.DISK_FILE, diskpathResourcePath, requestUrl, new byte[0]);
                         }
                     }
                 } catch (Throwable throwable) {
