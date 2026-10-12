@@ -8,6 +8,8 @@ import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.stream.ChunkedFile;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -157,16 +159,43 @@ public class MResponseHelper {
     }
 
     public static void write(ChannelHandlerContext ctx, File downloadedFile, MRestHeaders headers, Consumer<File> callback) {
+        write(ctx, HttpResponseStatus.OK, downloadedFile, headers, callback);
+    }
+
+    public static void write(ChannelHandlerContext ctx, HttpResponseStatus status, File downloadedFile, MRestHeaders headers, Consumer<File> callback) {
+        writeFile0(ctx, status, downloadedFile, headers, callback, true);
+    }
+
+    /**
+     * 以静态资源方式流式输出文件(不设置Content-Disposition; 仅当未指定Content-Type时使用octet-stream).
+     */
+    public static void writeStaticFile(ChannelHandlerContext ctx, HttpResponseStatus status, File file, MRestHeaders headers, Consumer<File> callback) {
+        writeFile0(ctx, status, file, headers, callback, false);
+    }
+
+    private static void writeFile0(ChannelHandlerContext ctx, HttpResponseStatus status, File downloadedFile, MRestHeaders headers, Consumer<File> callback, boolean attachment) {
+        RandomAccessFile randomAccessFile = null;
         try {
-            RandomAccessFile randomAccessFile = new RandomAccessFile(downloadedFile, "r");
+            randomAccessFile = new RandomAccessFile(downloadedFile, "r");
             long fileLength = randomAccessFile.length();
-            HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+            HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, status);
             HttpHeaders httpHeaders = setRespHeaders(response, headers);
             httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_LENGTH).add(Constants.HTTP_HEADER_CONTENT_LENGTH, fileLength);
-            httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_TYPE).add(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_APPLICATION_OCTETSTREAM);
-            httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_DISPOSITION).add(Constants.HTTP_HEADER_CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", downloadedFile.getName()));
+            if (!containsHeader(headers, Constants.HTTP_HEADER_CONTENT_TYPE)) {
+                httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_TYPE).add(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_APPLICATION_OCTETSTREAM);
+            }
+            if (attachment) {
+                httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_DISPOSITION).add(Constants.HTTP_HEADER_CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", escapeContentDispositionFileName(downloadedFile.getName())));
+            }
             ctx.write(response);
-            ChannelFuture sendFileFuture = ctx.write(new DefaultFileRegion(randomAccessFile.getChannel(), 0, fileLength), ctx.newProgressivePromise());
+            final RandomAccessFile fileAccess = randomAccessFile;
+            ChannelFuture sendFileFuture;
+            if (ctx.pipeline().get(SslHandler.class) != null) {
+                // SslHandler无法加密零拷贝FileRegion, 改用ChunkedFile经ChunkedWriteHandler分块写出.
+                sendFileFuture = ctx.write(new ChunkedFile(fileAccess, 0, fileLength, 8192), ctx.newProgressivePromise());
+            } else {
+                sendFileFuture = ctx.write(new DefaultFileRegion(fileAccess.getChannel(), 0, fileLength), ctx.newProgressivePromise());
+            }
             sendFileFuture.addListener(new ChannelProgressiveFutureListener() {
                 @Override
                 public void operationProgressed(ChannelProgressiveFuture channelProgressiveFuture, long l, long l1) throws Exception {
@@ -174,7 +203,7 @@ public class MResponseHelper {
                 }
                 @Override
                 public void operationComplete(ChannelProgressiveFuture channelProgressiveFuture) throws Exception {
-                    randomAccessFile.close();
+                    fileAccess.close();
                     if (callback != null) {
                         callback.accept(downloadedFile);
                     }
@@ -182,8 +211,37 @@ public class MResponseHelper {
             });
             ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
         } catch (Throwable throwable) {
+            // 异常路径下确保文件句柄释放(正常路径由 write 完成回调释放).
+            if (randomAccessFile != null) {
+                try {
+                    randomAccessFile.close();
+                } catch (Throwable ignore) {
+                    // do nothing.
+                }
+            }
             throw new MRestFileDownloadException(throwable);
         }
+    }
+
+    private static boolean containsHeader(MRestHeaders headers, String key) {
+        return headers != null && !headers.getAll(key).isEmpty();
+    }
+
+    private static String escapeContentDispositionFileName(String fileName) {
+        if (fileName == null) {
+            return "download";
+        }
+        StringBuilder builder = new StringBuilder(fileName.length());
+        for (int i = 0; i < fileName.length(); i++) {
+            char c = fileName.charAt(i);
+            // 转义可能引起header注入/截断的字符.
+            if (c == '"' || c == '\\' || c == '\r' || c == '\n') {
+                builder.append('_');
+            } else {
+                builder.append(c);
+            }
+        }
+        return builder.toString();
     }
 
     private static HttpHeaders setRespHeaders(HttpResponse response, MRestHeaders headers) {

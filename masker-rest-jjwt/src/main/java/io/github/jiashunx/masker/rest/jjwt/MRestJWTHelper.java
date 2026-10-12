@@ -1,14 +1,16 @@
 package io.github.jiashunx.masker.rest.jjwt;
 
-import io.github.jiashunx.masker.rest.framework.serialize.MRestSerializer;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.*;
 
 /**
@@ -40,7 +42,10 @@ public class MRestJWTHelper {
     private static final String HEADER_KEY_TYP = "typ";
     private static final String HEADER_VALUE_TYP = "JWT";
 
-    private final String secretKey;
+    /**
+     * 签名密钥(基于原始密钥的SHA-256摘要派生, 保证长度满足HMAC-SHA256要求).
+     */
+    private final SecretKey secretKey;
     /**
      * token失效时间, 为0永不过期.
      */
@@ -62,8 +67,16 @@ public class MRestJWTHelper {
         if (StringUtils.isEmpty(secretKey) || timeoutSeconds < 0) {
             throw new IllegalArgumentException();
         }
-        this.secretKey = secretKey;
+        this.secretKey = Keys.hmacShaKeyFor(sha256(secretKey));
         this.timeoutSeconds = timeoutSeconds;
+    }
+
+    private static byte[] sha256(String text) {
+        try {
+            return MessageDigest.getInstance("SHA-256").digest(text.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception exception) {
+            throw new IllegalStateException("SHA-256 not supported", exception);
+        }
     }
 
     public String newToken() {
@@ -86,9 +99,9 @@ public class MRestJWTHelper {
                     .setClaims(_claims)
                     .setHeader(_headers)
                     .setHeaderParam(HEADER_KEY_TYP, HEADER_VALUE_TYP)
-                    .setIssuedAt(new Date(currentTimeMillis))
-                    .setExpiration(new Date(currentTimeMillis + timeoutMillis))
-                    .signWith(SignatureAlgorithm.HS256, secretKey)
+                    .issuedAt(new Date(currentTimeMillis))
+                    .expiration(new Date(currentTimeMillis + timeoutMillis))
+                    .signWith(secretKey)
                     .compact();
         } catch (Throwable throwable) {
             logger.error("create jwt token failed, claims: {}, headers: {}", claims, headers, throwable);
@@ -112,12 +125,14 @@ public class MRestJWTHelper {
         return token;
     }
 
+    private Jws<Claims> parse(String jwtToken) {
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(removeTokenHeader(jwtToken));
+    }
+
     public boolean isTokenTimeout(String jwtToken) {
         long currentTimeMillis = System.currentTimeMillis();
         try {
-            String token = removeTokenHeader(jwtToken);
-            Jws<Claims> jws = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
-            Map<String, Object> claims = jws.getBody();
+            Claims claims = parse(jwtToken).getPayload();
             int createTimeSeconds = Integer.parseInt(claims.get(CLAIM_KEY_IAT).toString());
             int expireTimeSeconds = Integer.parseInt(claims.get(CLAIM_KEY_EXP).toString());
             return !(expireTimeSeconds*1000L >= currentTimeMillis && expireTimeSeconds - createTimeSeconds <= timeoutSeconds);
@@ -129,21 +144,9 @@ public class MRestJWTHelper {
 
     public boolean isTokenValid(String jwtToken) {
         try {
-            String token = removeTokenHeader(jwtToken);
-            // header={alg=HS256, typ=JWT, yourHeaderKey=yourHeaderValue}
-            // body={exp=1605420304, iat=1605419704, yourBodyKey=yourBodyValue}
-            // signature=_DQ2CTmS3rELlbst6P_jEE_LBhJOo-4JJ_8NkyGsR4k
-            Jws<Claims> jws = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
-            Map<String, Object> claims = jws.getBody();
-            Map<String, Object> headers = (Map<String, Object>) jws.getHeader();
-            String newToken = Jwts.builder()
-                    .setPayload(MRestSerializer.objectToJson(claims))
-                    .setHeader(headers)
-                    .setHeaderParam(HEADER_KEY_TYP, HEADER_VALUE_TYP)
-                    .signWith(SignatureAlgorithm.HS256, secretKey).compact();
-            // 对比签名, 从token中获取payload, 再根据payload重新生成新的token, 新旧token进行对比
-            // header, payload一致, 得到的signature肯定一致
-            return token.split("\\.")[2].equals(newToken.split("\\.")[2]);
+            // parseSignedClaims 内部会校验签名合法性, 校验通过即视为有效.
+            parse(jwtToken);
+            return true;
         } catch (Throwable throwable) {
             logger.error("verify jwt token [valid] failed: {}", jwtToken, throwable);
             return false;
@@ -152,8 +155,7 @@ public class MRestJWTHelper {
 
     public String updateToken(String jwtToken) {
         try {
-            String token = removeTokenHeader(jwtToken);
-            Jws<Claims> jws = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
+            Jws<Claims> jws = parse(jwtToken);
             Map<String, Object> claims = getTokenClaims(jws);
             Map<String, Object> headers = getTokenHeaders(jws);
             return newToken(claims, headers);
@@ -164,14 +166,14 @@ public class MRestJWTHelper {
     }
 
     private Map<String, Object> getTokenClaims(Jws<Claims> jws) {
-        Map<String, Object> claims = new HashMap<>(jws.getBody());
+        Map<String, Object> claims = new HashMap<>(jws.getPayload());
         claims.remove(CLAIM_KEY_IAT);
         claims.remove(CLAIM_KEY_EXP);
         return claims;
     }
 
     private Map<String, Object> getTokenHeaders(Jws<Claims> jws) {
-        Map<String, Object> headers = new HashMap<>((Map<String, Object>) jws.getHeader());
+        Map<String, Object> headers = new HashMap<>(jws.getHeader());
         headers.remove(HEADER_KEY_ALG);
         headers.remove(HEADER_KEY_TYP);
         return headers;

@@ -33,6 +33,11 @@ public class MRestDispatchServlet implements MRestServlet {
         MRestHandler restHandler = restContext.getUrlMappingHandler(requestURL, restRequest.getMethod());
         if (restHandler != null) {
             handleRequest(restRequest, restResponse, restHandler);
+            return;
+        }
+        // 路径已注册映射但请求方法不匹配 -> 405 (而非落到404)
+        if (restContext.getUrlMappingHandler(requestURL) != null) {
+            restResponse.write(HttpResponseStatus.METHOD_NOT_ALLOWED);
         }
     }
 

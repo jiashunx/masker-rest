@@ -61,7 +61,14 @@ public class UrlPatternModel {
 
     public int getRegularCount() {
         if (isSupportRegular()) {
-            return getActualUrlPattern().split(Constants.STRING_MATCH_ALL).length - 1;
+            String actualUrlPattern = getActualUrlPattern();
+            int count = 0;
+            for (int i = 0; i < actualUrlPattern.length(); i++) {
+                if (actualUrlPattern.charAt(i) == '*') {
+                    count++;
+                }
+            }
+            return count;
         }
         return 0;
     }

@@ -55,7 +55,7 @@
 public class Test {
     private static final Logger logger = LoggerFactory.getLogger(Test.class);
     public static void main(String[] args) {
-        // 默认端口8080
+        // http://127.0.0.1:8081/index.html
         new MRestServer()
             .listenPort(8081)
             .serverName("demo")
@@ -195,10 +195,10 @@ public class Test {
                     response.write(HttpResponseStatus.OK);
                 }, HttpMethod.PUT)
                 .mapping("/put_delete", (request, response) -> {
-                    response.write(new HashMap<>());
+                    response.write(HttpResponseStatus.OK);
                 }, HttpMethod.PUT, HttpMethod.DELETE)
                 .mapping("/空格测试 1 2", (request, response) -> {
-                    response.write("空格测试成功");
+                    response.writeString("空格测试成功");
                 }, HttpMethod.GET)
                 .filter("/*", (request, response, filterChain) -> {
                     System.out.println("拦截到url: " + request.getUrl());
@@ -540,7 +540,7 @@ public class Test {
 public class Test {
     private static final Logger logger = LoggerFactory.getLogger(Test.class);
     public static void main(String[] args) {
-        // 配套前端: static/upload.html
+        // http://127.0.0.1:10009/demo/upload.html
         new MRestServer(10009)
             .context("/demo")
                 // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
@@ -619,21 +619,21 @@ public class Test {
 public class Test {
     private static final Logger logger = LoggerFactory.getLogger(Test.class);
     public static void main(String[] args) {
-        // 配套前端: static/download.html
+        // http://127.0.0.1:10010/demo/download.html
         new MRestServer(10010)
             .context("/demo")
                 // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
                 .addDefaultClasspathResource()
                 .filedownload("/filedownload/test0", (request, response) -> {
                     String filePath = MRestUtils.getUserDirPath() + "README.md";
-                    response.write(new File(filePath));
+                    response.writeFile(new File(filePath));
                     // 也可使用jquery+form表单提交post请求来实现文件下载.
                 })
                 .get("/filedownload/test1", (request, response) -> {
                     String targetFilePath = MRestUtils.getSystemTempDirPath() + "SFS" + File.separator + System.currentTimeMillis() + File.separator + System.nanoTime() + ".zip";
                     File targetFile = new File(targetFilePath);
                     FileUtils.zip(new File(MRestUtils.getUserDirPath()).listFiles(), targetFile);
-                    response.write(targetFile, f -> {
+                    response.writeFile(targetFile, f -> {
                         try {
                             File parent = f.getParentFile();
                             f.delete();
@@ -780,7 +780,7 @@ public class Test {
 public class Test {
     private static final Logger logger = LoggerFactory.getLogger(Test.class);
     public static void main(String[] args) {
-        // 配套前端: static/websocket.html
+        // http://127.0.0.1:10013/demo/websocket.html
         new MRestServer(10013)
             .context("/demo")
                 // "/"扫描classpath: "META-INF/resources/", "resources/", "static/", "public/"
@@ -885,7 +885,7 @@ public class Test {
 public class Test {
     private static final Logger logger = LoggerFactory.getLogger(Test.class);
     public static void main(String[] args) {
-        // 配套前端: static/chatroom.html
+        // http://127.0.0.1:10014/demo/chatroom.html
         Map<String, Channel> chatRoomChannelMap = new ConcurrentHashMap<>();
         new MRestServer(10014)
             .context("/demo")

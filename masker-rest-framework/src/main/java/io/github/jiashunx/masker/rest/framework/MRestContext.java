@@ -20,8 +20,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -91,17 +93,49 @@ public class MRestContext {
         if (isStaticResourcesCacheEnabled()) {
             reloadResource();
             if (isAutoRefreshStaticResources()) {
-                new Thread(() -> {
-                    while (true) {
-                        try {
-                            Thread.sleep(getAutoRefreshStaticResourcesPeriod());
-                            reloadResource();
-                        } catch (Throwable throwable) {
-                            logger.error("{} reload static resource failed", getContextDesc(), throwable);
-                        }
-                    }
-                }, "ResourceReload" + restServer.getListenPort() + "_" + getContextPath()).start();
+                startAutoRefreshStaticResources();
             }
+        }
+    }
+
+    /**
+     * 静态资源自动刷新线程运行标识.
+     */
+    private volatile boolean autoRefreshStaticResourcesRunning = false;
+    private volatile Thread autoRefreshStaticResourcesThread;
+
+    private void startAutoRefreshStaticResources() {
+        autoRefreshStaticResourcesRunning = true;
+        Thread thread = new Thread(() -> {
+            while (autoRefreshStaticResourcesRunning) {
+                try {
+                    Thread.sleep(getAutoRefreshStaticResourcesPeriod());
+                    if (autoRefreshStaticResourcesRunning) {
+                        reloadResource();
+                    }
+                } catch (InterruptedException interruptedException) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Throwable throwable) {
+                    logger.error("{} reload static resource failed", getContextDesc(), throwable);
+                }
+            }
+        }, "ResourceReload" + restServer.getListenPort() + "_" + getContextPath());
+        // 使用守护线程, 避免server关闭后仍阻止JVM退出.
+        thread.setDaemon(true);
+        this.autoRefreshStaticResourcesThread = thread;
+        thread.start();
+    }
+
+    /**
+     * 停止静态资源自动刷新线程(server关闭时调用).
+     */
+    public void shutdown() {
+        autoRefreshStaticResourcesRunning = false;
+        Thread thread = this.autoRefreshStaticResourcesThread;
+        if (thread != null) {
+            thread.interrupt();
+            this.autoRefreshStaticResourcesThread = null;
         }
     }
 
@@ -243,8 +277,7 @@ public class MRestContext {
         return this;
     }
 
-    public MRestHandler getUrlMappingHandler(String requestUrl, HttpMethod method) {
-        MRestHandler handler = null;
+    public MRestHandler getUrlMappingHandler(String requestUrl, HttpMethod method) {        MRestHandler handler = null;
         Map<HttpMethod, MRestHandler> handlerMap = urlMappingHandler.get(requestUrl);
         if (handlerMap != null) {
             handler = handlerMap.get(method);
@@ -257,6 +290,19 @@ public class MRestContext {
             }
         }
         return handler;
+    }
+
+    /**
+     * 获取指定url已注册的任意方法映射处理(不区分方法), 用于判定"路径存在但方法不匹配".
+     * @param requestUrl 请求url
+     * @return MRestHandler, 未注册时返回null
+     */
+    public MRestHandler getUrlMappingHandler(String requestUrl) {
+        Map<HttpMethod, MRestHandler> handlerMap = urlMappingHandler.get(requestUrl);
+        if (handlerMap == null || handlerMap.isEmpty()) {
+            return null;
+        }
+        return handlerMap.values().iterator().next();
     }
 
     public <R> MRestContext get(String url, Supplier<R> handler) {
@@ -411,7 +457,21 @@ public class MRestContext {
     /**
      * filter映射处理.
      */
-    private final Map<String, List<MRestFilter>> filterMap = new HashMap<>();
+    private final Map<String, List<MRestFilter>> filterMap = new LinkedHashMap<>();
+    /**
+     * filter urlPattern预编译正则.
+     */
+    private final Map<String, Pattern> filterPatternMap = new HashMap<>();
+    /**
+     * servlet路由匹配结果缓存(有界LRU, 仅缓存不含占位符的匹配结果).
+     */
+    private final int servletMatchCacheMaxSize = 4096;
+    private final Map<String, MRestServlet> servletMatchCache = Collections.synchronizedMap(new LinkedHashMap<String, MRestServlet>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, MRestServlet> eldest) {
+            return size() > servletMatchCacheMaxSize;
+        }
+    });
     /**
      * 请求分发处理.
      */
@@ -427,11 +487,11 @@ public class MRestContext {
     /**
      * 配置的静态资源classpath扫描路径, 按照配置的先后顺序进行扫描, classpath静态资源扫描顺序高于磁盘静态资源.
      */
-    private final Map<String, List<String>> classpathResources = new HashMap<>();
+    private final Map<String, List<String>> classpathResources = new LinkedHashMap<>();
     /**
      * 配置的静态资源磁盘扫描路径, 按照配置的先后顺序进行扫描.
      */
-    private final Map<String, List<String>> diskpathResources = new HashMap<>();
+    private final Map<String, List<String>> diskpathResources = new LinkedHashMap<>();
     /**
      * 添加servlet的任务(在服务启动时统一添加).
      */
@@ -442,7 +502,14 @@ public class MRestContext {
     private final List<VoidFunc> filterTaskList = new ArrayList<>();
 
     public MRestServlet getServlet(String requestUrl) {
+        // 命中缓存直接返回(仅缓存不含占位符的匹配结果, 占位符需每请求写入placeholder).
+        MRestServlet cachedServlet = servletMatchCache.get(requestUrl);
+        if (cachedServlet != null) {
+            return cachedServlet;
+        }
         List<UrlMappingServlet> mappingServletList = new ArrayList<>();
+        // 是否存在带占位符的精确匹配(存在则不缓存, 以保证placeholder写入语义)
+        AtomicBoolean anyPlaceholderMatched = new AtomicBoolean(false);
         // 扩展名匹配
         AtomicReference<UrlMappingServlet> extRef = new AtomicReference<>();
         // 路径匹配
@@ -452,7 +519,7 @@ public class MRestContext {
         // 精确匹配 - 不带占位符
         AtomicReference<UrlMappingServlet> strictlyRef1 = new AtomicReference<>();
         servletMap.forEach((_up, urlMappingServlet) -> {
-            UrlMatchModel urlMatchModel = new UrlMatchModel(requestUrl, _up);
+            UrlMatchModel urlMatchModel = new UrlMatchModel(requestUrl, _up, urlMappingServlet.getUrlPatternModel());
             if (urlMatchModel.isMatched()) {
                 if (urlMatchModel.isPatternExt()) {
                     if (extRef.get() != null) {
@@ -478,6 +545,7 @@ public class MRestContext {
                                             , getContextDesc(), requestUrl, strictlyRef0.get().getUrlPatternModel().getUrlPattern(), urlMatchModel.getUrlPattern()));
                         }
                         SharedObjects.getServerThreadModel().getRestRequest().addPlaceholderKv(urlMatchModel.getPlaceholderMap());
+                        anyPlaceholderMatched.set(true);
                         strictlyRef0.set(urlMappingServlet);
                     } else {
                         if (strictlyRef1.get() != null) {
@@ -524,6 +592,10 @@ public class MRestContext {
             return null;
         }
         MRestServlet servlet = mappingServletList.get(0).getRestServlet();
+        // 不含占位符的匹配结果可缓存, 避免每请求全量线性扫描.
+        if (!anyPlaceholderMatched.get()) {
+            servletMatchCache.put(requestUrl, servlet);
+        }
         if (logger.isDebugEnabled()) {
             logger.debug("{} found url servlet: [{}] -> [{}]", getContextDesc(), requestUrl, servlet.servletName());
         }
@@ -579,8 +651,8 @@ public class MRestContext {
     public MRestFilterChain getFilterChain(String requestUrl) {
         Set<MRestFilter> filterSet = new HashSet<>();
         filterMap.forEach((urlPattern, filterList) -> {
-            String pattern = "^" + urlPattern.replace("*", "(\\S|\\s)*") + "$";
-            if (requestUrl.matches(pattern)) {
+            Pattern pattern = filterPatternMap.get(urlPattern);
+            if (pattern != null && pattern.matcher(requestUrl).matches()) {
                 filterSet.addAll(filterList);
             }
         });
@@ -589,7 +661,7 @@ public class MRestContext {
         filterList.sort((filter0, filter1) -> {
             int order0 = filter0.order();
             int order1 = filter1.order();
-            return order0 - order1;
+            return Integer.compare(order0, order1);
         });
         MRestServlet servlet = getServlet(requestUrl);
         // servlet包装为filter执行
@@ -621,6 +693,25 @@ public class MRestContext {
             filterChain.doFilter(request, response);
         });
         return new MRestFilterChainOfDefault(this, filterList.toArray(new MRestFilter[0]));
+    }
+
+    /**
+     * 将filter的urlPattern转换为锚定正则: '*'通配任意字符, 其余字符按字面量转义(避免正则注入与灾难性回溯).
+     */
+    static String filterPatternToRegex(String urlPattern) {
+        StringBuilder builder = new StringBuilder("^");
+        for (int i = 0; i < urlPattern.length(); i++) {
+            char c = urlPattern.charAt(i);
+            if (c == '*') {
+                builder.append(".*");
+            } else {
+                if ("\\.^$|?+()[]{}".indexOf(c) >= 0) {
+                    builder.append('\\');
+                }
+                builder.append(c);
+            }
+        }
+        return builder.append('$').toString();
     }
 
     /**
@@ -671,6 +762,7 @@ public class MRestContext {
             }
             for (String urlPattern: urlPatterns) {
                 filterMap.computeIfAbsent(urlPattern, k -> new ArrayList<>()).add(restFilter);
+                filterPatternMap.computeIfAbsent(urlPattern, k -> Pattern.compile(filterPatternToRegex(k)));
                 logger.info("{} register filter: {} -> {}", getContextDesc(), urlPattern, filter.filterName());
             }
         });

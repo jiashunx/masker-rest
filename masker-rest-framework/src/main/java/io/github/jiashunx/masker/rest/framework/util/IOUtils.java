@@ -196,7 +196,7 @@ public final class IOUtils {
                 diskFileResource.setFilePath(filePath);
                 diskFileResource.setAbsoluteFilePath(new File(filePath).getAbsolutePath());
                 diskFileResource.setBytes(bytes);
-                diskFileResource.setContentType(new MimetypesFileTypeMap().getContentType(filePath));
+                diskFileResource.setContentType(MimetypeUtils.getMimetypeContentType(filePath));
             }
         } catch (Throwable e) {
             diskFileResource = null;
@@ -404,9 +404,9 @@ public final class IOUtils {
 
     public static void copy(InputStream inputStream, OutputStream outputStream, boolean autoClose) throws IOException {
         try {
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[8192];
             int readSize = 0;
-            while ((readSize = inputStream.read(buffer)) >= 0) {
+            while ((readSize = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, readSize);
             }
         } finally {

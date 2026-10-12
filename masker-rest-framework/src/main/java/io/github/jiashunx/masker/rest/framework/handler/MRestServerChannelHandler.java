@@ -2,6 +2,7 @@ package io.github.jiashunx.masker.rest.framework.handler;
 
 import io.github.jiashunx.masker.rest.framework.*;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
+import io.github.jiashunx.masker.rest.framework.exception.MRestFileUploadException;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.model.ExceptionCallbackVo;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
@@ -10,6 +11,7 @@ import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.global.SharedObjects;
 import io.github.jiashunx.masker.rest.framework.util.MimetypeUtils;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
+import io.github.jiashunx.masker.rest.framework.util.UrlUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -19,6 +21,7 @@ import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.handler.codec.http.websocketx.*;
+import io.netty.handler.timeout.IdleStateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,11 +89,22 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        // 连接异常断开(非CloseWebSocketFrame)时, 确保触发inactive回调并清理handshake记录.
+        String channelId = ctx.channel().id().toString();
+        MWebsocketRequest websocketRequest = webSocketServerHandshakerMap.remove(channelId);
+        if (websocketRequest != null) {
+            fireInactiveCallback(ctx, websocketRequest);
+        }
         super.channelInactive(ctx);
     }
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            // 连接空闲超时, 关闭连接.
+            ctx.close();
+            return;
+        }
         super.userEventTriggered(ctx, evt);
     }
 
@@ -113,14 +127,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         MWebsocketResponse websocketResponse = new MWebsocketResponse(ctx, websocketContext);
         if (object instanceof CloseWebSocketFrame) {
             webSocketServerHandshakerMap.remove(channelId);
-            MRestUtils.tryCatch(() -> {
-                BiConsumer<MWebsocketRequest, MWebsocketResponse> inactiveCallback = websocketRequest.getWebsocketContext().getInactiveCallback();
-                if (inactiveCallback != null) {
-                    inactiveCallback.accept(websocketRequest, websocketResponse);
-                }
-            }, throwable -> {
-                logger.error("{} inactive callback execute failed", websocketContext.getWebSocketContextDesc(), throwable);
-            });
+            fireInactiveCallback(ctx, websocketRequest);
             websocketRequest.getHandshaker().close(ctx.channel(), (CloseWebSocketFrame) object.retain());
             // ctx.channel().close();
             return;
@@ -152,28 +159,38 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
     /************************************************** WebSocket *************************************************/
 
+    private void fireInactiveCallback(ChannelHandlerContext ctx, MWebsocketRequest websocketRequest) {
+        MWebsocketContext websocketContext = websocketRequest.getWebsocketContext();
+        MWebsocketResponse websocketResponse = new MWebsocketResponse(ctx, websocketContext);
+        MRestUtils.tryCatch(() -> {
+            BiConsumer<MWebsocketRequest, MWebsocketResponse> inactiveCallback = websocketContext.getInactiveCallback();
+            if (inactiveCallback != null) {
+                inactiveCallback.accept(websocketRequest, websocketResponse);
+            }
+        }, throwable -> {
+            logger.error("{} inactive callback execute failed", websocketContext.getWebSocketContextDesc(), throwable);
+        });
+    }
+
     private final Map<String, MWebsocketRequest> webSocketServerHandshakerMap = new ConcurrentHashMap<>();
-    private final Map<String, WebSocketServerHandshakerFactory> handshakerFactoryMap = new HashMap<>();
+    private final Map<String, WebSocketServerHandshakerFactory> handshakerFactoryMap = new ConcurrentHashMap<>();
 
     public WebSocketServerHandshakerFactory getWebSocketServerHandshakerFactory(String webSocketURL) {
-        WebSocketServerHandshakerFactory handshakerFactory = handshakerFactoryMap.get(webSocketURL);
-        if (handshakerFactory == null) {
-            synchronized (this) {
-                handshakerFactory = handshakerFactoryMap.get(webSocketURL);
-                if (handshakerFactory == null) {
-                    final WebSocketServerHandshakerFactory $handshakerFactory = new WebSocketServerHandshakerFactory(webSocketURL, null, false);
-                    handshakerFactoryMap.put(webSocketURL, $handshakerFactory);
-                    handshakerFactory = $handshakerFactory;
-                }
-            }
-        }
-        return handshakerFactory;
+        return handshakerFactoryMap.computeIfAbsent(webSocketURL, url -> new WebSocketServerHandshakerFactory(url, null, false));
     }
 
     /************************************************** HTTP  ****************************************************/
 
     private void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest object) throws Exception {
-        MRestRequest restRequest = parseHttpRequest(ctx, object);
+        MRestRequest restRequest;
+        try {
+            restRequest = parseHttpRequest(ctx, object);
+        } catch (Throwable throwable) {
+            // 请求解析失败(如畸形multipart)时返回400, 避免直接断开连接.
+            logger.error("{} parse http request failed", restServer.getServerDesc(), throwable);
+            MResponseHelper.write(ctx, HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
 
         // 处理websocket连接请求.
         if (Constants.UPGRADE_WEBSOCKET.equals(restRequest.getHeader(Constants.HTTP_HEADER_UPGRADE))) {
@@ -232,18 +249,20 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         try {
             MRestFilterChain filterChain = restContext.getFilterChain(requestUrl);
             filterChain.doFilter(restRequest, restResponse);
-            restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_NAME, MRestUtils.getFrameworkName());
-            restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_VERSION, MRestUtils.getFrameworkVersion());
-            restResponse.setHeader(Constants.HTTP_HEADER_SERVER_STARTUP_TIME, restResponse.getRestServer().getStartupTime());
-            restResponse.setHeader(Constants.HTTP_HEADER_SERVER_IDENTIFIER, restResponse.getRestServer().getIdentifier());
-            restResponse.setCookie(Constants.HTTP_HEADER_SERVER_IDENTIFIER, restResponse.getRestServer().getIdentifier());
+            if (restResponse.getRestServer().isFingerprintHeadersEnabled()) {
+                restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_NAME, MRestUtils.getFrameworkName());
+                restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_VERSION, MRestUtils.getFrameworkVersion());
+                restResponse.setHeader(Constants.HTTP_HEADER_SERVER_STARTUP_TIME, restResponse.getRestServer().getStartupTime());
+                restResponse.setHeader(Constants.HTTP_HEADER_SERVER_IDENTIFIER, restResponse.getRestServer().getIdentifier());
+                restResponse.setCookie(Constants.HTTP_HEADER_SERVER_IDENTIFIER, restResponse.getRestServer().getIdentifier());
+            }
             if (restResponse.getRestServer().isConnectionKeepAlive()) {
                 restResponse.setHeader(Constants.HTTP_HEADER_CONNECTION, Constants.CONNECTION_KEEP_ALIVE);
             }
             // Content-Type修正
             String acceptContentType = restRequest.getAcceptFirst();
             List<Object> contentTypes = restResponse.getHeaderAll(Constants.HTTP_HEADER_CONTENT_TYPE);
-            if (StringUtils.isNotEmpty(acceptContentType) && (Objects.isNull(contentTypes) || contentTypes.contains(MimetypeUtils.DEFAULT_CONTENT_TYPE_VALUE))) {
+            if (StringUtils.isNotEmpty(acceptContentType) && (contentTypes.isEmpty() || contentTypes.contains(MimetypeUtils.DEFAULT_CONTENT_TYPE_VALUE))) {
                 restResponse.setHeader(Constants.HTTP_HEADER_CONTENT_TYPE, acceptContentType);
             }
             restResponse.flush();
@@ -272,19 +291,25 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         restRequest.setProtocolName(httpRequest.protocolVersion().protocolName());
         restRequest.setProtocolVersion(httpRequest.protocolVersion().text());
         QueryStringDecoder queryStringDecoder = new QueryStringDecoder(httpRequest.uri(), StandardCharsets.UTF_8, true);
-        String originUrl = queryStringDecoder.path();
+        String originUrl = queryStringDecoder.toString();
         if (StringUtils.isEmpty(originUrl)) {
             originUrl = Constants.ROOT_PATH;
         }
         restRequest.setOriginUrl(originUrl);
 
-        // 根据url和已配置的context-path来解析出实际context-path
+        // 请求路径(已解码, 不含query string), 用于context匹配与路由.
+        String requestPath = queryStringDecoder.path();
+        if (StringUtils.isEmpty(requestPath)) {
+            requestPath = Constants.ROOT_PATH;
+        }
+
+        // 根据url和已配置的context-path来解析出实际context-path(最长前缀匹配, 且需满足路径边界)
         String _ctxPath = Constants.DEFAULT_CONTEXT_PATH;
         for (String context: restServer.getContextList()) {
             if (context.equals(Constants.DEFAULT_CONTEXT_PATH)) {
                 continue;
             }
-            if (originUrl.startsWith(context)) {
+            if (context.length() > _ctxPath.length() && UrlUtils.isPathPrefixMatch(requestPath, context)) {
                 _ctxPath = context;
             }
         }
@@ -294,12 +319,12 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         }
         restRequest.setRestContext(restContext);
 
-        // 获取context-path及实际url路径
+        // 获取context-path及实际url路径(从已解码的请求路径中去除context-path, 避免带入query string)
         String contextPath = restContext.getContextPath();
         restRequest.setContextPath(contextPath);
-        String url = originUrl;
+        String url = requestPath;
         if (!contextPath.equals(Constants.DEFAULT_CONTEXT_PATH)) {
-            url = originUrl.substring(contextPath.length());
+            url = requestPath.substring(contextPath.length());
         }
         // 请求路径为context-path, 形如: /context-path -> 应等价于 -> /context-path/
         if (StringUtils.isEmpty(url)) {
@@ -314,17 +339,26 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             MRestFileUploadRequest fileUploadRequest = new MRestFileUploadRequest(restRequest);
             //decode multipart data, request为FullHttpRequest类型
             HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(httpRequest);
-            while (decoder.hasNext()) {
-                InterfaceHttpData httpData = decoder.next();
-                if (httpData instanceof Attribute) {
-                    Attribute attribute = (Attribute) httpData;
-                    fileUploadRequest.addAttribute(attribute);
-                } else if (httpData instanceof FileUpload) {
-                    FileUpload fileUpload = (FileUpload) httpData;
-                    fileUploadRequest.addFileUploadObj(fileUpload);
+            try {
+                int fileUploadCount = 0;
+                int maxFileCount = restServer.getMultipartMaxFileCount();
+                while (decoder.hasNext()) {
+                    InterfaceHttpData httpData = decoder.next();
+                    if (httpData instanceof Attribute) {
+                        Attribute attribute = (Attribute) httpData;
+                        fileUploadRequest.addAttribute(attribute);
+                    } else if (httpData instanceof FileUpload) {
+                        if (++fileUploadCount > maxFileCount) {
+                            throw new MRestFileUploadException("multipart file count exceeds limit: " + maxFileCount);
+                        }
+                        FileUpload fileUpload = (FileUpload) httpData;
+                        fileUploadRequest.addFileUploadObj(fileUpload);
+                    }
                 }
+            } finally {
+                // 确保解码器释放, 避免异常路径下临时文件/缓冲泄漏.
+                decoder.destroy();
             }
-            decoder.destroy();
             // HttpPostMultipartRequestDecoder decoder = new HttpPostMultipartRequestDecoder(httpRequest);
             // List<InterfaceHttpData> httpDataList = decoder.getBodyHttpDatas();
             // for (InterfaceHttpData httpData : httpDataList) {
@@ -362,24 +396,31 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             parameters.put(key, mergedVal);
         });
         String contentType = httpRequest.headers().get(Constants.HTTP_HEADER_CONTENT_TYPE);
-        if (Constants.CONTENT_TYPE_X_WWW_FORM_URLENCODED.equals(contentType)) {
+        if (isFormUrlEncoded(contentType)) {
             String content = new String(restRequest.getBodyBytes(), StandardCharsets.UTF_8);
             if (StringUtils.isNotEmpty(content)) {
-                String[] kvArr = new String(restRequest.getBodyBytes(), StandardCharsets.UTF_8).split("&");
-                for (String kv: kvArr) {
-                    int i = kv.indexOf("=");
-                    String k = kv;
-                    String v = "";
-                    if (i >= 0 && i < kv.length() - 1) {
-                        k = kv.substring(0, i);
-                        v = kv.substring(i + 1);
+                // 使用QueryStringDecoder解析表单体, 正确处理百分号编码、"+"以及空值.
+                QueryStringDecoder bodyDecoder = new QueryStringDecoder(content, StandardCharsets.UTF_8, false);
+                bodyDecoder.parameters().forEach((key, valueList) -> {
+                    String mergedVal = "";
+                    if (valueList != null && !valueList.isEmpty()) {
+                        mergedVal = valueList.get(valueList.size() - 1);
                     }
-                    parameters.put(k, v);
-                }
+                    parameters.put(key, mergedVal);
+                });
             }
         }
         restRequest.setParameters(parameters);
         return restRequest;
+    }
+
+    private static boolean isFormUrlEncoded(String contentType) {
+        if (contentType == null) {
+            return false;
+        }
+        int idx = contentType.indexOf(';');
+        String baseContentType = (idx >= 0 ? contentType.substring(0, idx) : contentType).trim();
+        return Constants.CONTENT_TYPE_X_WWW_FORM_URLENCODED.equalsIgnoreCase(baseContentType);
     }
 
     private Exception handleException(ChannelHandlerContext ctx, MRestRequest request

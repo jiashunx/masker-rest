@@ -28,12 +28,17 @@ import java.util.function.Consumer;
  */
 public class MRestResponse {
 
+    /**
+     * forward最大递归深度.
+     */
+    private static final int MAX_FORWARD_DEPTH = 10;
+
     private final ChannelHandlerContext $channelHandlerContext;
     private MRestServer restServer;
     private final MRestContext restContext;
     private final MRestHeaders $headers = new MRestHeaders();
     private volatile FlushTask flushTask = null;
-    private boolean $flushed = false;
+    private volatile boolean $flushed = false;
 
     /**
      * 响应对象属性信息.
@@ -72,6 +77,21 @@ public class MRestResponse {
     }
 
     public MRestResponse forward(String targetURL, MRestRequest request) {
+        // 防止forward无限递归.
+        String depthKey = "mrest.forward.depth";
+        int depth = 0;
+        Object depthObj = request.getAttribute(depthKey);
+        if (depthObj != null) {
+            try {
+                depth = Integer.parseInt(String.valueOf(depthObj));
+            } catch (NumberFormatException ignore) {
+                // ignore.
+            }
+        }
+        if (depth >= MAX_FORWARD_DEPTH) {
+            throw new MRestServerException("forward depth exceeds limit: " + MAX_FORWARD_DEPTH);
+        }
+        request.setAttribute(depthKey, String.valueOf(depth + 1));
         request.setUrl(targetURL);
         MRestFilterChain filterChain = getRestContext().getFilterChain(targetURL);
         filterChain.doFilter(request, this);
@@ -88,42 +108,6 @@ public class MRestResponse {
 
     public MRestResponse write(HttpResponseStatus status, MRestHeaders headers) {
         return write(status, null, headers);
-    }
-
-    public MRestResponse writeJSON(byte[] bytes) {
-        return writeJSON(bytes, new HashMap<>());
-    }
-
-    public MRestResponse writeJSON(byte[] bytes, Map<String, Object> headers) {
-        return writeJSON(bytes, new MRestHeaders(headers));
-    }
-
-    public MRestResponse writeJSON(byte[] bytes, MRestHeaders headers) {
-        return write(bytes, new MRestHeaders(headers).add(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_APPLICATION_JSON));
-    }
-
-    public MRestResponse writeString(String string) {
-        return writeString(string, new HashMap<>());
-    }
-
-    public MRestResponse writeString(String string, Map<String, Object> headers) {
-        return writeString(string, new MRestHeaders(headers));
-    }
-
-    public MRestResponse writeString(String string, MRestHeaders headers) {
-        return write(string.getBytes(StandardCharsets.UTF_8), headers);
-    }
-
-    public MRestResponse write(Object object) {
-        return write(object, new HashMap<>());
-    }
-
-    public MRestResponse write(Object object, Map<String, Object> headers) {
-        return write(object, new MRestHeaders(headers));
-    }
-
-    public MRestResponse write(Object object, MRestHeaders headers) {
-        return write(MRestSerializer.jsonSerialize(object), headers);
     }
 
     public MRestResponse write(byte[] bytes) {
@@ -155,8 +139,88 @@ public class MRestResponse {
         return this;
     }
 
+    public MRestResponse writeString(String text) {
+        return writeString(text, new HashMap<>());
+    }
+
+    public MRestResponse writeString(String text, Map<String, Object> headers) {
+        return writeString(text, new MRestHeaders(headers));
+    }
+
+    public MRestResponse writeString(String text, MRestHeaders headers) {
+        return writeString(HttpResponseStatus.OK, text, headers);
+    }
+
+    public MRestResponse writeString(HttpResponseStatus status, String text) {
+        return writeString(status, text, new HashMap<>());
+    }
+
+    public MRestResponse writeString(HttpResponseStatus status, String text, Map<String, Object> headers) {
+        return writeString(status, text, new MRestHeaders(headers));
+    }
+
+    public MRestResponse writeString(HttpResponseStatus status, String text, MRestHeaders headers) {
+        return write(status, text.getBytes(StandardCharsets.UTF_8), headers);
+    }
+
+    public MRestResponse writeJSON(byte[] bytes) {
+        return writeJSON(bytes, new HashMap<>());
+    }
+
+    public MRestResponse writeJSON(byte[] bytes, Map<String, Object> headers) {
+        return writeJSON(bytes, new MRestHeaders(headers));
+    }
+
+    public MRestResponse writeJSON(byte[] bytes, MRestHeaders headers) {
+        return writeJSON(HttpResponseStatus.OK, bytes, headers);
+    }
+
+    public MRestResponse writeJSON(HttpResponseStatus status, byte[] bytes) {
+        return writeJSON(status, bytes, new HashMap<>());
+    }
+
+    public MRestResponse writeJSON(HttpResponseStatus status, byte[] bytes, Map<String, Object> headers) {
+        return writeJSON(status, bytes, new MRestHeaders(headers));
+    }
+
+    public MRestResponse writeJSON(HttpResponseStatus status, byte[] bytes, MRestHeaders headers) {
+        return write(status, bytes, new MRestHeaders(headers).add(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_APPLICATION_JSON));
+    }
+
+    public MRestResponse writeJSON(Object object) {
+        return writeJSON(object, new HashMap<>());
+    }
+
+    public MRestResponse writeJSON(Object object, Map<String, Object> headers) {
+        return writeJSON(object, new MRestHeaders(headers));
+    }
+
+    public MRestResponse writeJSON(Object object, MRestHeaders headers) {
+        return writeJSON(HttpResponseStatus.OK, object, headers);
+    }
+
+    public MRestResponse writeJSON(HttpResponseStatus status, Object object) {
+        return writeJSON(status, object, new HashMap<>());
+    }
+
+    public MRestResponse writeJSON(HttpResponseStatus status, Object object, Map<String, Object> headers) {
+        return writeJSON(status, object, new MRestHeaders(headers));
+    }
+
+    public MRestResponse writeJSON(HttpResponseStatus status, Object object, MRestHeaders headers) {
+        return writeJSON(status, MRestSerializer.jsonSerialize(object), headers);
+    }
+
     public MRestResponse writeStatusPageAsHtml(HttpResponseStatus status) {
-        return writeStatusPage(status, MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_TEXT_HTML));
+        return writeStatusPageAsHtml(status, new HashMap<>());
+    }
+
+    public MRestResponse writeStatusPageAsHtml(HttpResponseStatus status, Map<String, Object> headers) {
+        return writeStatusPageAsHtml(status, new MRestHeaders(headers));
+    }
+
+    public MRestResponse writeStatusPageAsHtml(HttpResponseStatus status, MRestHeaders headers) {
+        return writeStatusPage(status, new MRestHeaders(headers).add(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_TEXT_HTML));
     }
 
     public MRestResponse writeStatusPage(HttpResponseStatus status) {
@@ -171,44 +235,75 @@ public class MRestResponse {
         return write(status, MResponseHelper.getStatusPageBytes(status), headers);
     }
 
-    public MRestResponse write(HttpResponseStatus status, Object object) {
-        return write(status, object, new HashMap<>());
+    public MRestResponse writeFile(File downloadedFile) {
+        return writeFile(downloadedFile, new HashMap<>());
     }
 
-    public MRestResponse write(HttpResponseStatus status, Object object, Map<String, Object> headers) {
-        return write(status, object, new MRestHeaders(headers));
+    /**
+     * 以静态资源方式流式输出文件(不设置Content-Disposition).
+     * @param file 文件
+     * @param contentType Content-Type
+     * @return MRestResponse
+     */
+    public MRestResponse writeStaticFile(File file, String contentType) {
+        return writeStaticFile(file, new MRestHeaders(MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, contentType)));
     }
 
-    public MRestResponse write(HttpResponseStatus status, Object object, MRestHeaders headers) {
-        return write(status, MRestSerializer.jsonSerialize(object), headers);
-    }
-
-    public MRestResponse write(File downloadedFile) {
-        return write(downloadedFile, new HashMap<>());
-    }
-
-    public MRestResponse write(File downloadedFile, Consumer<File> callback) {
-        return write(downloadedFile, new HashMap<>(), callback);
-    }
-
-    public MRestResponse write(File downloadedFile, Map<String, Object> headers) {
-        return write(downloadedFile, new MRestHeaders(headers));
-    }
-
-    public MRestResponse write(File downloadedFile, Map<String, Object> headers, Consumer<File> callback) {
-        return write(downloadedFile, new MRestHeaders(headers), callback);
-    }
-
-    public MRestResponse write(File downloadedFile, MRestHeaders headers) {
-        return write(downloadedFile, headers, null);
-    }
-
-    public synchronized MRestResponse write(File downloadedFile, MRestHeaders headers, Consumer<File> callback) {
+    public synchronized MRestResponse writeStaticFile(File file, MRestHeaders headers) {
         if (isWriteMethodInvoked()) {
             throw new MRestServerException("write method has already been invoked.");
         }
-        flushTask = new FlushTask(downloadedFile, headers, callback);
+        flushTask = new FlushTask(HttpResponseStatus.OK, file, headers, null, false);
         setAttr("status", HttpResponseStatus.OK);
+        return this;
+    }
+
+    public MRestResponse writeFile(File downloadedFile, Consumer<File> callback) {
+        return writeFile(downloadedFile, new HashMap<>(), callback);
+    }
+
+    public MRestResponse writeFile(File downloadedFile, Map<String, Object> headers) {
+        return writeFile(downloadedFile, new MRestHeaders(headers));
+    }
+
+    public MRestResponse writeFile(File downloadedFile, Map<String, Object> headers, Consumer<File> callback) {
+        return writeFile(downloadedFile, new MRestHeaders(headers), callback);
+    }
+
+    public MRestResponse writeFile(File downloadedFile, MRestHeaders headers) {
+        return writeFile(downloadedFile, headers, null);
+    }
+
+    public MRestResponse writeFile(File downloadedFile, MRestHeaders headers, Consumer<File> callback) {
+        return writeFile(HttpResponseStatus.OK, downloadedFile, headers, callback);
+    }
+
+    public MRestResponse writeFile(HttpResponseStatus status, File downloadedFile) {
+        return writeFile(status, downloadedFile, new HashMap<>());
+    }
+
+    public MRestResponse writeFile(HttpResponseStatus status, File downloadedFile, Consumer<File> callback) {
+        return writeFile(status, downloadedFile, new HashMap<>(), callback);
+    }
+
+    public MRestResponse writeFile(HttpResponseStatus status, File downloadedFile, Map<String, Object> headers) {
+        return writeFile(status, downloadedFile, new MRestHeaders(headers));
+    }
+
+    public MRestResponse writeFile(HttpResponseStatus status, File downloadedFile, Map<String, Object> headers, Consumer<File> callback) {
+        return writeFile(status, downloadedFile, new MRestHeaders(headers), callback);
+    }
+
+    public MRestResponse writeFile(HttpResponseStatus status, File downloadedFile, MRestHeaders headers) {
+        return writeFile(status, downloadedFile, headers, null);
+    }
+
+    public synchronized MRestResponse writeFile(HttpResponseStatus status, File downloadedFile, MRestHeaders headers, Consumer<File> callback) {
+        if (isWriteMethodInvoked()) {
+            throw new MRestServerException("write method has already been invoked.");
+        }
+        flushTask = new FlushTask(status, downloadedFile, headers, callback);
+        setAttr("status", status);
         return this;
     }
 
@@ -225,13 +320,21 @@ public class MRestResponse {
         return this;
     }
 
+    /**
+     * 设置响应头, 单值语义: 同key已存在的值会被替换, 不会产生重复header.
+     */
     public MRestResponse setHeader(String key, Object value) {
-        this.$headers.add(key, value);
+        this.$headers.set(key, value);
         return this;
     }
 
+    /**
+     * 设置响应头, 单值语义: 同key已存在的值会被替换, 不会产生重复header.
+     */
     public MRestResponse setHeader(Map<String, Object> headers) {
-        this.$headers.add(headers);
+        if (headers != null) {
+            headers.forEach((key, value) -> this.$headers.set(key, value));
+        }
         return this;
     }
 
@@ -284,7 +387,9 @@ public class MRestResponse {
      * @param cookie io.netty.handler.codec.http.cookie.DefaultCookie.
      */
     public MRestResponse setCookie(Cookie cookie) {
-        return setHeader(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+        // Set-Cookie为多值header, 使用追加语义.
+        this.$headers.add(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+        return this;
     }
 
     public synchronized MRestResponse flush() {
@@ -306,24 +411,34 @@ public class MRestResponse {
         MRestHeaders headers;
         File downloadedFile;
         boolean isDownloadFile = false;
+        boolean attachment = true;
         Consumer<File> downloadCallback;
         FlushTask(HttpResponseStatus status, byte[] bytes, MRestHeaders headers) {
             this.status = Objects.requireNonNull(status);
             this.bytes = bytes;
             this.headers = headers == null ? new MRestHeaders() : headers;
         }
-        FlushTask(File downloadedFile, MRestHeaders headers, Consumer<File> downloadCallback) {
+        FlushTask(HttpResponseStatus status, File downloadedFile, MRestHeaders headers, Consumer<File> downloadCallback) {
+            this(status, downloadedFile, headers, downloadCallback, true);
+        }
+        FlushTask(HttpResponseStatus status, File downloadedFile, MRestHeaders headers, Consumer<File> downloadCallback, boolean attachment) {
+            this.status = Objects.requireNonNull(status);
             this.isDownloadFile = true;
             this.downloadedFile = Objects.requireNonNull(downloadedFile);
             this.headers = headers == null ? new MRestHeaders() : headers;
             this.downloadCallback = downloadCallback;
+            this.attachment = attachment;
         }
         void execute() {
             try {
                 MRestHeaders headers = $headers.copy();
-                headers.addAll(this.headers);
+                headers.merge(this.headers);
                 if (isDownloadFile) {
-                    MResponseHelper.write($channelHandlerContext, downloadedFile, headers, downloadCallback);
+                    if (attachment) {
+                        MResponseHelper.write($channelHandlerContext, status, downloadedFile, headers, downloadCallback);
+                    } else {
+                        MResponseHelper.writeStaticFile($channelHandlerContext, status, downloadedFile, headers, downloadCallback);
+                    }
                 } else {
                     MResponseHelper.write($channelHandlerContext, status, bytes, headers);
                 }

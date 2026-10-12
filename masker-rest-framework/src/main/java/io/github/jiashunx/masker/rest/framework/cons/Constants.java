@@ -36,6 +36,8 @@ public class Constants {
     public static final String HTTP_HEADER_CONTENT_DISPOSITION = "Content-Disposition";
     public static final String HTTP_HEADER_CONNECTION = "Connection";
     public static final String HTTP_HEADER_LOCATION = "Location";
+    public static final String HTTP_HEADER_ETAG = "ETag";
+    public static final String HTTP_HEADER_IF_NONE_MATCH = "If-None-Match";
     public static final String HTTP_HEADER_COOKIE = "Cookie";
     public static final String HTTP_HEADER_SET_COOKIE = "Set-Cookie";
     public static final String HTTP_HEADER_UPGRADE = "Upgrade";

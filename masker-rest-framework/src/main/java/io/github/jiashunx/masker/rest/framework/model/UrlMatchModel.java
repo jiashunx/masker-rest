@@ -16,9 +16,18 @@ public class UrlMatchModel {
     private final Map<String, String> placeholderMap;
 
     public UrlMatchModel(String url, String urlPattern) {
+        this(url, urlPattern, null);
+    }
+
+    /**
+     * @param url url
+     * @param urlPattern urlPattern
+     * @param urlPatternModel 预计算的UrlPatternModel(可为null, 避免每次请求重复解析pattern)
+     */
+    public UrlMatchModel(String url, String urlPattern, UrlPatternModel urlPatternModel) {
         this.url = UrlParaser.getUrl(url);
         this.urlPattern = UrlParaser.getUrlPattern(urlPattern);
-        this.urlPatternModel = new UrlPatternModel(this.urlPattern);
+        this.urlPatternModel = urlPatternModel != null ? urlPatternModel : new UrlPatternModel(this.urlPattern);
         this.matched = UrlParaser.isUrlMatchUrlPattern(this.url, this.urlPattern);
         this.placeholderMap = UrlParaser.getUrlPlaceholderMap(this.url, this.urlPattern);
     }

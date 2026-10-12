@@ -6,6 +6,7 @@ package io.github.jiashunx.masker.rest.framework.type;
 public enum  MRestNettyThreadType {
 
     BOSS,
-    WORKER;
+    WORKER,
+    BUSINESS;
 
 }
