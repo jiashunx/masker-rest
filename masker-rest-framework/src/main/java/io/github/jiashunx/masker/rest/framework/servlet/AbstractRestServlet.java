@@ -17,6 +17,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author jiashunx
@@ -95,9 +96,14 @@ public abstract class AbstractRestServlet implements MRestServlet {
         initialized = true;
     }
 
-    public final Map<Class<? extends MRestServlet>, MRestServlet> servletHandlerMap = new WeakHashMap<>();
+    /**
+     * servlet处理实例缓存, 键为servlet处理类.
+     * 使用ConcurrentHashMap保证多worker线程并发分发时的线程安全.
+     */
+    private final Map<Class<? extends MRestServlet>, MRestServlet> servletHandlerMap = new ConcurrentHashMap<>();
 
-    public synchronized void init() {
+    public void init() {
+        // 快速路径: 已初始化则直接返回, 避免每次请求都获取锁.
         if (initialized) {
             return;
         }
@@ -105,23 +111,13 @@ public abstract class AbstractRestServlet implements MRestServlet {
     }
 
     private MRestServlet getServletHandlerInstance(Class<? extends MRestServlet> servletHandlerClass) {
-        MRestServlet servletInstance = servletHandlerMap.get(servletHandlerClass);
-        if (servletInstance == null) {
-            synchronized (servletHandlerMap) {
-                final MRestServlet servletInstance0 = servletHandlerMap.get(servletHandlerClass);
-                if (servletInstance0 == null) {
-                    try {
-                        servletInstance = servletHandlerClass.getConstructor(this.getClass()).newInstance(this);
-                    } catch (Throwable throwable) {
-                        throw new MRestHandleException(String.format("create servlet mapping handler instance failed, class: %s", servletHandlerClass.getName()), throwable);
-                    }
-                    servletHandlerMap.put(servletHandlerClass, servletInstance);
-                } else {
-                    servletInstance = servletInstance0;
-                }
+        return servletHandlerMap.computeIfAbsent(servletHandlerClass, klass -> {
+            try {
+                return klass.getConstructor(this.getClass()).newInstance(this);
+            } catch (Throwable throwable) {
+                throw new MRestHandleException(String.format("create servlet mapping handler instance failed, class: %s", klass.getName()), throwable);
             }
-        }
-        return servletInstance;
+        });
     }
 
     public List<String> getMappingUrlList() {
