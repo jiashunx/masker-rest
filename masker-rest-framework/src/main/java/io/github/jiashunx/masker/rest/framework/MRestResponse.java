@@ -239,6 +239,25 @@ public class MRestResponse {
         return writeFile(downloadedFile, new HashMap<>());
     }
 
+    /**
+     * 以静态资源方式流式输出文件(不设置Content-Disposition).
+     * @param file 文件
+     * @param contentType Content-Type
+     * @return MRestResponse
+     */
+    public MRestResponse writeStaticFile(File file, String contentType) {
+        return writeStaticFile(file, new MRestHeaders(MRestHeaderBuilder.Build(Constants.HTTP_HEADER_CONTENT_TYPE, contentType)));
+    }
+
+    public synchronized MRestResponse writeStaticFile(File file, MRestHeaders headers) {
+        if (isWriteMethodInvoked()) {
+            throw new MRestServerException("write method has already been invoked.");
+        }
+        flushTask = new FlushTask(HttpResponseStatus.OK, file, headers, null, false);
+        setAttr("status", HttpResponseStatus.OK);
+        return this;
+    }
+
     public MRestResponse writeFile(File downloadedFile, Consumer<File> callback) {
         return writeFile(downloadedFile, new HashMap<>(), callback);
     }
@@ -392,6 +411,7 @@ public class MRestResponse {
         MRestHeaders headers;
         File downloadedFile;
         boolean isDownloadFile = false;
+        boolean attachment = true;
         Consumer<File> downloadCallback;
         FlushTask(HttpResponseStatus status, byte[] bytes, MRestHeaders headers) {
             this.status = Objects.requireNonNull(status);
@@ -399,18 +419,26 @@ public class MRestResponse {
             this.headers = headers == null ? new MRestHeaders() : headers;
         }
         FlushTask(HttpResponseStatus status, File downloadedFile, MRestHeaders headers, Consumer<File> downloadCallback) {
+            this(status, downloadedFile, headers, downloadCallback, true);
+        }
+        FlushTask(HttpResponseStatus status, File downloadedFile, MRestHeaders headers, Consumer<File> downloadCallback, boolean attachment) {
             this.status = Objects.requireNonNull(status);
             this.isDownloadFile = true;
             this.downloadedFile = Objects.requireNonNull(downloadedFile);
             this.headers = headers == null ? new MRestHeaders() : headers;
             this.downloadCallback = downloadCallback;
+            this.attachment = attachment;
         }
         void execute() {
             try {
                 MRestHeaders headers = $headers.copy();
                 headers.merge(this.headers);
                 if (isDownloadFile) {
-                    MResponseHelper.write($channelHandlerContext, status, downloadedFile, headers, downloadCallback);
+                    if (attachment) {
+                        MResponseHelper.write($channelHandlerContext, status, downloadedFile, headers, downloadCallback);
+                    } else {
+                        MResponseHelper.writeStaticFile($channelHandlerContext, status, downloadedFile, headers, downloadCallback);
+                    }
                 } else {
                     MResponseHelper.write($channelHandlerContext, status, bytes, headers);
                 }

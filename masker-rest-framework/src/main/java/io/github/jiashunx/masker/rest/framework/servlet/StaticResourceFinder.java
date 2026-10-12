@@ -160,12 +160,13 @@ public class StaticResourceFinder {
                 try {
                     // 磁盘文件路径合法性检查: 目标文件必须位于配置根目录之下(canonical 路径 + 路径段比较), 防止 ../ 路径穿越.
                     if (FileUtils.isUnderDirectory(new File(diskpathResourcePath0), new File(diskpathResourcePath))) {
-                        byte[] contentBytes = IOUtils.loadBytesFromDisk(diskpathResourcePath, false);
-                        if (contentBytes != null) {
+                        File diskFile = new File(diskpathResourcePath);
+                        if (diskFile.isFile()) {
                             if (logger.isDebugEnabled()) {
                                 logger.debug("{} locate diskpath resource: [{}] -> [{}]", restContext.getContextDesc(), requestUrl, diskpathResourcePath);
                             }
-                            return new StaticResource(StaticResourceType.DISK_FILE, diskpathResourcePath, requestUrl, contentBytes);
+                            // 磁盘文件仅记录文件路径, 由静态资源Servlet流式输出, 避免整体读入堆内存.
+                            return new StaticResource(StaticResourceType.DISK_FILE, diskpathResourcePath, requestUrl, new byte[0]);
                         }
                     }
                 } catch (Throwable throwable) {

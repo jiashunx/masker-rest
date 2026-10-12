@@ -163,6 +163,17 @@ public class MResponseHelper {
     }
 
     public static void write(ChannelHandlerContext ctx, HttpResponseStatus status, File downloadedFile, MRestHeaders headers, Consumer<File> callback) {
+        writeFile0(ctx, status, downloadedFile, headers, callback, true);
+    }
+
+    /**
+     * 以静态资源方式流式输出文件(不设置Content-Disposition; 仅当未指定Content-Type时使用octet-stream).
+     */
+    public static void writeStaticFile(ChannelHandlerContext ctx, HttpResponseStatus status, File file, MRestHeaders headers, Consumer<File> callback) {
+        writeFile0(ctx, status, file, headers, callback, false);
+    }
+
+    private static void writeFile0(ChannelHandlerContext ctx, HttpResponseStatus status, File downloadedFile, MRestHeaders headers, Consumer<File> callback, boolean attachment) {
         RandomAccessFile randomAccessFile = null;
         try {
             randomAccessFile = new RandomAccessFile(downloadedFile, "r");
@@ -170,8 +181,12 @@ public class MResponseHelper {
             HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, status);
             HttpHeaders httpHeaders = setRespHeaders(response, headers);
             httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_LENGTH).add(Constants.HTTP_HEADER_CONTENT_LENGTH, fileLength);
-            httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_TYPE).add(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_APPLICATION_OCTETSTREAM);
-            httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_DISPOSITION).add(Constants.HTTP_HEADER_CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", escapeContentDispositionFileName(downloadedFile.getName())));
+            if (!containsHeader(headers, Constants.HTTP_HEADER_CONTENT_TYPE)) {
+                httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_TYPE).add(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_APPLICATION_OCTETSTREAM);
+            }
+            if (attachment) {
+                httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_DISPOSITION).add(Constants.HTTP_HEADER_CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", escapeContentDispositionFileName(downloadedFile.getName())));
+            }
             ctx.write(response);
             final RandomAccessFile fileAccess = randomAccessFile;
             ChannelFuture sendFileFuture;
@@ -206,6 +221,10 @@ public class MResponseHelper {
             }
             throw new MRestFileDownloadException(throwable);
         }
+    }
+
+    private static boolean containsHeader(MRestHeaders headers, String key) {
+        return headers != null && !headers.getAll(key).isEmpty();
     }
 
     private static String escapeContentDispositionFileName(String fileName) {
