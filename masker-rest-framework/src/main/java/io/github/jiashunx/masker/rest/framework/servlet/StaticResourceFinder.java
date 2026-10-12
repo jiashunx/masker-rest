@@ -13,10 +13,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -27,9 +27,19 @@ public class StaticResourceFinder {
     private static final Logger logger = LoggerFactory.getLogger(StaticResourceFinder.class);
 
     /**
-     * 静态资源缓存Map(非静态对象)
+     * 静态资源缓存最大条目数, 超出后按LRU淘汰.
      */
-    private final Map<String, StaticResource> StaticResourceMap = new ConcurrentHashMap<>();
+    private final int staticResourceCacheMaxSize = 4096;
+
+    /**
+     * 静态资源缓存Map(非静态对象, 有界LRU, 由读写锁保护)
+     */
+    private final Map<String, StaticResource> StaticResourceMap = new LinkedHashMap<String, StaticResource>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, StaticResource> eldest) {
+            return size() > staticResourceCacheMaxSize;
+        }
+    };
     /**
      * 静态资源缓存Map(读写锁)
      */
@@ -64,7 +74,13 @@ public class StaticResourceFinder {
             }
             return staticResource;
         }
-        StaticResource staticResource = StaticResourceMap.get(requestUrl);
+        StaticResource staticResource;
+        StaticResourceMapReadWriteLock.readLock().lock();
+        try {
+            staticResource = StaticResourceMap.get(requestUrl);
+        } finally {
+            StaticResourceMapReadWriteLock.readLock().unlock();
+        }
         if (staticResource == null) {
             StaticResourceMapReadWriteLock.writeLock().lock();
             try {
@@ -74,7 +90,7 @@ public class StaticResourceFinder {
                     if (staticResource == null) {
                         staticResource = loadResourceFromDiskpath(requestUrl);
                     }
-                    // 仅缓存命中的资源, 不缓存未命中结果, 避免随机URL洪泛导致缓存无界增长.
+                    // 仅缓存命中的资源, 不缓存未命中结果, 避免随机URL洪泛导致缓存无界增长(LRU上限保护).
                     if (staticResource != null) {
                         StaticResourceMap.put(requestUrl, staticResource);
                     }
