@@ -15,6 +15,8 @@ public class MRestServerConfig {
     private boolean connectionKeepAlive;
     private int httpContentMaxMBSize;
     private int multipartMaxFileCount;
+    private int httpIdleTimeoutSeconds;
+    private boolean fingerprintHeadersEnabled;
     private List<String> classpathResources;
 
     public MRestServerConfig() {}
@@ -31,6 +33,8 @@ public class MRestServerConfig {
         this.connectionKeepAlive = other.connectionKeepAlive;
         this.httpContentMaxMBSize = other.httpContentMaxMBSize;
         this.multipartMaxFileCount = other.multipartMaxFileCount;
+        this.httpIdleTimeoutSeconds = other.httpIdleTimeoutSeconds;
+        this.fingerprintHeadersEnabled = other.fingerprintHeadersEnabled;
         this.classpathResources = other.classpathResources == null ? null : new ArrayList<>(other.classpathResources);
     }
 
@@ -88,6 +92,22 @@ public class MRestServerConfig {
 
     public void setMultipartMaxFileCount(int multipartMaxFileCount) {
         this.multipartMaxFileCount = multipartMaxFileCount;
+    }
+
+    public int getHttpIdleTimeoutSeconds() {
+        return httpIdleTimeoutSeconds;
+    }
+
+    public void setHttpIdleTimeoutSeconds(int httpIdleTimeoutSeconds) {
+        this.httpIdleTimeoutSeconds = httpIdleTimeoutSeconds;
+    }
+
+    public boolean isFingerprintHeadersEnabled() {
+        return fingerprintHeadersEnabled;
+    }
+
+    public void setFingerprintHeadersEnabled(boolean fingerprintHeadersEnabled) {
+        this.fingerprintHeadersEnabled = fingerprintHeadersEnabled;
     }
 
     public List<String> getClasspathResources() {

@@ -44,4 +44,14 @@ public class MRestServerTest {
         assertEquals(10, server.getMultipartMaxFileCount());
     }
 
+    @Test
+    public void test_securityConfigDefaults() {
+        MRestServer server = new MRestServer(8082, "sec-server");
+        assertFalse("idle timeout disabled by default", server.getHttpIdleTimeoutSeconds() > 0);
+        assertTrue("fingerprint headers enabled by default", server.isFingerprintHeadersEnabled());
+        server.httpIdleTimeoutSeconds(30).fingerprintHeadersEnabled(false);
+        assertEquals(30, server.getHttpIdleTimeoutSeconds());
+        assertFalse(server.isFingerprintHeadersEnabled());
+    }
+
 }

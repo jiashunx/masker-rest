@@ -6,6 +6,8 @@
   "connectionKeepAlive": false,
   "httpContentMaxMBSize": 50,
   "multipartMaxFileCount": 1000,
+  "httpIdleTimeoutSeconds": 0,
+  "fingerprintHeadersEnabled": true,
   "classpathResources": [
     "META-INF/resources/",
     "resources/",

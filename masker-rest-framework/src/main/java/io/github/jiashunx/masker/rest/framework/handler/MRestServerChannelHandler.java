@@ -21,6 +21,7 @@ import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.handler.codec.http.websocketx.*;
+import io.netty.handler.timeout.IdleStateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,6 +100,11 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            // 连接空闲超时, 关闭连接.
+            ctx.close();
+            return;
+        }
         super.userEventTriggered(ctx, evt);
     }
 
@@ -243,11 +249,13 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         try {
             MRestFilterChain filterChain = restContext.getFilterChain(requestUrl);
             filterChain.doFilter(restRequest, restResponse);
-            restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_NAME, MRestUtils.getFrameworkName());
-            restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_VERSION, MRestUtils.getFrameworkVersion());
-            restResponse.setHeader(Constants.HTTP_HEADER_SERVER_STARTUP_TIME, restResponse.getRestServer().getStartupTime());
-            restResponse.setHeader(Constants.HTTP_HEADER_SERVER_IDENTIFIER, restResponse.getRestServer().getIdentifier());
-            restResponse.setCookie(Constants.HTTP_HEADER_SERVER_IDENTIFIER, restResponse.getRestServer().getIdentifier());
+            if (restResponse.getRestServer().isFingerprintHeadersEnabled()) {
+                restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_NAME, MRestUtils.getFrameworkName());
+                restResponse.setHeader(Constants.HTTP_HEADER_SERVER_FRAMEWORK_VERSION, MRestUtils.getFrameworkVersion());
+                restResponse.setHeader(Constants.HTTP_HEADER_SERVER_STARTUP_TIME, restResponse.getRestServer().getStartupTime());
+                restResponse.setHeader(Constants.HTTP_HEADER_SERVER_IDENTIFIER, restResponse.getRestServer().getIdentifier());
+                restResponse.setCookie(Constants.HTTP_HEADER_SERVER_IDENTIFIER, restResponse.getRestServer().getIdentifier());
+            }
             if (restResponse.getRestServer().isConnectionKeepAlive()) {
                 restResponse.setHeader(Constants.HTTP_HEADER_CONNECTION, Constants.CONNECTION_KEEP_ALIVE);
             }

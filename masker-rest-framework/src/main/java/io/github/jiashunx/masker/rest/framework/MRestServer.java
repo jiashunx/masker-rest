@@ -72,6 +72,14 @@ public class MRestServer {
      * multipart上传文件数量上限
      */
     private int multipartMaxFileCount;
+    /**
+     * http连接空闲超时时间(秒), 0表示不启用.
+     */
+    private int httpIdleTimeoutSeconds;
+    /**
+     * 是否在响应中输出框架指纹信息(名称/版本/启动时间/标识).
+     */
+    private boolean fingerprintHeadersEnabled;
 
     /**
      * 是否开启Https
@@ -115,6 +123,8 @@ public class MRestServer {
         connectionKeepAlive(defaultServerConfig.isConnectionKeepAlive());
         httpContentMaxMBSize(defaultServerConfig.getHttpContentMaxMBSize());
         multipartMaxFileCount(defaultServerConfig.getMultipartMaxFileCount());
+        httpIdleTimeoutSeconds(defaultServerConfig.getHttpIdleTimeoutSeconds());
+        fingerprintHeadersEnabled(defaultServerConfig.isFingerprintHeadersEnabled());
         this.startupTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
         this.identifier = UUID.randomUUID().toString().replace("-", "");
     }
@@ -221,6 +231,27 @@ public class MRestServer {
 
     public int getMultipartMaxFileCount() {
         return this.multipartMaxFileCount;
+    }
+
+    public MRestServer httpIdleTimeoutSeconds(int httpIdleTimeoutSeconds) {
+        if (httpIdleTimeoutSeconds < 0) {
+            throw new IllegalArgumentException("httpIdleTimeoutSeconds must not be negative -> " + httpIdleTimeoutSeconds);
+        }
+        this.httpIdleTimeoutSeconds = httpIdleTimeoutSeconds;
+        return this;
+    }
+
+    public int getHttpIdleTimeoutSeconds() {
+        return this.httpIdleTimeoutSeconds;
+    }
+
+    public MRestServer fingerprintHeadersEnabled(boolean fingerprintHeadersEnabled) {
+        this.fingerprintHeadersEnabled = fingerprintHeadersEnabled;
+        return this;
+    }
+
+    public boolean isFingerprintHeadersEnabled() {
+        return this.fingerprintHeadersEnabled;
     }
 
     public MRestServer sslEnabled(boolean sslEnabled) {

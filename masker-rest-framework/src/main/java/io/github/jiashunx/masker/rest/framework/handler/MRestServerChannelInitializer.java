@@ -9,6 +9,7 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.HttpServerExpectContinueHandler;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.handler.timeout.IdleStateHandler;
 
 import javax.net.ssl.SSLEngine;
 import java.util.Objects;
@@ -41,6 +42,10 @@ public class MRestServerChannelInitializer extends ChannelInitializer<SocketChan
         // 使用此Handler后, 只会收到FullHttpRequest等对象
         pipeline.addLast(new HttpObjectAggregator(restServer.getHttpContentMaxByteSize()));
         pipeline.addLast(new HttpServerExpectContinueHandler());
+        // 可选的连接空闲超时(默认0=不启用), 用于缓解慢连接攻击.
+        if (restServer.getHttpIdleTimeoutSeconds() > 0) {
+            pipeline.addLast(new IdleStateHandler(0, 0, restServer.getHttpIdleTimeoutSeconds()));
+        }
         pipeline.addLast(new MRestServerChannelHandler(restServer));
     }
 
