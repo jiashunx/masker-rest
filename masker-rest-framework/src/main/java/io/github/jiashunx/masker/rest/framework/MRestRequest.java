@@ -136,7 +136,7 @@ public class MRestRequest {
     }
 
     public String getProtocolNameLowerCase() {
-        return getProtocolName().toLowerCase();
+        return getProtocolName().toLowerCase(Locale.ROOT);
     }
 
     public void setProtocolName(String protocolName) {
@@ -148,7 +148,7 @@ public class MRestRequest {
     }
 
     public String getProtocolVersionLowerCase() {
-        return getProtocolVersion().toLowerCase();
+        return getProtocolVersion().toLowerCase(Locale.ROOT);
     }
 
     public void setProtocolVersion(String protocolVersion) {

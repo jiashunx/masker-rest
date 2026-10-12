@@ -84,7 +84,10 @@ public class FileUtils {
         File newFile = new File(path);
         try {
             if (!newFile.exists()) {
-                newDirectory(newFile.getParentFile().getAbsolutePath());
+                File parent = newFile.getParentFile();
+                if (parent != null) {
+                    newDirectory(parent.getAbsolutePath());
+                }
                 newFile.createNewFile();
             }
         } catch (Throwable throwable) {
