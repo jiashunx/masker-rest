@@ -321,17 +321,21 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             MRestFileUploadRequest fileUploadRequest = new MRestFileUploadRequest(restRequest);
             //decode multipart data, request为FullHttpRequest类型
             HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(httpRequest);
-            while (decoder.hasNext()) {
-                InterfaceHttpData httpData = decoder.next();
-                if (httpData instanceof Attribute) {
-                    Attribute attribute = (Attribute) httpData;
-                    fileUploadRequest.addAttribute(attribute);
-                } else if (httpData instanceof FileUpload) {
-                    FileUpload fileUpload = (FileUpload) httpData;
-                    fileUploadRequest.addFileUploadObj(fileUpload);
+            try {
+                while (decoder.hasNext()) {
+                    InterfaceHttpData httpData = decoder.next();
+                    if (httpData instanceof Attribute) {
+                        Attribute attribute = (Attribute) httpData;
+                        fileUploadRequest.addAttribute(attribute);
+                    } else if (httpData instanceof FileUpload) {
+                        FileUpload fileUpload = (FileUpload) httpData;
+                        fileUploadRequest.addFileUploadObj(fileUpload);
+                    }
                 }
+            } finally {
+                // 确保解码器释放, 避免异常路径下临时文件/缓冲泄漏.
+                decoder.destroy();
             }
-            decoder.destroy();
             // HttpPostMultipartRequestDecoder decoder = new HttpPostMultipartRequestDecoder(httpRequest);
             // List<InterfaceHttpData> httpDataList = decoder.getBodyHttpDatas();
             // for (InterfaceHttpData httpData : httpDataList) {
