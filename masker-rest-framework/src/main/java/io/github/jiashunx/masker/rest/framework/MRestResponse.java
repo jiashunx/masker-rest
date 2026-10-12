@@ -28,6 +28,11 @@ import java.util.function.Consumer;
  */
 public class MRestResponse {
 
+    /**
+     * forward最大递归深度.
+     */
+    private static final int MAX_FORWARD_DEPTH = 10;
+
     private final ChannelHandlerContext $channelHandlerContext;
     private MRestServer restServer;
     private final MRestContext restContext;
@@ -72,6 +77,21 @@ public class MRestResponse {
     }
 
     public MRestResponse forward(String targetURL, MRestRequest request) {
+        // 防止forward无限递归.
+        String depthKey = "mrest.forward.depth";
+        int depth = 0;
+        Object depthObj = request.getAttribute(depthKey);
+        if (depthObj != null) {
+            try {
+                depth = Integer.parseInt(String.valueOf(depthObj));
+            } catch (NumberFormatException ignore) {
+                // ignore.
+            }
+        }
+        if (depth >= MAX_FORWARD_DEPTH) {
+            throw new MRestServerException("forward depth exceeds limit: " + MAX_FORWARD_DEPTH);
+        }
+        request.setAttribute(depthKey, String.valueOf(depth + 1));
         request.setUrl(targetURL);
         MRestFilterChain filterChain = getRestContext().getFilterChain(targetURL);
         filterChain.doFilter(request, this);
