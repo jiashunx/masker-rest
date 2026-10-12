@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import io.netty.handler.codec.http.HttpMethod;
+import io.github.jiashunx.masker.rest.framework.servlet.MRestServlet;
 
 import java.util.regex.Pattern;
 
@@ -36,6 +37,20 @@ public class MRestContextTest {
         // 根通配
         Pattern matchAll = Pattern.compile(MRestContext.filterPatternToRegex("/*"));
         assertTrue(matchAll.matcher("/anything/here").matches());
+    }
+
+    @Test
+    public void test_getServlet_matchedResultCached() {
+        MRestServer server = new MRestServer(8083, "servlet-cache-server");
+        MRestContext context = server.context("/api2");
+        MRestServlet servlet = (request, response) -> { };
+        context.servlet("/sv/*", servlet);
+        context.init();
+        MRestServlet first = context.getServlet("/sv/a");
+        MRestServlet second = context.getServlet("/sv/a");
+        assertNotNull(first);
+        assertSame("matched servlet should be served from cache", first, second);
+        assertNull(context.getServlet("/not-mapped"));
     }
 
 }

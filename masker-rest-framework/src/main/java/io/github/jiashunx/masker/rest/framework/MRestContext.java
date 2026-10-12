@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
 import java.util.regex.Pattern;
@@ -462,6 +463,16 @@ public class MRestContext {
      */
     private final Map<String, Pattern> filterPatternMap = new HashMap<>();
     /**
+     * servlet路由匹配结果缓存(有界LRU, 仅缓存不含占位符的匹配结果).
+     */
+    private final int servletMatchCacheMaxSize = 4096;
+    private final Map<String, MRestServlet> servletMatchCache = Collections.synchronizedMap(new LinkedHashMap<String, MRestServlet>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, MRestServlet> eldest) {
+            return size() > servletMatchCacheMaxSize;
+        }
+    });
+    /**
      * 请求分发处理.
      */
     private final MRestServlet dispatchServlet = new MRestDispatchServlet();
@@ -491,7 +502,14 @@ public class MRestContext {
     private final List<VoidFunc> filterTaskList = new ArrayList<>();
 
     public MRestServlet getServlet(String requestUrl) {
+        // 命中缓存直接返回(仅缓存不含占位符的匹配结果, 占位符需每请求写入placeholder).
+        MRestServlet cachedServlet = servletMatchCache.get(requestUrl);
+        if (cachedServlet != null) {
+            return cachedServlet;
+        }
         List<UrlMappingServlet> mappingServletList = new ArrayList<>();
+        // 是否存在带占位符的精确匹配(存在则不缓存, 以保证placeholder写入语义)
+        AtomicBoolean anyPlaceholderMatched = new AtomicBoolean(false);
         // 扩展名匹配
         AtomicReference<UrlMappingServlet> extRef = new AtomicReference<>();
         // 路径匹配
@@ -527,6 +545,7 @@ public class MRestContext {
                                             , getContextDesc(), requestUrl, strictlyRef0.get().getUrlPatternModel().getUrlPattern(), urlMatchModel.getUrlPattern()));
                         }
                         SharedObjects.getServerThreadModel().getRestRequest().addPlaceholderKv(urlMatchModel.getPlaceholderMap());
+                        anyPlaceholderMatched.set(true);
                         strictlyRef0.set(urlMappingServlet);
                     } else {
                         if (strictlyRef1.get() != null) {
@@ -573,6 +592,10 @@ public class MRestContext {
             return null;
         }
         MRestServlet servlet = mappingServletList.get(0).getRestServlet();
+        // 不含占位符的匹配结果可缓存, 避免每请求全量线性扫描.
+        if (!anyPlaceholderMatched.get()) {
+            servletMatchCache.put(requestUrl, servlet);
+        }
         if (logger.isDebugEnabled()) {
             logger.debug("{} found url servlet: [{}] -> [{}]", getContextDesc(), requestUrl, servlet.servletName());
         }
