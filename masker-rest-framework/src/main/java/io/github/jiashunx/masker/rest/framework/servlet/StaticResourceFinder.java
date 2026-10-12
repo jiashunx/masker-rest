@@ -27,11 +27,6 @@ public class StaticResourceFinder {
     private static final Logger logger = LoggerFactory.getLogger(StaticResourceFinder.class);
 
     /**
-     * 未定位到的静态资源(非静态对象).
-     */
-    private final StaticResource NotFoundStaticResource = StaticResource.buildEmpty();
-
-    /**
      * 静态资源缓存Map(非静态对象)
      */
     private final Map<String, StaticResource> StaticResourceMap = new ConcurrentHashMap<>();
@@ -79,17 +74,14 @@ public class StaticResourceFinder {
                     if (staticResource == null) {
                         staticResource = loadResourceFromDiskpath(requestUrl);
                     }
-                    if (staticResource == null) {
-                        staticResource = NotFoundStaticResource;
+                    // 仅缓存命中的资源, 不缓存未命中结果, 避免随机URL洪泛导致缓存无界增长.
+                    if (staticResource != null) {
+                        StaticResourceMap.put(requestUrl, staticResource);
                     }
-                    StaticResourceMap.put(requestUrl, staticResource);
                 }
             } finally {
                 StaticResourceMapReadWriteLock.writeLock().unlock();
             }
-        }
-        if (staticResource == NotFoundStaticResource) {
-            return null;
         }
         return staticResource;
     }
