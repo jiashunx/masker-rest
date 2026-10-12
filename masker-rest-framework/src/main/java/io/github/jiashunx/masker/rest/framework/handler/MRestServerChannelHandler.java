@@ -244,7 +244,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             // Content-Type修正
             String acceptContentType = restRequest.getAcceptFirst();
             List<Object> contentTypes = restResponse.getHeaderAll(Constants.HTTP_HEADER_CONTENT_TYPE);
-            if (StringUtils.isNotEmpty(acceptContentType) && (Objects.isNull(contentTypes) || contentTypes.contains(MimetypeUtils.DEFAULT_CONTENT_TYPE_VALUE))) {
+            if (StringUtils.isNotEmpty(acceptContentType) && (contentTypes.isEmpty() || contentTypes.contains(MimetypeUtils.DEFAULT_CONTENT_TYPE_VALUE))) {
                 restResponse.setHeader(Constants.HTTP_HEADER_CONTENT_TYPE, acceptContentType);
             }
             restResponse.flush();

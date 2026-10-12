@@ -281,13 +281,21 @@ public class MRestResponse {
         return this;
     }
 
+    /**
+     * 设置响应头, 单值语义: 同key已存在的值会被替换, 不会产生重复header.
+     */
     public MRestResponse setHeader(String key, Object value) {
-        this.$headers.add(key, value);
+        this.$headers.set(key, value);
         return this;
     }
 
+    /**
+     * 设置响应头, 单值语义: 同key已存在的值会被替换, 不会产生重复header.
+     */
     public MRestResponse setHeader(Map<String, Object> headers) {
-        this.$headers.add(headers);
+        if (headers != null) {
+            headers.forEach((key, value) -> this.$headers.set(key, value));
+        }
         return this;
     }
 
@@ -340,7 +348,9 @@ public class MRestResponse {
      * @param cookie io.netty.handler.codec.http.cookie.DefaultCookie.
      */
     public MRestResponse setCookie(Cookie cookie) {
-        return setHeader(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+        // Set-Cookie为多值header, 使用追加语义.
+        this.$headers.add(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+        return this;
     }
 
     public synchronized MRestResponse flush() {
@@ -378,7 +388,7 @@ public class MRestResponse {
         void execute() {
             try {
                 MRestHeaders headers = $headers.copy();
-                headers.addAll(this.headers);
+                headers.merge(this.headers);
                 if (isDownloadFile) {
                     MResponseHelper.write($channelHandlerContext, status, downloadedFile, headers, downloadCallback);
                 } else {

@@ -1,5 +1,7 @@
 package io.github.jiashunx.masker.rest.framework.model;
 
+import io.github.jiashunx.masker.rest.framework.cons.Constants;
+
 import java.util.*;
 
 /**
@@ -79,6 +81,39 @@ public class MRestHeaders {
 
     public MRestHeaders add(Map<String, Object> headers) {
         return addAll(mapToHeaders(headers));
+    }
+
+    /**
+     * 设置header, 单值语义: 同key已存在的值会被移除后再添加.
+     * @param key header名称
+     * @param value header值
+     * @return MRestHeaders
+     */
+    public MRestHeaders set(String key, Object value) {
+        remove(key);
+        return add(key, value);
+    }
+
+    /**
+     * 合并headers: Set-Cookie保留多值(追加), 其余header使用覆盖(单值)语义.
+     * @param headers 待合并headers
+     * @return MRestHeaders
+     */
+    public MRestHeaders merge(MRestHeaders headers) {
+        if (headers == null) {
+            return this;
+        }
+        for (MRestHeader header: headers.getHeaders()) {
+            if (header == null) {
+                continue;
+            }
+            if (Constants.HTTP_HEADER_SET_COOKIE.equalsIgnoreCase(header.getKey())) {
+                add(header);
+            } else {
+                set(header.getKey(), header.getValue());
+            }
+        }
+        return this;
     }
 
     @Deprecated
