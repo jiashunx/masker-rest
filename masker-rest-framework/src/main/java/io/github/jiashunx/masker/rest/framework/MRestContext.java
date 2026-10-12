@@ -501,7 +501,7 @@ public class MRestContext {
         // 精确匹配 - 不带占位符
         AtomicReference<UrlMappingServlet> strictlyRef1 = new AtomicReference<>();
         servletMap.forEach((_up, urlMappingServlet) -> {
-            UrlMatchModel urlMatchModel = new UrlMatchModel(requestUrl, _up);
+            UrlMatchModel urlMatchModel = new UrlMatchModel(requestUrl, _up, urlMappingServlet.getUrlPatternModel());
             if (urlMatchModel.isMatched()) {
                 if (urlMatchModel.isPatternExt()) {
                     if (extRef.get() != null) {
