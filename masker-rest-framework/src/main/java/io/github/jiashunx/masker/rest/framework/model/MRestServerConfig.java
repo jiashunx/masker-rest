@@ -14,6 +14,7 @@ public class MRestServerConfig {
     private int workerThreadNum;
     private boolean connectionKeepAlive;
     private int httpContentMaxMBSize;
+    private int multipartMaxFileCount;
     private List<String> classpathResources;
 
     public MRestServerConfig() {}
@@ -29,6 +30,7 @@ public class MRestServerConfig {
         this.workerThreadNum = other.workerThreadNum;
         this.connectionKeepAlive = other.connectionKeepAlive;
         this.httpContentMaxMBSize = other.httpContentMaxMBSize;
+        this.multipartMaxFileCount = other.multipartMaxFileCount;
         this.classpathResources = other.classpathResources == null ? null : new ArrayList<>(other.classpathResources);
     }
 
@@ -78,6 +80,14 @@ public class MRestServerConfig {
 
     public void setHttpContentMaxMBSize(int httpContentMaxMBSize) {
         this.httpContentMaxMBSize = httpContentMaxMBSize;
+    }
+
+    public int getMultipartMaxFileCount() {
+        return multipartMaxFileCount;
+    }
+
+    public void setMultipartMaxFileCount(int multipartMaxFileCount) {
+        this.multipartMaxFileCount = multipartMaxFileCount;
     }
 
     public List<String> getClasspathResources() {

@@ -2,6 +2,7 @@ package io.github.jiashunx.masker.rest.framework.handler;
 
 import io.github.jiashunx.masker.rest.framework.*;
 import io.github.jiashunx.masker.rest.framework.cons.Constants;
+import io.github.jiashunx.masker.rest.framework.exception.MRestFileUploadException;
 import io.github.jiashunx.masker.rest.framework.filter.MRestFilterChain;
 import io.github.jiashunx.masker.rest.framework.model.ExceptionCallbackVo;
 import io.github.jiashunx.masker.rest.framework.model.MRestServerThreadModel;
@@ -175,7 +176,15 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
     /************************************************** HTTP  ****************************************************/
 
     private void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest object) throws Exception {
-        MRestRequest restRequest = parseHttpRequest(ctx, object);
+        MRestRequest restRequest;
+        try {
+            restRequest = parseHttpRequest(ctx, object);
+        } catch (Throwable throwable) {
+            // 请求解析失败(如畸形multipart)时返回400, 避免直接断开连接.
+            logger.error("{} parse http request failed", restServer.getServerDesc(), throwable);
+            MResponseHelper.write(ctx, HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
 
         // 处理websocket连接请求.
         if (Constants.UPGRADE_WEBSOCKET.equals(restRequest.getHeader(Constants.HTTP_HEADER_UPGRADE))) {
@@ -323,12 +332,17 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             //decode multipart data, request为FullHttpRequest类型
             HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(httpRequest);
             try {
+                int fileUploadCount = 0;
+                int maxFileCount = restServer.getMultipartMaxFileCount();
                 while (decoder.hasNext()) {
                     InterfaceHttpData httpData = decoder.next();
                     if (httpData instanceof Attribute) {
                         Attribute attribute = (Attribute) httpData;
                         fileUploadRequest.addAttribute(attribute);
                     } else if (httpData instanceof FileUpload) {
+                        if (++fileUploadCount > maxFileCount) {
+                            throw new MRestFileUploadException("multipart file count exceeds limit: " + maxFileCount);
+                        }
                         FileUpload fileUpload = (FileUpload) httpData;
                         fileUploadRequest.addFileUploadObj(fileUpload);
                     }

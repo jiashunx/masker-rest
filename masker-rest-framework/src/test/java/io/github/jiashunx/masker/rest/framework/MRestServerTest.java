@@ -26,8 +26,7 @@ public class MRestServerTest {
     }
 
     @Test
-    public void test_sslStartAndGracefulShutdown() throws Exception {
-        int port;
+    public void test_sslStartAndGracefulShutdown() throws Exception {        int port;
         try (ServerSocket socket = new ServerSocket(0)) {
             port = socket.getLocalPort();
         }
@@ -35,6 +34,14 @@ public class MRestServerTest {
         server.start();
         assertTrue(server.isSslEnabled());
         server.shutdown();
+    }
+
+    @Test
+    public void test_multipartMaxFileCountConfigurable() {
+        MRestServer server = new MRestServer(8081, "cfg-server");
+        assertTrue(server.getMultipartMaxFileCount() > 0);
+        server.multipartMaxFileCount(10);
+        assertEquals(10, server.getMultipartMaxFileCount());
     }
 
 }

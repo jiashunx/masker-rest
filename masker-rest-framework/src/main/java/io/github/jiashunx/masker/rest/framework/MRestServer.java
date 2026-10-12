@@ -68,6 +68,10 @@ public class MRestServer {
      * http请求报文字节大小限制
      */
     private int httpContentMaxByteSize;
+    /**
+     * multipart上传文件数量上限
+     */
+    private int multipartMaxFileCount;
 
     /**
      * 是否开启Https
@@ -110,6 +114,7 @@ public class MRestServer {
         workerThreadNum(defaultServerConfig.getWorkerThreadNum());
         connectionKeepAlive(defaultServerConfig.isConnectionKeepAlive());
         httpContentMaxMBSize(defaultServerConfig.getHttpContentMaxMBSize());
+        multipartMaxFileCount(defaultServerConfig.getMultipartMaxFileCount());
         this.startupTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
         this.identifier = UUID.randomUUID().toString().replace("-", "");
     }
@@ -204,6 +209,18 @@ public class MRestServer {
 
     public int getHttpContentMaxByteSize() {
         return this.httpContentMaxByteSize;
+    }
+
+    public MRestServer multipartMaxFileCount(int multipartMaxFileCount) {
+        if (multipartMaxFileCount <= 0) {
+            throw new IllegalArgumentException("multipartMaxFileCount must large than zero -> " + multipartMaxFileCount);
+        }
+        this.multipartMaxFileCount = multipartMaxFileCount;
+        return this;
+    }
+
+    public int getMultipartMaxFileCount() {
+        return this.multipartMaxFileCount;
     }
 
     public MRestServer sslEnabled(boolean sslEnabled) {
