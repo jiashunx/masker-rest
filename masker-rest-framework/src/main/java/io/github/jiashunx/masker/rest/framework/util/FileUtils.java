@@ -15,6 +15,15 @@ import java.util.zip.ZipOutputStream;
  */
 public class FileUtils {
 
+    /**
+     * 解压文件最大条目数(防止zip炸弹).
+     */
+    public static final int MAX_UNZIP_ENTRY_COUNT = 100000;
+    /**
+     * 解压文件解压后最大总大小, 1GB(防止zip炸弹).
+     */
+    public static final long MAX_UNZIP_TOTAL_SIZE = 1024L * 1024L * 1024L;
+
     private FileUtils() {}
 
     /**
@@ -148,10 +157,27 @@ public class FileUtils {
     public static void unzip(File zipFile, File targetDir) throws MRestZipException {
         try (ZipFile zip = new ZipFile(zipFile)) {
             newDirectory(targetDir.getAbsolutePath());
+            int entryCount = 0;
+            long totalSize = 0L;
             for (Enumeration<? extends  ZipEntry> entries = zip.entries(); entries.hasMoreElements();) {
                 ZipEntry zipEntry = entries.nextElement();
+                // 防止zip炸弹: 限制条目数量与解压后总大小.
+                if (++entryCount > MAX_UNZIP_ENTRY_COUNT) {
+                    throw new MRestZipException("unzip failed: entry count exceeds limit " + MAX_UNZIP_ENTRY_COUNT);
+                }
+                long entrySize = zipEntry.getSize();
+                if (entrySize > 0) {
+                    totalSize += entrySize;
+                    if (totalSize > MAX_UNZIP_TOTAL_SIZE) {
+                        throw new MRestZipException("unzip failed: total uncompressed size exceeds limit " + MAX_UNZIP_TOTAL_SIZE);
+                    }
+                }
                 String entryName = zipEntry.getName();
                 File newFile = new File(targetDir.getAbsolutePath() + "/" + entryName);
+                // 防止Zip Slip: 解压目标文件必须位于目标目录之下, 拒绝越界条目.
+                if (!isUnderDirectory(targetDir, newFile)) {
+                    throw new MRestZipException("unzip failed: entry outside target directory, entryName: " + entryName);
+                }
                 if (zipEntry.isDirectory()) {
                     newDirectory(newFile.getAbsolutePath());
                 } else {
