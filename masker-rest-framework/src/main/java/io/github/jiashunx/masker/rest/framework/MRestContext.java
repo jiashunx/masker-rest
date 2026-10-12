@@ -275,8 +275,7 @@ public class MRestContext {
         return this;
     }
 
-    public MRestHandler getUrlMappingHandler(String requestUrl, HttpMethod method) {
-        MRestHandler handler = null;
+    public MRestHandler getUrlMappingHandler(String requestUrl, HttpMethod method) {        MRestHandler handler = null;
         Map<HttpMethod, MRestHandler> handlerMap = urlMappingHandler.get(requestUrl);
         if (handlerMap != null) {
             handler = handlerMap.get(method);
@@ -289,6 +288,19 @@ public class MRestContext {
             }
         }
         return handler;
+    }
+
+    /**
+     * 获取指定url已注册的任意方法映射处理(不区分方法), 用于判定"路径存在但方法不匹配".
+     * @param requestUrl 请求url
+     * @return MRestHandler, 未注册时返回null
+     */
+    public MRestHandler getUrlMappingHandler(String requestUrl) {
+        Map<HttpMethod, MRestHandler> handlerMap = urlMappingHandler.get(requestUrl);
+        if (handlerMap == null || handlerMap.isEmpty()) {
+            return null;
+        }
+        return handlerMap.values().iterator().next();
     }
 
     public <R> MRestContext get(String url, Supplier<R> handler) {
