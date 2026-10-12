@@ -177,4 +177,22 @@ public class UrlUtils {
         return path.equals(prefix) || path.startsWith(prefix + Constants.PATH_SEP);
     }
 
+    /**
+     * 判断路径中是否包含父级目录段(".."), 用于防止路径穿越.
+     * @param path0 路径
+     * @return boolean
+     */
+    public static boolean containsParentDirSegment(String path0) {
+        String path = nullToEmpty(path0);
+        if (path.isEmpty()) {
+            return false;
+        }
+        for (String segment: path.split(Constants.PATH_SEP)) {
+            if ("..".equals(segment)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

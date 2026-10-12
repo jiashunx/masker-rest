@@ -176,4 +176,18 @@ public class UrlUtilsTest {
         assertFalse(UrlUtils.isPathPrefixMatch("/app", "/app/sub"));
     }
 
+    @Test
+    public void test_containsParentDirSegment() {
+        assertFalse(UrlUtils.containsParentDirSegment(null));
+        assertFalse(UrlUtils.containsParentDirSegment(""));
+        assertFalse(UrlUtils.containsParentDirSegment("/a/b/c.txt"));
+        assertFalse(UrlUtils.containsParentDirSegment("/..hidden/file"));
+        assertFalse(UrlUtils.containsParentDirSegment("/a../b"));
+        // 父级目录段
+        assertTrue(UrlUtils.containsParentDirSegment("/.."));
+        assertTrue(UrlUtils.containsParentDirSegment("/a/../b"));
+        assertTrue(UrlUtils.containsParentDirSegment("/a/b/.."));
+        assertTrue(UrlUtils.containsParentDirSegment(".."));
+    }
+
 }

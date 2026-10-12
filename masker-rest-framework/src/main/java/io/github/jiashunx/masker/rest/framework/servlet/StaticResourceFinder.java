@@ -57,6 +57,10 @@ public class StaticResourceFinder {
 
     public StaticResource loadResource(String requestUrl0) {
         String requestUrl = MRestUtils.formatPath(requestUrl0);
+        // 拒绝包含父级目录段("..")的请求路径, 防止 classpath/磁盘静态资源路径穿越.
+        if (UrlUtils.containsParentDirSegment(requestUrl)) {
+            return null;
+        }
         // 若不支持静态资源缓存，则每次请求均执行静态资源查找处理
         if (!this.restContext.isStaticResourcesCacheEnabled()) {
             StaticResource staticResource = loadResourceFromClasspath(requestUrl);
