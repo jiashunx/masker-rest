@@ -4,6 +4,7 @@ import io.github.jiashunx.masker.rest.framework.exception.MRestFileOperateExcept
 import io.github.jiashunx.masker.rest.framework.exception.MRestZipException;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -15,6 +16,25 @@ import java.util.zip.ZipOutputStream;
 public class FileUtils {
 
     private FileUtils() {}
+
+    /**
+     * 判断文件是否位于指定目录之下(不含目录本身), 使用规范化路径并基于路径段比较, 用于防止路径穿越.
+     * @param directory 目录
+     * @param file 文件
+     * @return boolean
+     */
+    public static boolean isUnderDirectory(File directory, File file) {
+        if (directory == null || file == null) {
+            return false;
+        }
+        try {
+            Path dirPath = directory.getCanonicalFile().toPath();
+            Path filePath = file.getCanonicalFile().toPath();
+            return filePath.startsWith(dirPath) && !filePath.equals(dirPath);
+        } catch (Throwable throwable) {
+            return false;
+        }
+    }
 
     public static void deleteFile(File[] files) throws MRestFileOperateException {
         if (files == null || files.length == 0) {

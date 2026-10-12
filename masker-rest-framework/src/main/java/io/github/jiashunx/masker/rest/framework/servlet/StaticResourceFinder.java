@@ -3,6 +3,7 @@ package io.github.jiashunx.masker.rest.framework.servlet;
 import io.github.jiashunx.masker.rest.framework.MRestContext;
 import io.github.jiashunx.masker.rest.framework.model.StaticResource;
 import io.github.jiashunx.masker.rest.framework.type.StaticResourceType;
+import io.github.jiashunx.masker.rest.framework.util.FileUtils;
 import io.github.jiashunx.masker.rest.framework.util.IOUtils;
 import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.util.UrlUtils;
@@ -145,11 +146,8 @@ public class StaticResourceFinder {
             for (String diskpathResourcePath0: diskpathResourcePaths) {
                 String diskpathResourcePath = UrlUtils.appendSuffixSep(UrlUtils.replaceWinSep(diskpathResourcePath0)) + filePathSuffix;
                 try {
-                    // 磁盘文件路径合法性检查
-                    String path0 = UrlUtils.replaceWinSep(new File(diskpathResourcePath0).getAbsolutePath());
-                    String path1 = UrlUtils.replaceWinSep(new File(diskpathResourcePath).getAbsolutePath());
-                    // 文件路径不可为文件目录父级目录.
-                    if (path1.startsWith(path0) && path1.length() > path0.length()) {
+                    // 磁盘文件路径合法性检查: 目标文件必须位于配置根目录之下(canonical 路径 + 路径段比较), 防止 ../ 路径穿越.
+                    if (FileUtils.isUnderDirectory(new File(diskpathResourcePath0), new File(diskpathResourcePath))) {
                         byte[] contentBytes = IOUtils.loadBytesFromDisk(diskpathResourcePath, false);
                         if (contentBytes != null) {
                             if (logger.isDebugEnabled()) {
