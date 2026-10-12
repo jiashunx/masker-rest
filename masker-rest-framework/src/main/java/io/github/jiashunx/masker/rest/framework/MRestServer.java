@@ -14,6 +14,8 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
@@ -21,13 +23,14 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
+import io.netty.util.concurrent.GlobalEventExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author jiashunx
@@ -42,6 +45,19 @@ public class MRestServer {
     private final String identifier;
 
     private Channel serverChannel;
+
+    /**
+     * boss线程组(持有引用以便优雅关闭).
+     */
+    private volatile EventLoopGroup bossGroup;
+    /**
+     * worker线程组(持有引用以便优雅关闭).
+     */
+    private volatile EventLoopGroup workerGroup;
+    /**
+     * 子通道组(用于优雅关闭时关闭所有活跃连接, 含WebSocket连接).
+     */
+    private final ChannelGroup childChannels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
     private int listenPort;
     private String serverName;
@@ -290,15 +306,53 @@ public class MRestServer {
             throw new MRestServerCloseException(String.format("%s has already been closed", getServerDesc()));
         }
         try {
-            serverChannel.close().addListener(future -> {
-                logger.info("{} closed", getServerDesc());
-            }).get();
+            // 1. 关闭监听通道, 停止接收新连接
+            if (serverChannel != null) {
+                serverChannel.close().addListener(future -> {
+                    logger.info("{} closed", getServerDesc());
+                }).get();
+                serverChannel = null;
+            }
+            // 2. 关闭所有子通道(含WebSocket连接)
+            childChannels.close().awaitUninterruptibly();
+            // 3. 停止静态资源自动刷新线程
+            contextMap.forEach((key, restContext) -> restContext.shutdown());
+            // 4. 优雅关闭线程组
+            EventLoopGroup worker = this.workerGroup;
+            if (worker != null) {
+                worker.shutdownGracefully(0, 2, TimeUnit.SECONDS).sync();
+                this.workerGroup = null;
+            }
+            EventLoopGroup boss = this.bossGroup;
+            if (boss != null) {
+                boss.shutdownGracefully(0, 2, TimeUnit.SECONDS).sync();
+                this.bossGroup = null;
+            }
         } catch (Throwable throwable) {
             throw new MRestServerCloseException(String.format("%s close failed", getServerDesc()), throwable);
         }
         closed = true;
-        serverChannel = null;
         return this;
+    }
+
+    /**
+     * 关闭事件循环线程组(用于启动失败时的资源释放), 不阻塞等待.
+     */
+    private void closeEventLoopGroups() {
+        EventLoopGroup worker = this.workerGroup;
+        if (worker != null) {
+            worker.shutdownGracefully(0, 2, TimeUnit.SECONDS);
+            this.workerGroup = null;
+        }
+        EventLoopGroup boss = this.bossGroup;
+        if (boss != null) {
+            boss.shutdownGracefully(0, 2, TimeUnit.SECONDS);
+            this.bossGroup = null;
+        }
+    }
+
+    public ChannelGroup getChildChannels() {
+        return childChannels;
     }
 
     /**
@@ -327,6 +381,8 @@ public class MRestServer {
             });
             EventLoopGroup bossGroup = new NioEventLoopGroup(bossThreadNum, new MRestThreadFactory(MRestNettyThreadType.BOSS, listenPort));
             EventLoopGroup workerGroup = new NioEventLoopGroup(workerThreadNum, new MRestThreadFactory(MRestNettyThreadType.WORKER, listenPort));
+            this.bossGroup = bossGroup;
+            this.workerGroup = workerGroup;
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.option(ChannelOption.SO_BACKLOG, 1024);
             bootstrap.childOption(ChannelOption.TCP_NODELAY, true);
@@ -337,19 +393,6 @@ public class MRestServer {
                     .childHandler(new MRestServerChannelInitializer(this));
             serverChannel = bootstrap.bind(listenPort).sync().channel();
             logger.info("{} started on port {} (http{})", getServerDesc(), getListenPort(), isSslEnabled() ? "s" : "");
-            AtomicReference<Channel> serverChannelRef = new AtomicReference<>(serverChannel);
-            final Thread syncThread = new Thread(() -> {
-                try {
-                    serverChannelRef.get().closeFuture().syncUninterruptibly();
-                } catch (Throwable throwable) {
-                    logger.error("{} channel close future synchronized failed", getServerDesc(), throwable);
-                } finally {
-                    serverChannelRef.set(null);
-                }
-            });
-            syncThread.setName(getServerDesc() + "-closeFuture.Sync");
-            syncThread.setDaemon(true);
-            syncThread.start();
             started = true;
             if (!this.callbackAfterStartups.isEmpty()) {
                 for (int index = 0, size = this.callbackAfterStartups.size(); index < size; index++) {
@@ -364,6 +407,8 @@ public class MRestServer {
                 }
             }
         } catch (Throwable throwable) {
+            // 启动失败时释放已创建的线程组.
+            closeEventLoopGroups();
             throw new MRestServerInitializeException(String.format("%s start failed", getServerDesc()), throwable);
         }
         return this;

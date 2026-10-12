@@ -91,17 +91,49 @@ public class MRestContext {
         if (isStaticResourcesCacheEnabled()) {
             reloadResource();
             if (isAutoRefreshStaticResources()) {
-                new Thread(() -> {
-                    while (true) {
-                        try {
-                            Thread.sleep(getAutoRefreshStaticResourcesPeriod());
-                            reloadResource();
-                        } catch (Throwable throwable) {
-                            logger.error("{} reload static resource failed", getContextDesc(), throwable);
-                        }
-                    }
-                }, "ResourceReload" + restServer.getListenPort() + "_" + getContextPath()).start();
+                startAutoRefreshStaticResources();
             }
+        }
+    }
+
+    /**
+     * 静态资源自动刷新线程运行标识.
+     */
+    private volatile boolean autoRefreshStaticResourcesRunning = false;
+    private volatile Thread autoRefreshStaticResourcesThread;
+
+    private void startAutoRefreshStaticResources() {
+        autoRefreshStaticResourcesRunning = true;
+        Thread thread = new Thread(() -> {
+            while (autoRefreshStaticResourcesRunning) {
+                try {
+                    Thread.sleep(getAutoRefreshStaticResourcesPeriod());
+                    if (autoRefreshStaticResourcesRunning) {
+                        reloadResource();
+                    }
+                } catch (InterruptedException interruptedException) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Throwable throwable) {
+                    logger.error("{} reload static resource failed", getContextDesc(), throwable);
+                }
+            }
+        }, "ResourceReload" + restServer.getListenPort() + "_" + getContextPath());
+        // 使用守护线程, 避免server关闭后仍阻止JVM退出.
+        thread.setDaemon(true);
+        this.autoRefreshStaticResourcesThread = thread;
+        thread.start();
+    }
+
+    /**
+     * 停止静态资源自动刷新线程(server关闭时调用).
+     */
+    public void shutdown() {
+        autoRefreshStaticResourcesRunning = false;
+        Thread thread = this.autoRefreshStaticResourcesThread;
+        if (thread != null) {
+            thread.interrupt();
+            this.autoRefreshStaticResourcesThread = null;
         }
     }
 

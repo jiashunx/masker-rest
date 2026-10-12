@@ -26,6 +26,8 @@ public class MRestServerChannelInitializer extends ChannelInitializer<SocketChan
 
     @Override
     protected void initChannel(SocketChannel socketChannel) throws Exception {
+        // 注册子通道, 便于server关闭时统一关闭所有活跃连接.
+        this.restServer.getChildChannels().add(socketChannel);
         ChannelPipeline pipeline = socketChannel.pipeline();
         if (this.restServer.isSslEnabled()) {
             SSLEngine sslEngine = this.restServer.getSslContext().newEngine(socketChannel.alloc());
