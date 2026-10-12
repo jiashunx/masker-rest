@@ -165,4 +165,16 @@ public class UrlUtils {
         return url;
     }
 
+    /**
+     * 判断请求路径是否命中指定路径前缀, 需满足路径边界(避免 /abc 命中前缀 /a).
+     * @param requestPath 请求路径
+     * @param prefixPath 前缀路径
+     * @return boolean
+     */
+    public static boolean isPathPrefixMatch(String requestPath, String prefixPath) {
+        String path = nullToEmpty(requestPath);
+        String prefix = nullToEmpty(prefixPath);
+        return path.equals(prefix) || path.startsWith(prefix + Constants.PATH_SEP);
+    }
+
 }

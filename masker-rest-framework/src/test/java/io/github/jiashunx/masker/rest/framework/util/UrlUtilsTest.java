@@ -161,4 +161,19 @@ public class UrlUtilsTest {
         assertEquals("/ddd/ddd///", UrlUtils.appendSuffixSep("/ddd/ddd///"));
     }
 
+    @Test
+    public void test_isPathPrefixMatch() {
+        // 完全相等
+        assertTrue(UrlUtils.isPathPrefixMatch("/app", "/app"));
+        // 满足路径边界
+        assertTrue(UrlUtils.isPathPrefixMatch("/app/users", "/app"));
+        assertTrue(UrlUtils.isPathPrefixMatch("/app/users/1", "/app"));
+        // 不满足路径边界(前缀相同但非完整路径段): /abc 不应命中 /a
+        assertFalse(UrlUtils.isPathPrefixMatch("/abc", "/a"));
+        assertFalse(UrlUtils.isPathPrefixMatch("/application/x", "/app"));
+        // 无前缀关系
+        assertFalse(UrlUtils.isPathPrefixMatch("/other", "/app"));
+        assertFalse(UrlUtils.isPathPrefixMatch("/app", "/app/sub"));
+    }
+
 }

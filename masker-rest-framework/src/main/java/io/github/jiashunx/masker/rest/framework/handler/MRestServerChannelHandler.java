@@ -10,6 +10,7 @@ import io.github.jiashunx.masker.rest.framework.util.MRestUtils;
 import io.github.jiashunx.masker.rest.framework.global.SharedObjects;
 import io.github.jiashunx.masker.rest.framework.util.MimetypeUtils;
 import io.github.jiashunx.masker.rest.framework.util.StringUtils;
+import io.github.jiashunx.masker.rest.framework.util.UrlUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -278,13 +279,19 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         }
         restRequest.setOriginUrl(originUrl);
 
-        // 根据url和已配置的context-path来解析出实际context-path
+        // 请求路径(已解码, 不含query string), 用于context匹配与路由.
+        String requestPath = queryStringDecoder.path();
+        if (StringUtils.isEmpty(requestPath)) {
+            requestPath = Constants.ROOT_PATH;
+        }
+
+        // 根据url和已配置的context-path来解析出实际context-path(最长前缀匹配, 且需满足路径边界)
         String _ctxPath = Constants.DEFAULT_CONTEXT_PATH;
         for (String context: restServer.getContextList()) {
             if (context.equals(Constants.DEFAULT_CONTEXT_PATH)) {
                 continue;
             }
-            if (originUrl.startsWith(context)) {
+            if (context.length() > _ctxPath.length() && UrlUtils.isPathPrefixMatch(requestPath, context)) {
                 _ctxPath = context;
             }
         }
@@ -294,12 +301,12 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         }
         restRequest.setRestContext(restContext);
 
-        // 获取context-path及实际url路径
+        // 获取context-path及实际url路径(从已解码的请求路径中去除context-path, 避免带入query string)
         String contextPath = restContext.getContextPath();
         restRequest.setContextPath(contextPath);
-        String url = queryStringDecoder.path();
+        String url = requestPath;
         if (!contextPath.equals(Constants.DEFAULT_CONTEXT_PATH)) {
-            url = originUrl.substring(contextPath.length());
+            url = requestPath.substring(contextPath.length());
         }
         // 请求路径为context-path, 形如: /context-path -> 应等价于 -> /context-path/
         if (StringUtils.isEmpty(url)) {
