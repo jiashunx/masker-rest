@@ -49,9 +49,23 @@ public class MRestServerTest {
         MRestServer server = new MRestServer(8082, "sec-server");
         assertFalse("idle timeout disabled by default", server.getHttpIdleTimeoutSeconds() > 0);
         assertTrue("fingerprint headers enabled by default", server.isFingerprintHeadersEnabled());
+        assertEquals("business thread pool disabled by default", 0, server.getBusinessThreadNum());
         server.httpIdleTimeoutSeconds(30).fingerprintHeadersEnabled(false);
         assertEquals(30, server.getHttpIdleTimeoutSeconds());
         assertFalse(server.isFingerprintHeadersEnabled());
+    }
+
+    @Test
+    public void test_businessThreadPoolStartAndShutdown() throws Exception {
+        int port;
+        try (ServerSocket socket = new ServerSocket(0)) {
+            port = socket.getLocalPort();
+        }
+        MRestServer server = new MRestServer(port, "biz-server").businessThreadNum(2);
+        server.start();
+        assertNotNull(server.getBusinessGroup());
+        server.shutdown();
+        assertNull(server.getBusinessGroup());
     }
 
 }

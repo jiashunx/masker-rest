@@ -46,7 +46,12 @@ public class MRestServerChannelInitializer extends ChannelInitializer<SocketChan
         if (restServer.getHttpIdleTimeoutSeconds() > 0) {
             pipeline.addLast(new IdleStateHandler(0, 0, restServer.getHttpIdleTimeoutSeconds()));
         }
-        pipeline.addLast(new MRestServerChannelHandler(restServer));
+        if (restServer.getBusinessGroup() != null) {
+            // 使用独立业务线程组执行请求处理, 避免阻塞IO/CPU占用worker线程.
+            pipeline.addLast(restServer.getBusinessGroup(), new MRestServerChannelHandler(restServer));
+        } else {
+            pipeline.addLast(new MRestServerChannelHandler(restServer));
+        }
     }
 
 }

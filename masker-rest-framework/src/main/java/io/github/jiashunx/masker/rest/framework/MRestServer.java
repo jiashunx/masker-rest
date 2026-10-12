@@ -23,6 +23,8 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +60,10 @@ public class MRestServer {
      * 子通道组(用于优雅关闭时关闭所有活跃连接, 含WebSocket连接).
      */
     private final ChannelGroup childChannels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+    /**
+     * 独立业务线程组(可选, 用于避免阻塞IO占用worker线程).
+     */
+    private volatile EventExecutorGroup businessGroup;
 
     private int listenPort;
     private String serverName;
@@ -80,6 +86,10 @@ public class MRestServer {
      * 是否在响应中输出框架指纹信息(名称/版本/启动时间/标识).
      */
     private boolean fingerprintHeadersEnabled;
+    /**
+     * 业务线程数(0表示不使用独立业务线程池, 请求处理在worker线程执行).
+     */
+    private int businessThreadNum;
 
     /**
      * 是否开启Https
@@ -125,6 +135,7 @@ public class MRestServer {
         multipartMaxFileCount(defaultServerConfig.getMultipartMaxFileCount());
         httpIdleTimeoutSeconds(defaultServerConfig.getHttpIdleTimeoutSeconds());
         fingerprintHeadersEnabled(defaultServerConfig.isFingerprintHeadersEnabled());
+        businessThreadNum(defaultServerConfig.getBusinessThreadNum());
         this.startupTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date());
         this.identifier = UUID.randomUUID().toString().replace("-", "");
     }
@@ -252,6 +263,22 @@ public class MRestServer {
 
     public boolean isFingerprintHeadersEnabled() {
         return this.fingerprintHeadersEnabled;
+    }
+
+    public MRestServer businessThreadNum(int businessThreadNum) {
+        if (businessThreadNum < 0) {
+            throw new IllegalArgumentException("businessThreadNum must not be negative -> " + businessThreadNum);
+        }
+        this.businessThreadNum = businessThreadNum;
+        return this;
+    }
+
+    public int getBusinessThreadNum() {
+        return this.businessThreadNum;
+    }
+
+    public EventExecutorGroup getBusinessGroup() {
+        return this.businessGroup;
     }
 
     public MRestServer sslEnabled(boolean sslEnabled) {
@@ -385,6 +412,11 @@ public class MRestServer {
                 boss.shutdownGracefully(0, 2, TimeUnit.SECONDS).sync();
                 this.bossGroup = null;
             }
+            EventExecutorGroup business = this.businessGroup;
+            if (business != null) {
+                business.shutdownGracefully(0, 2, TimeUnit.SECONDS).sync();
+                this.businessGroup = null;
+            }
         } catch (Throwable throwable) {
             throw new MRestServerCloseException(String.format("%s close failed", getServerDesc()), throwable);
         }
@@ -405,6 +437,11 @@ public class MRestServer {
         if (boss != null) {
             boss.shutdownGracefully(0, 2, TimeUnit.SECONDS);
             this.bossGroup = null;
+        }
+        EventExecutorGroup business = this.businessGroup;
+        if (business != null) {
+            business.shutdownGracefully(0, 2, TimeUnit.SECONDS);
+            this.businessGroup = null;
         }
     }
 
@@ -440,6 +477,9 @@ public class MRestServer {
             EventLoopGroup workerGroup = new NioEventLoopGroup(workerThreadNum, new MRestThreadFactory(MRestNettyThreadType.WORKER, listenPort));
             this.bossGroup = bossGroup;
             this.workerGroup = workerGroup;
+            if (businessThreadNum > 0) {
+                this.businessGroup = new DefaultEventExecutorGroup(businessThreadNum, new MRestThreadFactory(MRestNettyThreadType.BUSINESS, listenPort));
+            }
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.option(ChannelOption.SO_BACKLOG, 1024);
             bootstrap.childOption(ChannelOption.TCP_NODELAY, true);

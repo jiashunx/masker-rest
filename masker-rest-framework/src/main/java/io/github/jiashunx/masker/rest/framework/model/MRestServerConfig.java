@@ -17,6 +17,7 @@ public class MRestServerConfig {
     private int multipartMaxFileCount;
     private int httpIdleTimeoutSeconds;
     private boolean fingerprintHeadersEnabled;
+    private int businessThreadNum;
     private List<String> classpathResources;
 
     public MRestServerConfig() {}
@@ -35,6 +36,7 @@ public class MRestServerConfig {
         this.multipartMaxFileCount = other.multipartMaxFileCount;
         this.httpIdleTimeoutSeconds = other.httpIdleTimeoutSeconds;
         this.fingerprintHeadersEnabled = other.fingerprintHeadersEnabled;
+        this.businessThreadNum = other.businessThreadNum;
         this.classpathResources = other.classpathResources == null ? null : new ArrayList<>(other.classpathResources);
     }
 
@@ -108,6 +110,14 @@ public class MRestServerConfig {
 
     public void setFingerprintHeadersEnabled(boolean fingerprintHeadersEnabled) {
         this.fingerprintHeadersEnabled = fingerprintHeadersEnabled;
+    }
+
+    public int getBusinessThreadNum() {
+        return businessThreadNum;
+    }
+
+    public void setBusinessThreadNum(int businessThreadNum) {
+        this.businessThreadNum = businessThreadNum;
     }
 
     public List<String> getClasspathResources() {
