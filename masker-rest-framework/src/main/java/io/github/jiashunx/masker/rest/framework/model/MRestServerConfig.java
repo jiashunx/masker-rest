@@ -1,5 +1,6 @@
 package io.github.jiashunx.masker.rest.framework.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,6 +15,22 @@ public class MRestServerConfig {
     private boolean connectionKeepAlive;
     private int httpContentMaxMBSize;
     private List<String> classpathResources;
+
+    public MRestServerConfig() {}
+
+    /**
+     * 拷贝构造, 用于对外返回默认配置副本, 避免调用方修改全局默认配置.
+     * @param other 源配置
+     */
+    public MRestServerConfig(MRestServerConfig other) {
+        this.serverPort = other.serverPort;
+        this.serverName = other.serverName;
+        this.bossThreadNum = other.bossThreadNum;
+        this.workerThreadNum = other.workerThreadNum;
+        this.connectionKeepAlive = other.connectionKeepAlive;
+        this.httpContentMaxMBSize = other.httpContentMaxMBSize;
+        this.classpathResources = other.classpathResources == null ? null : new ArrayList<>(other.classpathResources);
+    }
 
     public int getServerPort() {
         return serverPort;

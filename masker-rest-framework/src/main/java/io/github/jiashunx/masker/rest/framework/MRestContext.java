@@ -476,11 +476,11 @@ public class MRestContext {
     /**
      * 配置的静态资源classpath扫描路径, 按照配置的先后顺序进行扫描, classpath静态资源扫描顺序高于磁盘静态资源.
      */
-    private final Map<String, List<String>> classpathResources = new HashMap<>();
+    private final Map<String, List<String>> classpathResources = new LinkedHashMap<>();
     /**
      * 配置的静态资源磁盘扫描路径, 按照配置的先后顺序进行扫描.
      */
-    private final Map<String, List<String>> diskpathResources = new HashMap<>();
+    private final Map<String, List<String>> diskpathResources = new LinkedHashMap<>();
     /**
      * 添加servlet的任务(在服务启动时统一添加).
      */

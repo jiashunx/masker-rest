@@ -438,7 +438,7 @@ public class MRestServer {
     }
 
     public List<VoidFunc> getCallbackAfterStartups() {
-        return callbackAfterStartups;
+        return new ArrayList<>(callbackAfterStartups);
     }
 
 }

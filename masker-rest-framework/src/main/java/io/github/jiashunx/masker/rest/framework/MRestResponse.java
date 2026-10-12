@@ -33,7 +33,7 @@ public class MRestResponse {
     private final MRestContext restContext;
     private final MRestHeaders $headers = new MRestHeaders();
     private volatile FlushTask flushTask = null;
-    private boolean $flushed = false;
+    private volatile boolean $flushed = false;
 
     /**
      * 响应对象属性信息.

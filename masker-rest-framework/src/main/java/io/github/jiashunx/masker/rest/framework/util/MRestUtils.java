@@ -91,7 +91,8 @@ public class MRestUtils {
                 }
             }
         }
-        return serverDefaultConfig;
+        // 返回副本, 避免调用方修改全局默认配置.
+        return new MRestServerConfig(serverDefaultConfig);
     }
 
     public static String formatPath(String path) {
