@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class StaticResourceServlet implements MRestServlet {
 
@@ -73,6 +74,14 @@ public class StaticResourceServlet implements MRestServlet {
 
     private void writeStaticResource(MRestRequest restRequest, MRestResponse restResponse, byte[] bytes, String contentType) {
         if (restRequest.getMethod() == HttpMethod.GET) {
+            // 基于内容的弱ETag, 支持条件请求(If-None-Match)返回304.
+            String etag = "\"" + Integer.toHexString(Arrays.hashCode(bytes)) + "-" + bytes.length + "\"";
+            restResponse.setHeader(Constants.HTTP_HEADER_ETAG, etag);
+            String ifNoneMatch = restRequest.getHeader(Constants.HTTP_HEADER_IF_NONE_MATCH);
+            if (ifNoneMatch != null && ifNoneMatch.contains(etag)) {
+                restResponse.write(HttpResponseStatus.NOT_MODIFIED);
+                return;
+            }
             restResponse.setHeader(Constants.HTTP_HEADER_CONTENT_TYPE, contentType);
             restResponse.write(bytes);
         } else {
