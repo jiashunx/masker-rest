@@ -263,7 +263,7 @@ public class MRestResponse {
         if (isWriteMethodInvoked()) {
             throw new MRestServerException("write method has already been invoked.");
         }
-        flushTask = new FlushTask(downloadedFile, headers, callback);
+        flushTask = new FlushTask(status, downloadedFile, headers, callback);
         setAttr("status", status);
         return this;
     }
@@ -368,7 +368,8 @@ public class MRestResponse {
             this.bytes = bytes;
             this.headers = headers == null ? new MRestHeaders() : headers;
         }
-        FlushTask(File downloadedFile, MRestHeaders headers, Consumer<File> downloadCallback) {
+        FlushTask(HttpResponseStatus status, File downloadedFile, MRestHeaders headers, Consumer<File> downloadCallback) {
+            this.status = Objects.requireNonNull(status);
             this.isDownloadFile = true;
             this.downloadedFile = Objects.requireNonNull(downloadedFile);
             this.headers = headers == null ? new MRestHeaders() : headers;
@@ -379,7 +380,7 @@ public class MRestResponse {
                 MRestHeaders headers = $headers.copy();
                 headers.addAll(this.headers);
                 if (isDownloadFile) {
-                    MResponseHelper.write($channelHandlerContext, downloadedFile, headers, downloadCallback);
+                    MResponseHelper.write($channelHandlerContext, status, downloadedFile, headers, downloadCallback);
                 } else {
                     MResponseHelper.write($channelHandlerContext, status, bytes, headers);
                 }

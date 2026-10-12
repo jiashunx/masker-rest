@@ -157,16 +157,22 @@ public class MResponseHelper {
     }
 
     public static void write(ChannelHandlerContext ctx, File downloadedFile, MRestHeaders headers, Consumer<File> callback) {
+        write(ctx, HttpResponseStatus.OK, downloadedFile, headers, callback);
+    }
+
+    public static void write(ChannelHandlerContext ctx, HttpResponseStatus status, File downloadedFile, MRestHeaders headers, Consumer<File> callback) {
+        RandomAccessFile randomAccessFile = null;
         try {
-            RandomAccessFile randomAccessFile = new RandomAccessFile(downloadedFile, "r");
+            randomAccessFile = new RandomAccessFile(downloadedFile, "r");
             long fileLength = randomAccessFile.length();
-            HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+            HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, status);
             HttpHeaders httpHeaders = setRespHeaders(response, headers);
             httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_LENGTH).add(Constants.HTTP_HEADER_CONTENT_LENGTH, fileLength);
             httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_TYPE).add(Constants.HTTP_HEADER_CONTENT_TYPE, Constants.CONTENT_TYPE_APPLICATION_OCTETSTREAM);
             httpHeaders.remove(Constants.HTTP_HEADER_CONTENT_DISPOSITION).add(Constants.HTTP_HEADER_CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", downloadedFile.getName()));
             ctx.write(response);
-            ChannelFuture sendFileFuture = ctx.write(new DefaultFileRegion(randomAccessFile.getChannel(), 0, fileLength), ctx.newProgressivePromise());
+            final RandomAccessFile fileAccess = randomAccessFile;
+            ChannelFuture sendFileFuture = ctx.write(new DefaultFileRegion(fileAccess.getChannel(), 0, fileLength), ctx.newProgressivePromise());
             sendFileFuture.addListener(new ChannelProgressiveFutureListener() {
                 @Override
                 public void operationProgressed(ChannelProgressiveFuture channelProgressiveFuture, long l, long l1) throws Exception {
@@ -174,7 +180,7 @@ public class MResponseHelper {
                 }
                 @Override
                 public void operationComplete(ChannelProgressiveFuture channelProgressiveFuture) throws Exception {
-                    randomAccessFile.close();
+                    fileAccess.close();
                     if (callback != null) {
                         callback.accept(downloadedFile);
                     }
@@ -182,6 +188,14 @@ public class MResponseHelper {
             });
             ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
         } catch (Throwable throwable) {
+            // 异常路径下确保文件句柄释放(正常路径由 write 完成回调释放).
+            if (randomAccessFile != null) {
+                try {
+                    randomAccessFile.close();
+                } catch (Throwable ignore) {
+                    // do nothing.
+                }
+            }
             throw new MRestFileDownloadException(throwable);
         }
     }
