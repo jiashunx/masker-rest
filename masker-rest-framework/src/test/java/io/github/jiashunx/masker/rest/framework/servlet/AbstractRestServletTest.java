@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import io.github.jiashunx.masker.rest.framework.servlet.mapping.GetMapping;
 import io.github.jiashunx.masker.rest.framework.servlet.mapping.RequestMapping;
+import io.github.jiashunx.masker.rest.framework.exception.MRestMappingException;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -18,6 +19,23 @@ public class AbstractRestServletTest {
     public static class DemoServlet extends AbstractRestServlet {
         @GetMapping(url = "/hello")
         public void hello() {}
+    }
+
+    @RequestMapping(url = "/static-demo")
+    public static class StaticMethodServlet extends AbstractRestServlet {
+        @GetMapping(url = "/bad")
+        public static void bad() {}
+    }
+
+    @Test
+    public void test_staticMappingMethodRejected() {
+        StaticMethodServlet servlet = new StaticMethodServlet();
+        try {
+            servlet.init();
+            fail("expected MRestMappingException for static mapping method");
+        } catch (MRestMappingException expected) {
+            // expected
+        }
     }
 
     @Test

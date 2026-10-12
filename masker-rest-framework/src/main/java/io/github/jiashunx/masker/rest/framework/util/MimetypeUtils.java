@@ -18,6 +18,11 @@ public class MimetypeUtils {
     public static final String DEFAULT_CONTENT_TYPE_KEY = ".*";
     public static final String DEFAULT_CONTENT_TYPE_VALUE = "application/octet-stream";
 
+    /**
+     * 共享的MimetypesFileTypeMap实例(构造时会加载MIME配置, 避免每次查找都重新构造).
+     */
+    private static final MimetypesFileTypeMap MIMETYPES_FILE_TYPE_MAP = new MimetypesFileTypeMap();
+
     private static final Map<String, String> CONTENT_TYPE_MAP = new HashMap<>();
     static {
         try {
@@ -31,6 +36,15 @@ public class MimetypeUtils {
         }
     }
 
+    /**
+     * 根据文件名获取MIME类型(使用共享MimetypesFileTypeMap实例).
+     * @param fileName 文件名
+     * @return MIME类型
+     */
+    public static String getMimetypeContentType(String fileName) {
+        return MIMETYPES_FILE_TYPE_MAP.getContentType(fileName);
+    }
+
     public static String getResourceContentType(String fileName) {
         try {
             String suffix = DEFAULT_CONTENT_TYPE_KEY;
@@ -40,7 +54,7 @@ public class MimetypeUtils {
             }
             String contentType = CONTENT_TYPE_MAP.get(suffix);
             if (contentType == null || contentType.equals(DEFAULT_CONTENT_TYPE_VALUE)) {
-                contentType = new MimetypesFileTypeMap().getContentType(fileName);
+                contentType = MIMETYPES_FILE_TYPE_MAP.getContentType(fileName);
             }
             if (StringUtils.isEmpty(contentType)) {
                 contentType = DEFAULT_CONTENT_TYPE_VALUE;

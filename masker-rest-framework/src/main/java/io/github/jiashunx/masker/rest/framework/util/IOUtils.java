@@ -196,7 +196,7 @@ public final class IOUtils {
                 diskFileResource.setFilePath(filePath);
                 diskFileResource.setAbsoluteFilePath(new File(filePath).getAbsolutePath());
                 diskFileResource.setBytes(bytes);
-                diskFileResource.setContentType(new MimetypesFileTypeMap().getContentType(filePath));
+                diskFileResource.setContentType(MimetypeUtils.getMimetypeContentType(filePath));
             }
         } catch (Throwable e) {
             diskFileResource = null;

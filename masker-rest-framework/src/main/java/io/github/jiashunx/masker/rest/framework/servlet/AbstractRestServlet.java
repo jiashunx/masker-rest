@@ -42,6 +42,7 @@ public abstract class AbstractRestServlet implements MRestServlet {
             GetMapping getMapping = method.getAnnotation(GetMapping.class);
             if (getMapping != null) {
                 String mappingUrl = MRestUtils.formatPath(getMapping.url());
+                validateMappingMethod(servletClass, mappingUrl, method);
                 if (!klassMappingUrl.equals(Constants.ROOT_PATH)) {
                     mappingUrl = klassMappingUrl + mappingUrl;
                 }
@@ -61,6 +62,7 @@ public abstract class AbstractRestServlet implements MRestServlet {
             PostMapping postMapping = method.getAnnotation(PostMapping.class);
             if (postMapping != null) {
                 String mappingUrl = MRestUtils.formatPath(postMapping.url());
+                validateMappingMethod(servletClass, mappingUrl, method);
                 if (!klassMappingUrl.equals(Constants.ROOT_PATH)) {
                     mappingUrl = klassMappingUrl + mappingUrl;
                 }
@@ -80,6 +82,7 @@ public abstract class AbstractRestServlet implements MRestServlet {
             RequestMapping methodRequestMapping = method.getAnnotation(RequestMapping.class);
             if (methodRequestMapping != null) {
                 String mappingUrl = MRestUtils.formatPath(methodRequestMapping.url());
+                validateMappingMethod(servletClass, mappingUrl, method);
                 if (!klassMappingUrl.equals(Constants.ROOT_PATH)) {
                     mappingUrl = klassMappingUrl + mappingUrl;
                 }
@@ -94,6 +97,18 @@ public abstract class AbstractRestServlet implements MRestServlet {
             }
         }
         initialized = true;
+    }
+
+    private static void validateMappingMethod(Class<?> servletClass, String mappingUrl, Method method) {
+        int modifiers = method.getModifiers();
+        if (!Modifier.isPublic(modifiers)) {
+            throw new MRestMappingException(String.format("url [%s] mapping method must be public, className.methodName=%s.%s"
+                    , mappingUrl, servletClass.getName(), method.getName()));
+        }
+        if (Modifier.isStatic(modifiers)) {
+            throw new MRestMappingException(String.format("url [%s] mapping method must not be static, className.methodName=%s.%s"
+                    , mappingUrl, servletClass.getName(), method.getName()));
+        }
     }
 
     /**
