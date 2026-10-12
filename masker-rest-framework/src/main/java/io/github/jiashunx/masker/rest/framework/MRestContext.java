@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -455,7 +456,11 @@ public class MRestContext {
     /**
      * filter映射处理.
      */
-    private final Map<String, List<MRestFilter>> filterMap = new HashMap<>();
+    private final Map<String, List<MRestFilter>> filterMap = new LinkedHashMap<>();
+    /**
+     * filter urlPattern预编译正则.
+     */
+    private final Map<String, Pattern> filterPatternMap = new HashMap<>();
     /**
      * 请求分发处理.
      */
@@ -623,8 +628,8 @@ public class MRestContext {
     public MRestFilterChain getFilterChain(String requestUrl) {
         Set<MRestFilter> filterSet = new HashSet<>();
         filterMap.forEach((urlPattern, filterList) -> {
-            String pattern = "^" + urlPattern.replace("*", "(\\S|\\s)*") + "$";
-            if (requestUrl.matches(pattern)) {
+            Pattern pattern = filterPatternMap.get(urlPattern);
+            if (pattern != null && pattern.matcher(requestUrl).matches()) {
                 filterSet.addAll(filterList);
             }
         });
@@ -665,6 +670,25 @@ public class MRestContext {
             filterChain.doFilter(request, response);
         });
         return new MRestFilterChainOfDefault(this, filterList.toArray(new MRestFilter[0]));
+    }
+
+    /**
+     * 将filter的urlPattern转换为锚定正则: '*'通配任意字符, 其余字符按字面量转义(避免正则注入与灾难性回溯).
+     */
+    static String filterPatternToRegex(String urlPattern) {
+        StringBuilder builder = new StringBuilder("^");
+        for (int i = 0; i < urlPattern.length(); i++) {
+            char c = urlPattern.charAt(i);
+            if (c == '*') {
+                builder.append(".*");
+            } else {
+                if ("\\.^$|?+()[]{}".indexOf(c) >= 0) {
+                    builder.append('\\');
+                }
+                builder.append(c);
+            }
+        }
+        return builder.append('$').toString();
     }
 
     /**
@@ -715,6 +739,7 @@ public class MRestContext {
             }
             for (String urlPattern: urlPatterns) {
                 filterMap.computeIfAbsent(urlPattern, k -> new ArrayList<>()).add(restFilter);
+                filterPatternMap.computeIfAbsent(urlPattern, k -> Pattern.compile(filterPatternToRegex(k)));
                 logger.info("{} register filter: {} -> {}", getContextDesc(), urlPattern, filter.filterName());
             }
         });
