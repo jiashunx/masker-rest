@@ -1,7 +1,10 @@
 # masker-rest 缺陷与优化方向分析（REFACTOR）
 
 > 本文基于对 `1.8.0-SNAPSHOT`（JDK8）分支的文档与源码评审，并经资深评审（@oracle）逐条反汇编核验。
-> 目的：梳理现存缺陷、优化方向与可执行待办，作为后续重构/修复的输入。**本文不含任何代码改动。**
+> 目的：梳理现存缺陷、优化方向与可执行待办。
+>
+> **更新（已实施）**：第 1~3 节的分析结论已按第 4 节逐项落地修复，每个修复均经 `mvn -o test` 验证通过并单独提交推送至 `origin/1.8.0-SNAPSHOT`。
+> 最终测试：framework 39 + jjwt 1，BUILD SUCCESS。完成情况与提交见 §4，遗留/差异见 §5。
 
 ---
 
@@ -83,6 +86,8 @@
 
 ## 2. 优化方向与推荐顺序
 
+> 说明：本节为**评审时的原始推荐顺序**。实际实施中，安全的代码级项已在 `1.8.0-SNAPSHOT` 分支完成（含原计划在 Phase 4 的性能项），以便前向并入 `2.4.0`。完成状态见 §4。
+
 1. **Phase 0 · 1.8.0 安全与正确性批次**（纯 JDK8 代码，可前向合并）
    - 在 `parseHttpRequest` 建立**单一 URL 归一化/解码入口**，从根因上同时解决 A / C / D。
    - 修复 B（Zip Slip）、K（multipart）、F（servletMap 并发）、J（响应头语义）、H（下载状态码）。
@@ -121,61 +126,90 @@
 | junit | 4.13.1 | 4.13.1 已修 CVE-2020-15250；JUnit4 维护模式 | 迁移 JUnit 5 |
 | webjar-jquery | 3.5.1 | 已含 CVE-2020-11022/11023 修复，无高危 | 可选升 3.7.1 |
 
+> **实际升级结果**：Netty **4.1.139.Final**；jackson-databind **2.17.2**；gson **2.10.1**；logback **1.2.13**；slf4j-api **1.7.36**；jsoup **1.15.4**；asm/asm-commons/asm-util **9.7**；jjwt **0.12.6**（api/impl/jackson）；bcpkix **jdk18on 1.80**；移除 jaxb-api/impl/core（`activation` 保留）。junit 4 与 webjar-jquery 未升级。
+
 ---
 
-## 4. 待办事项（TODO）
+## 4. 待办事项与完成状态（TODO）
 
-> 交付顺序遵循"先在 1.8.0 修复 → 前向并入 2.4.0"。每项建议附带回归测试。
+> 交付顺序遵循"先在 1.8.0 修复 → 前向并入 2.4.0"。每项均已附带回归测试并通过 `mvn -o test`。
+> 状态：`[x]` 已完成；`[~]` 部分完成/有差异（见 §5）。
 
 ### Phase 0 · 安全与正确性（1.8.0，纯 JDK8 代码）
 
-- [ ] **P0-1（A/D/C）** 在 `MRestServerChannelHandler.parseHttpRequest` 建立唯一的 URL 解码+归一化入口（消除重复编码/解码差异）
-- [ ] **P0-2（A）** `StaticResourceFinder.loadResourceFromDiskpath` 改用 canonical path 包含校验 + 分隔符边界；拒绝 `..`
-- [ ] **P0-3（C）** classpath 资源路径统一 `..` 拒绝，并校验解析结果仍在配置前缀内
-- [ ] **P0-4（D）** context 匹配改用已解码 `path()`，最长前缀 + 边界匹配，注册期排序保证确定性；URL 与 rawQuery 分离
-- [ ] **P0-5（B）** `FileUtils.unzip` 增加 canonical 包含校验、跳过危险条目、条目数/总量上限；若确认无调用方考虑废弃 API
-- [ ] **P0-6（K）** multipart 属性快照为 String 名值对；`try/finally` 确保 `decoder.destroy()`；迁移到 `HttpPostMultipartRequestDecoder`
-- [ ] **P0-7（F）** `servletHandlerMap` 改 `ConcurrentHashMap` + `computeIfAbsent`；`init()` 改一次性 volatile 检查
-- [ ] **P0-8（J）** 引入真正的 `set`(替换) 与 `add` 语义区分（`Set-Cookie` 保留 add）；合并头时去重单值头
-- [ ] **P0-9（H）** `writeFile(status,...)` 状态码透传到 `MResponseHelper.write`
-- [ ] **P0-10** 为以上各项补充回归测试（路径穿越、非根 context 路由、multipart 字段、并发 servlet 分发、响应头）
+- [x] **P0-1（A/D/C）** URL 解码+归一化入口 —— `202490f`（改用已解码 `path()`）+ `637ca67`（集中拒绝 `..`）
+- [x] **P0-2（A）** 磁盘资源 canonical 包含校验 + 分隔符边界 —— `a80381a`
+- [x] **P0-3（C）** classpath 资源 `..` 拒绝 —— `637ca67`
+- [x] **P0-4（D）** context 最长前缀+边界匹配、确定性选择、URL/rawQuery 分离 —— `202490f`
+- [x] **P0-5（B）** `FileUtils.unzip` canonical 包含校验 + 条目数/总量上限 —— `476b348`
+- [x] **P0-6（K）** multipart 属性快照为 String 名值对 + `finally` 销毁解码器 —— `17a9076`（保留 `HttpPostRequestDecoder`，未迁移 `HttpPostMultipartRequestDecoder`）
+- [x] **P0-7（F）** `servletHandlerMap` → `ConcurrentHashMap` + `computeIfAbsent`；`init()` 快速路径 —— `bc1d123`
+- [x] **P0-8（J）** `set`(替换)/`add` 语义区分 + 合并去重（`Set-Cookie` 保留 add）—— `42e6102`
+- [x] **P0-9（H）** 下载状态码透传 + 异常路径句柄释放 —— `4b7119f`
+- [x] **P0-10** 回归测试 —— 已随各修复提交（UrlUtils/FileUtils/IOUtils/MRestHeaders/MRestFileUploadRequest/AbstractRestServlet 等）
 
 ### Phase 1 · 生命周期（1.8.0）
 
-- [ ] **P1-1（E）** `MRestServer` 持有 `bossGroup/workerGroup` 字段；`shutdown()` 优雅关闭并 `sync()`
-- [ ] **P1-2（E）** 使用 `ChannelGroup` 跟踪并关闭子通道（含 WebSocket）
-- [ ] **P1-3（E）** 静态资源刷新改用受生命周期管理的守护 `ScheduledExecutorService`，可取消；删除死代码 `syncThread`
-- [ ] **P1-4** 增加 start/stop 往返的测试，验证无线程池/文件句柄泄漏
+- [x] **P1-1（E）** `bossGroup/workerGroup` 字段化 + `shutdownGracefully().sync()` —— `3d0d4ee`
+- [x] **P1-2（E）** `ChannelGroup` 跟踪并关闭子通道（含 WebSocket）—— `3d0d4ee`
+- [x] **P1-3（E）** 静态资源刷新改为可停的守护线程（volatile 标志 + interrupt），删除死代码 `syncThread` —— `3d0d4ee`
+- [x] **P1-4** start/stop 往返测试 —— `MRestServerTest`（`3d0d4ee`）
 
-### Phase 2 · 依赖现代化（两分支 pom，父 pom 属性统一）
+### Phase 2 · 依赖现代化（两分支 pom）
 
-- [ ] **P2-1** Netty 升级至 ≥ 4.1.139；拆分 `netty-all` 为按需模块 + `netty-bom`
-- [ ] **P2-2** jackson-databind、gson、logback、slf4j、jsoup、asm 升级到受支持版本
-- [ ] **P2-3** jjwt 0.9.1 → 0.12.x/0.13.x（api/impl/jackson）；同步改 `masker-rest-jjwt`
-- [ ] **P2-4** 升级 jjwt 后移除 `jaxb-api/jaxb-impl/jaxb-core/activation` shim（若不再被依赖）
-- [ ] **P2-5** 校验版本属性集中在父 pom，确保两分支仅差 `jdk.compiler.version`
+- [~] **P2-1** Netty 升级至 4.1.139.Final —— `5a1a722`（**未拆分** `netty-all`）
+- [x] **P2-2** jackson-databind 2.17.2 / gson 2.10.1 / logback 1.2.13 / slf4j 1.7.36 / jsoup 1.15.4 / asm 9.7 —— `ecfd693`
+- [x] **P2-3** jjwt → 0.12.6（api/impl/jackson）—— `2b4da1f`
+- [x] **P2-4** 移除 jaxb-api/impl/core（`activation` 保留，`MimetypesFileTypeMap` 需要）—— `a13a529`
+- [~] **P2-5** 版本仍集中于父 pom `dependencyManagement`（未改用 `<properties>` 占位）
 
 ### Phase 3 · 2.4.0 / JDK11 可移植性
 
-- [ ] **P3-1** `SelfSignedCertificate` 构建后 `delete()` 临时文件
-- [ ] **P3-2** 引入 `bcpkix-jdk18on` 为可选框架依赖（兼容 8/11+），或对 sslEnabled 无显式 `SslContext` 时 `fail fast` 并给出清晰提示
-- [ ] **P3-3** `maven-compiler` 改用 `<release>`
-- [ ] **P3-4** 规划 `MRestThreadFactory` 中 `SecurityManager` 的移除（JDK17+ 弃用）
+- [x] **P3-1** `SelfSignedCertificate` 构建后 `delete()` 临时文件 —— `54c4ab2`
+- [x] **P3-2** `bcpkix-jdk18on` 作为可选框架依赖 + 失败时清晰提示 —— `54c4ab2`
+- [~] **P3-3** `<release>` 编译 —— **未在 1.8.0 改动**（JDK8 构建；属 2.4.0/JDK11 分支）
+- [x] **P3-4** 移除 `MRestThreadFactory` 对 `SecurityManager` 的依赖 —— `54c4ab2`
 
-### Phase 4 · 性能架构（2.4.0 及之后）
+### Phase 4 · 性能架构
 
-- [ ] **P4-1** 注册期预编译 filter/URL Pattern，缓存不可变过滤链（消除每请求重编译）
-- [ ] **P4-2** servlet 分发改 trie/索引结构，消除每请求线性扫描与模型构造
-- [ ] **P4-3** 静态资源：有界 LRU（含负缓存 TTL）、按键加载（去掉全局写锁 IO）、`ChunkedFile` 流式、ETag/Last-Modified/Cache-Control/304
-- [ ] **P4-4** 引入可选业务线程池，避免阻塞 IO/CPU 占用 Netty event loop
-- [ ] **P4-5** 请求体限制：可配置聚合上限、multipart 文件数/总量上限
+- [x] **P4-1** filter URL Pattern 注册期预编译 + 字面量转义 —— `4457132`
+- [x] **P4-2** servlet 路由复用预计算模型 + 命中结果有界 LRU 缓存 —— `160b16c` + `a34b486`
+- [x] **P4-3** 静态资源：不缓存未命中 + 有界 LRU + ETag/304 + 磁盘文件流式输出 —— `f9a8902`/`a20217a`/`d5e7f10`/`9d321f3`
+- [x] **P4-4** 可选独立业务线程池（`businessThreadNum`，默认关闭）—— `5951dad`
+- [x] **P4-5** multipart 文件数量上限 + 畸形请求 400 —— `3fb4020`
 
-### Phase 5 · 健壮性与安全加固（可穿插）
+### Phase 5 · 健壮性与安全加固
 
-- [ ] **P5-1** WebSocket：`channelInactive` 中触发 `inactiveCallback` 与清理；handshaker 缓存改并发安全；可选 Origin 校验；空闲超时
-- [ ] **P5-2** 增加 `IdleStateHandler`/读超时；指纹头/cookie 可选关闭并加固（HttpOnly/Secure/SameSite）
-- [ ] **P5-3** 修 `MRestDispatchServlet` 405 分支；`application/x-www-form-urlencoded` body 正确解码
-- [ ] **P5-4** 修 `Low` 级项：`IOUtils.copy` 循环条件与缓冲区、`MimetypesFileTypeMap` 缓存、`Locale.ROOT`、`UrlPatternModel.getRegularCount`、`FileUtils` NPE/TOCTOU、前缀扫描顺序、ASM `static` 方法处理、`remoteAddress` 语义、可变返回值、`$flushed` volatile / ThreadLocal 上下文传播
+- [x] **P5-1** WebSocket `channelInactive` 清理 + handshaker 缓存并发安全 —— `a626920`（Origin 校验未做）
+- [~] **P5-2** 可选空闲超时 + 指纹头开关 —— `43b4cec`（超时默认关闭；cookie 未加 HttpOnly/Secure/SameSite）
+- [x] **P5-3** 表单体 percent/`+` 解码 + 405 分支 —— `a626920` + `fe61592`
+- [x] **P5-4** Low 级项：`IOUtils.copy`、Mimetype 缓存、`Locale.ROOT`、`getRegularCount`、`FileUtils` NPE、前缀扫描顺序、ASM 静态方法校验、可变返回值副本、`$flushed` volatile、forward 递归保护、ThreadLocal 显式传播 —— `5bc65dd`/`af347f8`/`6402eea`/`0f16184`/`54dc3f5`
+
+### 其他（评审补充项）
+
+- [x] **G** HTTPS 下载改用 `ChunkedFile` + `Content-Disposition` 文件名转义 —— `4a84780`
+
+---
+
+## 5. 遗留与差异说明
+
+以下项为**有意保留/延后**或与原文建议存在差异，需后续评估：
+
+- **依赖拆分**：Netty 已升至 4.1.139.Final，但仍使用 `netty-all` 聚合依赖，未拆分为按需模块 + `netty-bom`。
+- **`<release>` 编译**：仅适用于 2.4.0/JDK11 分支；1.8.0 保持 `source/target=8`（JDK8 构建），未改动。
+- **P2-5**：依赖版本仍集中在父 pom `dependencyManagement`（未改用 `<properties>` 占位）。
+- **WebSocket Origin 校验**（CSWSH）未实现。
+- **空闲超时**：`httpIdleTimeoutSeconds` 默认 `0`（关闭），需显式配置启用；指纹标识 cookie 未加 `HttpOnly/Secure/SameSite`。
+- **ASM**：仅增加 `public && !static` 映射方法校验；未扫描继承的注解方法。
+- **`remoteAddress` 语义**：保持原行为（未交换 `local/remote`），以免破坏既有调用方语义。
+- **Low 项未做**：`MResponseHelper.writeJSON(String)` 仍用平台默认字符集且未补 JSON Content-Type；`FileUtils.newFile/newDirectory` 的 TOCTOU 未处理（仅修 NPE）。
+- **multipart**：保留 `HttpPostRequestDecoder`（未迁移 `HttpPostMultipartRequestDecoder`），仅修复 use-after-destroy 与销毁时机。
+
+**兼容性注意**：
+- **jjwt 0.12.6 迁移破坏了令牌兼容** —— HMAC 密钥改为对原始密钥做 SHA-256 派生（32 字节），旧版 0.9.1 签发的 token 不再通过校验，升级前需评估存量 token 过渡方案。
+- 新增配置默认保持向后兼容：`httpIdleTimeoutSeconds=0`、`businessThreadNum=0`、`fingerprintHeadersEnabled=true`、`multipartMaxFileCount=1000`。
+
+**验证环境**：本机仅 JDK11；`source/target=8` 由 JDK11 编译验证通过（`mvn -o test`）。
 
 ---
 
