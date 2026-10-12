@@ -87,6 +87,12 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        // 连接异常断开(非CloseWebSocketFrame)时, 确保触发inactive回调并清理handshake记录.
+        String channelId = ctx.channel().id().toString();
+        MWebsocketRequest websocketRequest = webSocketServerHandshakerMap.remove(channelId);
+        if (websocketRequest != null) {
+            fireInactiveCallback(ctx, websocketRequest);
+        }
         super.channelInactive(ctx);
     }
 
@@ -114,14 +120,7 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
         MWebsocketResponse websocketResponse = new MWebsocketResponse(ctx, websocketContext);
         if (object instanceof CloseWebSocketFrame) {
             webSocketServerHandshakerMap.remove(channelId);
-            MRestUtils.tryCatch(() -> {
-                BiConsumer<MWebsocketRequest, MWebsocketResponse> inactiveCallback = websocketRequest.getWebsocketContext().getInactiveCallback();
-                if (inactiveCallback != null) {
-                    inactiveCallback.accept(websocketRequest, websocketResponse);
-                }
-            }, throwable -> {
-                logger.error("{} inactive callback execute failed", websocketContext.getWebSocketContextDesc(), throwable);
-            });
+            fireInactiveCallback(ctx, websocketRequest);
             websocketRequest.getHandshaker().close(ctx.channel(), (CloseWebSocketFrame) object.retain());
             // ctx.channel().close();
             return;
@@ -153,22 +152,24 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
 
     /************************************************** WebSocket *************************************************/
 
+    private void fireInactiveCallback(ChannelHandlerContext ctx, MWebsocketRequest websocketRequest) {
+        MWebsocketContext websocketContext = websocketRequest.getWebsocketContext();
+        MWebsocketResponse websocketResponse = new MWebsocketResponse(ctx, websocketContext);
+        MRestUtils.tryCatch(() -> {
+            BiConsumer<MWebsocketRequest, MWebsocketResponse> inactiveCallback = websocketContext.getInactiveCallback();
+            if (inactiveCallback != null) {
+                inactiveCallback.accept(websocketRequest, websocketResponse);
+            }
+        }, throwable -> {
+            logger.error("{} inactive callback execute failed", websocketContext.getWebSocketContextDesc(), throwable);
+        });
+    }
+
     private final Map<String, MWebsocketRequest> webSocketServerHandshakerMap = new ConcurrentHashMap<>();
-    private final Map<String, WebSocketServerHandshakerFactory> handshakerFactoryMap = new HashMap<>();
+    private final Map<String, WebSocketServerHandshakerFactory> handshakerFactoryMap = new ConcurrentHashMap<>();
 
     public WebSocketServerHandshakerFactory getWebSocketServerHandshakerFactory(String webSocketURL) {
-        WebSocketServerHandshakerFactory handshakerFactory = handshakerFactoryMap.get(webSocketURL);
-        if (handshakerFactory == null) {
-            synchronized (this) {
-                handshakerFactory = handshakerFactoryMap.get(webSocketURL);
-                if (handshakerFactory == null) {
-                    final WebSocketServerHandshakerFactory $handshakerFactory = new WebSocketServerHandshakerFactory(webSocketURL, null, false);
-                    handshakerFactoryMap.put(webSocketURL, $handshakerFactory);
-                    handshakerFactory = $handshakerFactory;
-                }
-            }
-        }
-        return handshakerFactory;
+        return handshakerFactoryMap.computeIfAbsent(webSocketURL, url -> new WebSocketServerHandshakerFactory(url, null, false));
     }
 
     /************************************************** HTTP  ****************************************************/
@@ -373,24 +374,31 @@ public class MRestServerChannelHandler extends SimpleChannelInboundHandler<Objec
             parameters.put(key, mergedVal);
         });
         String contentType = httpRequest.headers().get(Constants.HTTP_HEADER_CONTENT_TYPE);
-        if (Constants.CONTENT_TYPE_X_WWW_FORM_URLENCODED.equals(contentType)) {
+        if (isFormUrlEncoded(contentType)) {
             String content = new String(restRequest.getBodyBytes(), StandardCharsets.UTF_8);
             if (StringUtils.isNotEmpty(content)) {
-                String[] kvArr = new String(restRequest.getBodyBytes(), StandardCharsets.UTF_8).split("&");
-                for (String kv: kvArr) {
-                    int i = kv.indexOf("=");
-                    String k = kv;
-                    String v = "";
-                    if (i >= 0 && i < kv.length() - 1) {
-                        k = kv.substring(0, i);
-                        v = kv.substring(i + 1);
+                // 使用QueryStringDecoder解析表单体, 正确处理百分号编码、"+"以及空值.
+                QueryStringDecoder bodyDecoder = new QueryStringDecoder(content, StandardCharsets.UTF_8, false);
+                bodyDecoder.parameters().forEach((key, valueList) -> {
+                    String mergedVal = "";
+                    if (valueList != null && !valueList.isEmpty()) {
+                        mergedVal = valueList.get(valueList.size() - 1);
                     }
-                    parameters.put(k, v);
-                }
+                    parameters.put(key, mergedVal);
+                });
             }
         }
         restRequest.setParameters(parameters);
         return restRequest;
+    }
+
+    private static boolean isFormUrlEncoded(String contentType) {
+        if (contentType == null) {
+            return false;
+        }
+        int idx = contentType.indexOf(';');
+        String baseContentType = (idx >= 0 ? contentType.substring(0, idx) : contentType).trim();
+        return Constants.CONTENT_TYPE_X_WWW_FORM_URLENCODED.equalsIgnoreCase(baseContentType);
     }
 
     private Exception handleException(ChannelHandlerContext ctx, MRestRequest request
