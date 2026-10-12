@@ -1,6 +1,7 @@
 
 <h3 id="">masker-rest版本清单</h3>
 
+- [20261012 - 1.8.0.RELEASE/2.4.0.RELEASE](#1.8.0.RELEASE/2.4.0.RELEASE)
 - [20241113 - 2.3.0.RELEASE](#2.3.0.RELEASE)
 - [20240824 - 2.2.2.RELEASE](#2.2.2.RELEASE)
 - [20240823 - 2.2.1.RELEASE](#2.2.1.RELEASE)
@@ -42,6 +43,62 @@
 - [20201115 - 1.1.1](#1.1.1)
 - [20201115 - 1.1.0](#1.1.0)
 - [20201115 - 1.0.0](#1.0.0)
+
+<h4 id="1.8.0.RELEASE/2.4.0.RELEASE">20261012 - 1.8.0.RELEASE/2.4.0.RELEASE</h4>
+
+- fix: 修复磁盘静态资源路径穿越缺陷（使用canonical路径+路径段包含校验）
+
+- fix: 修复classpath静态资源前缀逃逸缺陷（拒绝父级目录段）
+
+- fix: 修复FileUtils.unzip的Zip Slip缺陷（越界条目拒绝+zip炸弹限制）
+
+- fix: 修复HTTPS文件下载兼容性与Content-Disposition文件名注入缺陷（ChunkedFile+文件名转义）
+
+- fix: 修正非根context-path请求url解析缺陷（使用已解码路径+最长前缀边界匹配）
+
+- fix: 修复multipart表单属性use-after-destroy缺陷（属性快照+确保解码器释放）
+
+- fix: 修复AbstractRestServlet处理实例缓存并发缺陷（ConcurrentHashMap+快速路径）
+
+- fix: 修复Server线程组未优雅关闭缺陷（EventLoopGroup/子通道/静态资源刷新线程）
+
+- fix: 修复文件下载响应状态码被忽略缺陷（状态码透传）
+
+- fix: 修正响应头重复缺陷（set替换语义+Set-Cookie保留多值）
+
+- fix: 修正application/x-www-form-urlencoded表单体解码缺陷（百分号/加号解码）
+
+- fix: 修复WebSocket异常断连未触发inactive回调及连接清理的缺陷
+
+- fix: 修正已注册路径但请求方法不匹配时返回404的缺陷（应返回405）
+
+- refactor: filter URL模式注册期预编译并字面量转义（消除每请求正则编译与注入/回溯风险）
+
+- refactor: servlet路由匹配复用预计算模型并增加有界LRU缓存（消除每请求线性扫描）
+
+- refactor: 静态资源缓存改为有界LRU且不缓存未命中，磁盘文件改为流式输出并支持ETag/304
+
+- refactor: 提升JDK16+兼容性（自签证书临时文件清理+可选bcpkix+移除SecurityManager依赖）
+
+- refactor: 修正Low级健壮性问题（IOUtils拷贝/Mimetype复用/Locale.ROOT/ASM静态方法校验等）
+
+- feat: 增加multipart文件数量上限配置（multipartMaxFileCount）
+
+- feat: 增加可选连接空闲超时与框架指纹头开关（安全加固）
+
+- feat: 增加可选独立业务线程池（businessThreadNum，默认关闭）
+
+- feat: 增加SharedObjects线程上下文显式捕获/传播API
+
+- chore: 升级Netty至4.1.139.Final（修复多项CVE）
+
+- chore: 升级Jackson/Gson/Logback/SLF4J/ASM/Jsoup依赖版本（修复多项CVE）
+
+- chore: 升级jjwt至0.12.6并适配新API（api/impl/jackson三件套）
+
+- chore: 升级BouncyCastle至bcpkix-jdk18on 1.80
+
+- chore: 移除仅为兼容旧版jjwt而引入的jaxb-api/impl/core依赖
 
 <h4 id="2.3.0.RELEASE">20241113 - 2.3.0.RELEASE</h4>
 
